@@ -9,6 +9,7 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PYTHONPATH=/app/src PYTHONUNBUFFERED
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
+COPY contracts ./contracts
 COPY src ./src
 COPY web ./web
 # The commit SHA the Action built; the gateway reports it on /healthz so a deploy can be verified.
