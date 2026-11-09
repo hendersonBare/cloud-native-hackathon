@@ -1,30 +1,19 @@
-/* Rapport phone app: design tokens (from the design canvas) and shared components.
+/* Rapport phone app: design tokens (from the design canvas, light only) and shared components.
    Screen-specific styles live in app/screens/<name>.css. */
 
 .rp {
-  --bg:#0B0D11;--surface:#14171D;--raised:#1C2028;--nav:#171A21;--line:#2A2F3A;--line2:#1F232B;
-  --text:#F4F0E8;--text2:#C0C5CE;--text3:#9CA2AE;
-  --gold:#E6C992;--gold-bg:#221D13;--gold-line:#50442B;--gold-mid:#CDAA6A;
-  --fill:#E6C992;--on-fill:#17130A;--on-fill2:#4A3F28;
-  --live:#FF6B61;--live-on-fill:#C42B1C;--yes:#1A8F4E;--no:#D2382C;
-  --chip:#FFFFFF;--chip-line:transparent;--chip-shadow:none;
-  --steel:#B9C6DC;--steel-bg:#1A2130;--steel-line:#33415C;
-  --sage:#B7D3C2;--sage-bg:#18241E;--sage-line:#2F4A3C;
-  --lilac:#CDBFE6;--lilac-bg:#211C2B;--lilac-line:#43385C;
-  --off:#343A47;--knob:#C0C5CE;--scrim:rgba(6,7,9,.6);--shadow:none;
-}
-.rp.rp-light {
   --bg:#F4F3EF;--surface:#FFFFFF;--raised:#EFEDE8;--nav:#FFFFFF;--line:#DEDAD2;--line2:#E8E5DF;
   --text:#14161B;--text2:#4A505C;--text3:#5C6270;
   --gold:#7A5718;--gold-bg:#F7EFDD;--gold-line:#DCC79A;--gold-mid:#B8923F;
   --fill:#14161B;--on-fill:#F4F0E8;--on-fill2:#BBC0CA;
-  --live:#C9302C;--live-on-fill:#FF5A4E;
+  --live:#C9302C;--live-on-fill:#FF5A4E;--yes:#1A8F4E;--no:#D2382C;--yes-bg:#E4F3EA;--yes-text:#146C3B;
   --chip:#FFFFFF;--chip-line:#E2DED6;--chip-shadow:0 1px 2px rgba(20,22,27,.08);
   --steel:#3D5278;--steel-bg:#E8EDF6;--steel-line:#C5D0E4;
   --sage:#2F5E46;--sage-bg:#E6F1EA;--sage-line:#C2DACB;
   --lilac:#5B4690;--lilac-bg:#EEE9F8;--lilac-line:#D5CBEB;
   --off:#C9CCD3;--knob:#FFFFFF;--scrim:rgba(20,22,27,.38);
   --shadow:0 1px 2px rgba(20,22,27,.05),0 10px 28px rgba(20,22,27,.07);
+  color-scheme: light;
 }
 
 /* Base */

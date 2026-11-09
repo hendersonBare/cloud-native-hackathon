@@ -13,7 +13,8 @@
             "Low-overhead tracing at the edge",
             "eBPF on small clusters",
             "Robots that run Kubernetes"
-          ]
+          ],
+          "chips": ["Edge tracing", "Small clusters"]
         },
         {
           "id": "bluefin.bo",
@@ -21,7 +22,8 @@
             "Tracing with no code changes",
             "Cutting observability costs",
             "A hospital platform migration"
-          ]
+          ],
+          "chips": ["Zero-code tracing", "Observability cost"]
         },
         {
           "id": "harborline.lena",
@@ -29,16 +31,13 @@
             "Cutting incident time",
             "Rolling out OpenTelemetry",
             "Compliance for telemetry data"
-          ]
+          ],
+          "chips": ["Incident time", "OpenTelemetry"]
         }
       ],
-      "peerBanner": {
-        "body": "Comparing notes on eBPF tracing · tap to watch"
-      },
       "agreed": {
         "with": "lumenly.priya",
-        "title": "Priya · agents agreed",
-        "body": "eBPF overhead numbers · Coffee Tue 3:00 PM"
+        "chips": ["eBPF overhead", "Cloud spend"]
       },
       "upNext": [
         {
@@ -68,7 +67,8 @@
             "A 30% smaller cloud bill",
             "FinOps for Kubernetes",
             "Right-sizing clusters"
-          ]
+          ],
+          "chips": ["FinOps", "Right-sizing"]
         },
         {
           "id": "acme.ava",
@@ -76,7 +76,8 @@
             "Zero-code eBPF tracing",
             "A hospital rollout: 40% faster incidents",
             "OpenTelemetry on Kubernetes"
-          ]
+          ],
+          "chips": ["Zero-code eBPF", "Hospital case study"]
         },
         {
           "id": "lumenly.priya",
@@ -84,16 +85,13 @@
             "Cloud spend without blind spots",
             "eBPF without the overhead",
             "Running a small platform team"
-          ]
+          ],
+          "chips": ["Cloud spend", "eBPF overhead"]
         }
       ],
-      "peerBanner": {
-        "body": "Comparing notes on tracing costs · tap to watch"
-      },
       "agreed": {
         "with": "tidewater.sofia",
-        "title": "Sofia · agents agreed",
-        "body": "FinOps dashboards · Coffee Tue 10:00 AM"
+        "chips": ["FinOps", "Right-sizing"]
       },
       "upNext": [
         {

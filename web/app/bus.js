@@ -10,7 +10,6 @@
 //   exchange:message  {encounter_id, from, text, round, shared: []}   live mode only (from SSE)
 //   exchange:policy   {encounter_id, org_id, allow, rule_id, reason}  live mode only (from SSE)
 //   encounter:done    {encounter_id}                              exchange finished (broadcast)
-//   theme             'light'|'dark'                              (local)
 //   config            {malicious}                                 presenter toolbar (local)
 // Per-phone shared state: ctx.store.encounter = {encounter_id, initiator, responder, startedAt,
 //   status: 'waiting'|'talking'|'done'|'declined'} — written only by app/flow.js.

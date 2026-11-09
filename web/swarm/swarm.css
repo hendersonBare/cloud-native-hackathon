@@ -1,15 +1,16 @@
 /* Swarm panel: the judges' view of the agents meeting, between the two phones. */
+/* The stage is light by default (stage.css tokens); the dark set applies if a page sets data-theme="dark". */
 :root {
   --swarm-w: 380px;
   --swarm-gap: 24px;
-  --sw-ok-bg: #0F2A1B; --sw-ok-fg: #7FDDA6; --sw-ok-line: #1F6B42;
-  --sw-no-bg: #33130F; --sw-no-fg: #FF9C92; --sw-no-line: #8F2F26;
-  --sw-run-fg: #7FDDA6; --sw-wait-fg: #E6C992; --sw-done-fg: #9DC4FF; --sw-fail-fg: #FF9C92;
-}
-:root[data-theme="light"] {
   --sw-ok-bg: #E3F3E9; --sw-ok-fg: #0E5A31; --sw-ok-line: #8CC9A6;
   --sw-no-bg: #FBE6E3; --sw-no-fg: #9B1C13; --sw-no-line: #E3A29B;
   --sw-run-fg: #0E5A31; --sw-wait-fg: #7A5718; --sw-done-fg: #1E4FA3; --sw-fail-fg: #9B1C13;
+}
+:root[data-theme="dark"] {
+  --sw-ok-bg: #0F2A1B; --sw-ok-fg: #7FDDA6; --sw-ok-line: #1F6B42;
+  --sw-no-bg: #33130F; --sw-no-fg: #FF9C92; --sw-no-line: #8F2F26;
+  --sw-run-fg: #7FDDA6; --sw-wait-fg: #E6C992; --sw-done-fg: #9DC4FF; --sw-fail-fg: #FF9C92;
 }
 
 /* Only the stage with the panel changes: the phones' layout is untouched when it is hidden. */

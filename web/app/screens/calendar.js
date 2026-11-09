@@ -1,4 +1,4 @@
-// Calendar · Auto-transcribe, ported from Calendar.dc.html.
+// Calendar · Auto-transcribe, updated to the v2 Calendar.dc.html (events on Monday and Wednesday only).
 import { h, icon, bottomNav, nextId } from '../ui.js';
 
 const CONTENT = {
@@ -9,12 +9,9 @@ const CONTENT = {
     ],
     live: 'Hallway conversation',
     later: [
-      { key: 'talk', time: '3:30 PM', title: 'Zero-code tracing with eBPF on Kubernetes', location: 'Room B' },
       { key: 'poster', time: '4:00 PM', title: 'eBPF tracing deep dive', location: 'Room 2' },
       { key: 'dinner', time: '6:30 PM', title: 'Partner dinner', location: 'Off the record' },
     ],
-    tuesday: { time: '3:00 PM', with: 'lumenly.priya', note: 'Compare eBPF overhead numbers' },
-    thursday: { time: '3:00 PM', with: 'kestrel.mia', note: 'Compare OpenTelemetry setups' },
   },
   'bluefin.bo': {
     earlier: [
@@ -23,12 +20,9 @@ const CONTENT = {
     ],
     live: 'Platform track Q&A',
     later: [
-      { key: 'talk', time: '3:30 PM', title: 'Zero-code tracing with eBPF on Kubernetes', location: 'Room B' },
       { key: 'poster', time: '4:00 PM', title: 'Observability cost poster session', location: 'Room 2' },
       { key: 'dinner', time: '5:00 PM', title: 'Platform team sync', location: 'Bluefin Health' },
     ],
-    tuesday: { time: '10:00 AM', with: 'tidewater.sofia', note: 'Compare FinOps dashboards' },
-    thursday: { time: '3:00 PM', with: 'harborline.lena', note: 'Compare OpenTelemetry setups' },
   },
 };
 
@@ -38,7 +32,7 @@ const dateLabel = (day) => `${DAYS[day]}, November ${9 + day}, 2026`;
 export function render(ctx) {
   const content = CONTENT[ctx.me.id];
   const st = ctx.store.calendar || (ctx.store.calendar = {
-    day: 0, conf: true, talk: true, poster: true, dinner: false,
+    day: 0, conf: true, poster: true, dinner: false,
   });
 
   const track = () => h('span', { class: 'capture-track', 'aria-hidden': 'true' },
@@ -72,7 +66,7 @@ export function render(ctx) {
   },
   h('span', { class: 'day-name' }, day.slice(0, 3)),
   h('span', { class: 'day-date' }, String(9 + i)),
-  h('span', { class: `day-dot${i < 4 ? ' has-events' : ''}`, 'aria-hidden': 'true' })));
+  h('span', { class: `day-dot${i === 0 || i === 2 ? ' has-events' : ''}`, 'aria-hidden': 'true' })));
 
   function heading(text) {
     return h('h2', { class: 'eyebrow agenda-heading' }, text);
@@ -110,13 +104,6 @@ export function render(ctx) {
       toggle);
   }
 
-  function bookedEvent(event) {
-    return h('div', { class: 'booked-event' },
-      eventTime(event.time),
-      eventCopy(`Coffee with ${ctx.person(event.with).name}`, event.note),
-      icon('check', { size: 18, stroke: 2, label: 'Confirmed' }));
-  }
-
   function drawAgenda() {
     const section = h('section', { class: 'day-agenda', 'aria-label': dateLabel(st.day) });
     if (st.day === 0) {
@@ -133,17 +120,13 @@ export function render(ctx) {
         heading('Later'),
         h('div', { class: 'event-card later-card' }, content.later.map(captureEvent)),
       );
-    } else if (st.day === 1) {
-      section.append(heading('Booked by your agents'), bookedEvent(content.tuesday));
     } else if (st.day === 2) {
       section.append(
         heading('Proposed by your agents'),
         h('a', { class: 'proposed-event', href: '#/match' },
-          eventTime('10:00 AM'), eventCopy(`Coffee with ${ctx.peer.name}`, 'Agreed by both agents'),
+          eventTime('10:00 AM'), eventCopy(`Coffee with ${ctx.peer.name}`, 'Both agents agreed · tap to confirm'),
           icon('chevron', { size: 18, stroke: 1.8 })),
       );
-    } else if (st.day === 3) {
-      section.append(heading('Booked by your agents'), bookedEvent(content.thursday));
     } else {
       section.append(h('div', { class: 'calendar-empty' },
         h('p', { class: 'empty-title' }, 'Nothing scheduled'),

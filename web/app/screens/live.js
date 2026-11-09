@@ -129,7 +129,8 @@ export function render(ctx) {
 
   function drawFooter() {
     const saved = st.mode === 'session';
-    const status = h('p', { class: 'capture-status', role: 'status', 'aria-live': 'polite' },
+    // The design shows no status line while recording; it stays as a screen-reader live region.
+    const status = h('p', { class: saved ? 'capture-status' : 'capture-status visually-hidden', role: 'status', 'aria-live': 'polite' },
       icon('memory', { size: 14, stroke: 1.8 }),
       saved ? 'Saved · speakers matched to the program'
         : st.paused ? 'Capture paused · Personal memory' : 'Streaming to your Personal memory');
@@ -171,7 +172,7 @@ export function render(ctx) {
     tickClock();
     const heading = h('div', { class: 'capture-heading' },
       h('h2', { class: 'serif' }, conversation ? 'Hallway conversation' : 'Zero-code tracing with eBPF on Kubernetes'),
-      h('p', null, conversation ? 'Expo hall · started 2:41 PM · tap a name to change it'
+      h('p', null, conversation ? 'Expo hall · started 2:41 PM'
         : 'Talk · Room B · Mon 3:30 PM · started from your calendar'));
     if (conversation) {
       main.replaceChildren(h('div', { class: 'capture-content' }, heading, log,

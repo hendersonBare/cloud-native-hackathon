@@ -50,11 +50,43 @@ const CONTENT = {
 
 const NOT_FOUND = "I couldn't find that in the memory you can access.";
 const OUTSIDE_SCOPE = 'That memory is outside the selected scope. Include Platform team to search it.';
+// Scope index 3 = Personal only.
+const PERSONAL_SCOPE = 3;
+// Own profile records: profile-<persona_id>-<visibility>[-<n>] (SPEC 4.3). Citation has no owner
+// field and other kinds (encounter_summary, followup) don't encode one, so only these are provable.
+const OWN_PROFILE_SUFFIX = /^(shareable|private)(-\d+)?$/;
+
+function isOwnProfile(cite, personaId) {
+  if (cite.kind !== 'profile' || typeof personaId !== 'string' || !personaId) return false;
+  const prefix = `profile-${personaId}-`;
+  return cite.memory_id.startsWith(prefix) && OWN_PROFILE_SUFFIX.test(cite.memory_id.slice(prefix.length));
+}
 
 function scopeLabel(scope) {
   const included = ['Personal', 'Team', 'Infrastructure', 'Organization'].slice(0, 4 - scope);
   return included.length === 1 ? 'Personal memory only'
     : `${included.slice(0, -1).join(', ')} + ${included.at(-1)}`;
+}
+
+/**
+ * Turn a gateway AskAnswer into what the card shows for the selected scope.
+ * AskRequest has no scope field, so the gateway can't narrow the search. Fail closed:
+ * keep known team memories out of narrower scopes, and in Personal show an answer only
+ * if every citation is provably the viewer's own (their own profile records).
+ */
+export function liveResult(data, scope, content, fallback, personaId) {
+  const citations = Array.isArray(data?.citations) ? data.citations.flatMap((cite) => {
+    const id = cite?.memory_id;
+    return typeof id === 'string' && typeof cite?.title === 'string'
+      ? [{ memory_id: id, title: cite.title, kind: cite.kind }] : [];
+  }) : [];
+  const outside = content.questions.some((item) => scope > item.level
+    && item.citations.some((known) => citations.some((cite) => cite.memory_id === known.memory_id)));
+  const provablyPersonal = citations.length > 0 && citations.every((cite) => isOwnProfile(cite, personaId));
+  if (fallback.answer === OUTSIDE_SCOPE || outside || (scope === PERSONAL_SCOPE && !provablyPersonal)) {
+    return { answer: OUTSIDE_SCOPE, citations: [] };
+  }
+  return { answer: data.answer, citations: citations.map(({ memory_id, title }) => ({ memory_id, title })) };
 }
 
 function mockAnswer(content, question, scope) {
@@ -178,16 +210,7 @@ export function render(ctx) {
         if (!response.ok) throw new Error('Memory request failed');
         const data = await response.json();
         if (typeof data?.answer !== 'string' || !data.answer.trim()) throw new Error('Missing answer');
-        const citations = Array.isArray(data.citations) ? data.citations.flatMap((cite) => {
-          const id = cite?.memory_id;
-          return typeof id === 'string' && typeof cite?.title === 'string'
-            ? [{ memory_id: id, title: cite.title }] : [];
-        }) : [];
-        // The API has no scope field: keep known team memories out of Personal.
-        const outside = content.questions.some((item) => scope > item.level
-          && item.citations.some((known) => citations.some((cite) => cite.memory_id === known.memory_id)));
-        result = fallback.answer === OUTSIDE_SCOPE || outside
-          ? { answer: OUTSIDE_SCOPE, citations: [] } : { answer: data.answer, citations };
+        result = liveResult(data, scope, content, fallback, ctx.me.id);
       } catch {
         result = fallback;
       } finally {
@@ -246,7 +269,6 @@ export function render(ctx) {
       h('section', { class: 'memory-section', 'aria-labelledby': scopeId },
         h('div', { class: 'memory-section-head' },
           h('h2', { id: scopeId, class: 'eyebrow' }, 'Search scope'),
-          h('p', { class: 'memory-role-note' }, icon('lock', { size: 13, stroke: 1.9 }), 'Other teams are outside your role'),
         ),
         h('div', { class: 'memory-levels', role: 'group', 'aria-label': 'Search scope' }, scopeButtons),
       ),

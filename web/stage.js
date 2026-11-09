@@ -1,5 +1,5 @@
 // Demo stage: loads one phone app per iframe, scales the frames to fit the
-// window, and relays presenter controls (theme, malicious, reset) to the phones.
+// window, and relays presenter controls (malicious, reset) to the phones.
 
 import { initSwarm } from './swarm/index.js';
 import { openStream } from './app/api.js';
@@ -31,7 +31,6 @@ const frames = [...document.querySelectorAll('.device[data-persona]')].map((devi
   frame.dataset.persona = persona;
   return frame;
 });
-const themeBtn = document.getElementById('theme-btn');
 const malicious = document.getElementById('malicious');
 
 function readPref(key, fallback) {
@@ -41,23 +40,14 @@ function writePref(key, value) {
   try { localStorage.setItem(key, value); } catch { /* storage blocked */ }
 }
 
-// Light is the demo default; the toolbar button switches for this browser only.
-let theme = params.get('theme') || readPref('rapport.theme', 'light');
-
 function phoneUrl(persona) {
-  const q = new URLSearchParams({ persona, theme });
+  const q = new URLSearchParams({ persona });
   if (mode === 'mock') q.set('mock', '1');
   return `phone.html?${q}`;
 }
 
 function post(msg) {
   for (const f of frames) f.contentWindow?.postMessage(msg, location.origin);
-}
-
-function applyTheme() {
-  root.dataset.theme = theme;
-  themeBtn.textContent = theme === 'dark' ? 'Light theme' : 'Dark theme';
-  post({ type: 'theme', theme });
 }
 
 function fit() {
@@ -86,16 +76,9 @@ badge.dataset.mode = mode;
 for (const f of frames) {
   f.src = phoneUrl(f.dataset.persona);
   f.addEventListener('load', () => {
-    f.contentWindow?.postMessage({ type: 'theme', theme }, location.origin);
     f.contentWindow?.postMessage({ type: 'config', malicious: malicious.checked }, location.origin);
   });
 }
-
-themeBtn.addEventListener('click', () => {
-  theme = theme === 'dark' ? 'light' : 'dark';
-  writePref('rapport.theme', theme);
-  applyTheme();
-});
 
 malicious.addEventListener('change', () => post({ type: 'config', malicious: malicious.checked }));
 
@@ -148,7 +131,6 @@ const swarm = initSwarm({
 });
 
 window.addEventListener('resize', fit);
-applyTheme();
 fit();
 tickClock();
 setInterval(tickClock, 15000);

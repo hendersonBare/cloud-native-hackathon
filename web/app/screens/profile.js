@@ -1,11 +1,14 @@
 // Agent identity, role-based memory access, and local CV metadata.
-import { h, svg, icon, topbar, bottomNav, eyebrow, nextId } from '../ui.js';
+import { h, svg, topbar, bottomNav, eyebrow, nextId } from '../ui.js';
 
 const CONTENT = {
   'acme.ava': {
     name: 'Ava',
     title: 'Solutions Engineer',
     org: 'Acme Observability',
+    team: 'Solutions team',
+    lookingFor: 'Healthcare design partners',
+    openTo: 'Coffee chats',
     represents: 'Your agent represents your work in zero-code eBPF tracing and healthcare observability.',
     topics: ['eBPF tracing', 'OpenTelemetry', 'Healthcare', 'Observability'],
     workingOn: 'Working on: a hospital network rollout with 40% faster incidents',
@@ -14,6 +17,9 @@ const CONTENT = {
     name: 'Bo',
     title: 'Platform Lead',
     org: 'Bluefin Health',
+    team: 'Platform team',
+    lookingFor: 'Zero-code tracing',
+    openTo: 'Coffee chats',
     represents: 'Tu agente representa tu trabajo en la plataforma hospitalaria y el tracing sin cambios de código.',
     topics: ['eBPF tracing', 'OpenTelemetry', 'HIPAA review', 'Observability cost'],
     workingOn: 'Trabajando en: la migración de la plataforma hospitalaria',
@@ -22,9 +28,9 @@ const CONTENT = {
 };
 
 const ROLES = [
-  { id: 'engineer', label: 'Engineer', name: 'Platform engineer', writes: 'Personal · Team', access: [false, false, true, true] },
-  { id: 'manager', label: 'Eng manager', name: 'Engineering manager', writes: 'Up to Infrastructure', access: [false, true, true, true] },
-  { id: 'admin', label: 'Org admin', name: 'Org admin', writes: 'Every level', access: [true, true, true, true] },
+  { id: 'engineer', label: 'Engineer', name: 'Platform engineer', access: [false, false, true, true] },
+  { id: 'manager', label: 'Eng manager', name: 'Engineering manager', access: [false, true, true, true] },
+  { id: 'admin', label: 'Org admin', name: 'Org admin', access: [true, true, true, true] },
 ];
 
 export function render(ctx) {
@@ -33,7 +39,6 @@ export function render(ctx) {
   if (!ROLES.some((role) => role.id === st.role)) st.role = 'engineer';
   let visibility = st.cv?.visibility || st.visibility || 'shareable';
   const roleHeading = h('h1', { class: 'serif profile-role-name' });
-  const writes = h('p', { class: 'profile-access-value' });
   const accessBody = h('tbody');
   const roleButtons = new Map();
   const roleId = nextId('profile-role');
@@ -45,7 +50,6 @@ export function render(ctx) {
   function drawRole() {
     const selected = ROLES.find((role) => role.id === st.role);
     roleHeading.textContent = selected.name;
-    writes.textContent = selected.writes;
     for (const [id, button] of roleButtons) {
       button.setAttribute('aria-pressed', String(id === st.role));
     }
@@ -79,34 +83,24 @@ export function render(ctx) {
     h('div', { class: 'profile-identity' },
       roleHeading,
       h('p', { class: 'profile-identity-name' }, `${content.name} · ${content.title}`),
-      h('p', { class: 'profile-identity-org' }, `${content.org} · Platform team`),
+      h('p', { class: 'profile-identity-org' }, `${content.org} · ${content.team}`),
       h('p', { class: 'profile-represents', lang: content.lang }, content.represents)),
-    h('div', { class: 'profile-pass-access', 'aria-live': 'polite', 'aria-atomic': 'true' },
-      h('div', { class: 'profile-access-detail' }, eyebrow('Writes to', { tag: 'p' }), writes),
-      h('div', { class: 'profile-access-detail' }, eyebrow('Reads up to', { tag: 'p' }),
-        h('p', { class: 'profile-access-value' }, 'Organization'))));
+    h('div', { class: 'profile-pass-access' },
+      h('div', { class: 'profile-access-detail' }, eyebrow('Looking for', { tag: 'p' }),
+        h('p', { class: 'profile-access-value' }, content.lookingFor)),
+      h('div', { class: 'profile-access-detail' }, eyebrow('Open to', { tag: 'p' }),
+        h('p', { class: 'profile-access-value' }, content.openTo))));
 
-  const fileAction = h('span');
-  const fileStatus = h('div', { class: 'profile-file-status', role: 'status', 'aria-live': 'polite' });
-  function drawCV() {
-    fileAction.textContent = st.cv ? 'Replace' : 'Add CV';
-    fileStatus.replaceChildren(...(st.cv ? [
-      h('p', { class: 'profile-filename' }, st.cv.filename),
-      h('p', { class: 'profile-read-state' }, icon('check', { size: 16 }), 'Your agent read it'),
-    ] : []));
-    fileStatus.hidden = !st.cv;
-  }
   function saveCV(filename) {
     st.cv = { filename, visibility };
     ctx.bus.emitLocal('ui:context', { filename, visibility });
-    drawCV();
   }
   const fileInput = h('input', {
     id: fileId,
     class: 'profile-file-input',
     type: 'file',
     accept: '.pdf,.md,.txt',
-    'aria-label': 'Add or replace CV',
+    'aria-label': 'Replace CV',
     onChange: (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -130,8 +124,6 @@ export function render(ctx) {
           if (st.cv) saveCV(st.cv.filename);
         },
       }), h('span', null, label))));
-  drawCV();
-
   const context = h('section', { class: 'profile-section', 'aria-labelledby': contextId },
     eyebrow('Context it carries', { id: contextId }),
     h('div', { class: 'profile-context-card' },
@@ -140,11 +132,8 @@ export function render(ctx) {
           ['path', { d: 'M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z' }],
           ['path', { d: 'M14 3v5h5M9 13h6M9 17h6' }],
         ], { size: 19 })),
-        h('div', { class: 'profile-context-copy' },
-          h('p', { class: 'profile-context-title' }, 'CV'),
-          h('p', { class: 'profile-context-subtitle' }, "Parsed into your agent's context")),
-        h('label', { class: 'profile-file-control', for: fileId }, fileAction, fileInput)),
-      fileStatus,
+        h('p', { class: 'profile-context-title' }, 'CV'),
+        h('label', { class: 'profile-file-control', for: fileId }, 'Replace', fileInput)),
       h('ul', { class: 'profile-topics', 'aria-label': 'Context topics' },
         content.topics.map((topic) => h('li', { class: 'pill' }, topic))),
       h('p', { class: 'profile-working-on', lang: content.lang }, content.workingOn),
@@ -165,7 +154,7 @@ export function render(ctx) {
         eyebrow('Role', { id: roleId }), picker),
       h('section', { class: 'profile-section', 'aria-labelledby': accessId },
         h('div', { class: 'profile-access-heading' },
-          eyebrow('Memory access', { id: accessId }), h('p', null, 'Follows your role')),
+          eyebrow('Memory access', { id: accessId })),
         h('div', { class: 'profile-access-table', 'aria-live': 'polite' },
           h('table', { 'aria-labelledby': accessId }, accessBody)))),
     bottomNav('profile'));
