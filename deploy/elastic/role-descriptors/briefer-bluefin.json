@@ -2,8 +2,11 @@
   "rapport-briefer-bluefin": {
     "cluster": ["monitor_inference"],
     "indices": [
-      { "names": ["rapport-bluefin-internal", "rapport-bluefin-shareable"], "privileges": ["read", "write"] },
-      { "names": ["rapport-conference"], "privileges": ["read"] }
+      {
+        "names": ["rapport-bluefin-internal", "rapport-bluefin-internal-v*", "rapport-bluefin-shareable", "rapport-bluefin-shareable-v*"],
+        "privileges": ["read", "write"]
+      },
+      { "names": ["rapport-conference", "rapport-conference-v*"], "privileges": ["read"] }
     ]
   }
 }
