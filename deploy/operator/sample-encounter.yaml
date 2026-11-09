@@ -1,0 +1,24 @@
+# NOT in kustomization.yaml on purpose. Apply it by hand to watch the operator work:
+#   kubectl apply -f deploy/operator/sample-encounter.yaml
+#   kubectl get enc            # phase goes Running, then Completed or Failed
+#   kubectl get job,svc,networkpolicy -A -l rapport.dev/encounter=enc-sample
+# Deleting the Encounter (kubectl delete enc enc-sample) garbage-collects everything it owns.
+# The operator also deletes it after spec.ttlSeconds.
+apiVersion: rapport.dev/v1alpha1
+kind: Encounter
+metadata:
+  name: enc-sample
+  labels:
+    app.kubernetes.io/part-of: rapport
+  annotations:
+    rapport.dev/traceparent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+spec:
+  initiator:
+    orgId: acme
+    personaId: acme.ava
+    malicious: false
+  responder:
+    orgId: bluefin
+    personaId: bluefin.bo
+    malicious: true
+  ttlSeconds: 600

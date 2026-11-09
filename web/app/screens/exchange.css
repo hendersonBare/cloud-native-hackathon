@@ -1,0 +1,200 @@
+.exchange .exchange-counter {
+  min-width: 44px;
+  padding-right: 8px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.exchange .exchange-pair {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 30px 10px;
+}
+
+.exchange .exchange-agent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.exchange .exchange-agent-mark,
+.exchange .exchange-agent-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.exchange .exchange-agent-mark {
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-line);
+  color: var(--gold);
+}
+
+.exchange .exchange-connection {
+  flex: 1;
+  min-width: 0;
+  height: 1px;
+  margin-bottom: 22px;
+  border-top: 1px dashed var(--gold-line);
+}
+
+.exchange .exchange-log {
+  padding: 4px 20px 12px;
+  gap: 12px;
+  overflow-wrap: anywhere;
+}
+
+.exchange .exchange-log > * {
+  flex-shrink: 0;
+}
+
+.exchange .exchange-message {
+  max-width: 86%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.exchange .exchange-message.is-mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.exchange .exchange-message.is-peer {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.exchange .exchange-bubble {
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: 18px 18px 18px 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.exchange .is-mine .exchange-bubble {
+  border-radius: 18px 18px 4px 18px;
+  background: var(--gold-bg);
+  border-color: var(--gold-line);
+}
+
+.exchange .exchange-shared {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
+}
+
+.exchange .is-mine .exchange-shared {
+  color: var(--gold);
+}
+
+.exchange .exchange-progress {
+  align-self: flex-end;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gold);
+}
+
+.exchange .exchange-dots {
+  display: inline-flex;
+  gap: 3px;
+  flex: none;
+}
+
+.exchange .exchange-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--gold);
+}
+
+.exchange .exchange-dots span:nth-child(2) { background: var(--gold-mid); }
+.exchange .exchange-dots span:nth-child(3) { background: var(--gold-line); }
+
+.exchange .exchange-policy {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 9px;
+  margin: 0;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.exchange .exchange-policy svg { flex: none; }
+.exchange .exchange-policy.is-allowed { color: var(--yes); }
+.exchange .exchange-policy.is-blocked { color: var(--no); }
+.exchange .is-mine .exchange-policy { align-self: flex-end; }
+
+.exchange .exchange-declined {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0;
+  color: var(--text2);
+  font-size: 15px;
+}
+
+.exchange .exchange-sharing {
+  flex: none;
+  padding: 10px 20px 0;
+  border-top: 1px solid var(--line2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exchange .exchange-sharing-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.exchange .exchange-sharing-head p,
+.exchange .exchange-lock {
+  font-size: 13px;
+  color: var(--text3);
+}
+
+.exchange .exchange-permissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.exchange .exchange-lock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exchange .exchange-lock svg { flex: none; }
+.exchange .exchange-actions { padding: 10px 20px 4px; }

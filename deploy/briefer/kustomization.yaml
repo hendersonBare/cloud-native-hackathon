@@ -1,7 +1,8 @@
-# Owned by the memory workstream. Add this component's manifests here and list them under
-# resources. Argo CD builds deploy/ with kustomize on every push to main.
+# Owned by the memory workstream (briefer). Argo CD builds deploy/ with kustomize on every push to main.
 # Every container: image `app` (kustomize swaps in GHCR), explicit requests AND limits
-# (rapport_common.names.RESOURCES_*), and names.SECURITY_CONTEXT.
+# (rapport_common.names.RESOURCES_SERVICE), and names.SECURITY_CONTEXT.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources: []
+resources:
+  - briefer-acme.yaml
+  - briefer-bluefin.yaml

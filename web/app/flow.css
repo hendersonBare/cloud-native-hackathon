@@ -1,0 +1,15 @@
+/* App infrastructure: modal content uses the shared theme and sheet primitives. */
+.flow-sheet { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+.flow-connect { display: flex; flex-direction: column; gap: 18px; padding-top: 8px; }
+.flow-connect-avatars { align-self: flex-start; }
+.flow-connect-avatars > .avatar { border: 3px solid var(--surface); box-sizing: content-box; }
+.flow-connect-title { font-size: 32px; line-height: 1.08; }
+.flow-connect-why { font-size: 15px; line-height: 1.5; color: var(--text2); }
+.flow-connect-sharing { display: flex; flex-direction: column; gap: 10px; }
+.flow-connect-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.flow-connect-lock { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 13px; line-height: 1.5; }
+.flow-connect-lock svg { flex: none; }
+.flow-connect-actions { padding: 4px 0 0; }
+.flow-connect-actions .btn { min-height: 48px; }
+.flow-toast { overflow-wrap: anywhere; pointer-events: none; }
+.flow-toast[data-tone="error"] { border-color: var(--no); }

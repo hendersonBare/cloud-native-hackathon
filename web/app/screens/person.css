@@ -1,0 +1,36 @@
+/* Agent research brief. Fixed chrome surrounds the scrolling research. */
+.person .person-main { padding: 6px 20px 12px; gap: 12px; }
+.person .person-main > * { flex-shrink: 0; }
+.person .person-identity { display: flex; align-items: center; gap: 14px; }
+.person .person-heading { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.person .person-name { font-size: 34px; overflow-wrap: anywhere; }
+.person .person-confirmed { font-size: 14px; color: var(--text2); }
+
+.person .person-research { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.person .person-research-head { display: flex; align-items: center; gap: 10px; }
+.person .person-agent-mark {
+  width: 30px; height: 30px; flex: none; border-radius: 9px;
+  background: var(--gold-bg); border: 1px solid var(--gold-line); color: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+}
+.person .person-research-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+.person .person-research-head .badge { flex: none; }
+.person .person-facts { display: flex; flex-direction: column; }
+.person .person-fact { display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+.person .person-fact:last-child { padding-bottom: 0; }
+.person .person-fact dt {
+  width: 80px; flex: none; padding-top: 3px;
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text3);
+}
+.person .person-fact dd { flex: 1; min-width: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.person .person-sources { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+
+.person .person-why { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.person .person-reasons { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.person .person-reason { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 21px; }
+.person .person-reason-dot {
+  width: 5px; height: 5px; flex: none; margin-top: 8px; border-radius: 3px; background: var(--gold);
+}
+.person .person-connect { padding: 0 8px; }
+.person .person-connect svg { flex: none; }
+.person .person-connect:disabled { cursor: default; opacity: .65; }

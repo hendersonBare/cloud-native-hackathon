@@ -1,0 +1,81 @@
+.tag { position: relative; background: var(--bg); }
+.tag .topbar { position: relative; z-index: 1; }
+.tag .tag-recording {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px 6px 0;
+  color: var(--live); font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+.tag .tag-recording-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--live); }
+.tag .tag-transcript {
+  position: absolute; top: 56px; left: 0; right: 0; padding: 22px 20px 0;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.tag .tag-transcript-heading { display: flex; flex-direction: column; gap: 4px; }
+.tag .tag-transcript-title { font-size: 32px; line-height: 1.05; }
+.tag .tag-transcript-subtitle { font-size: 14px; color: var(--text2); }
+.tag .tag-transcript-segment { display: flex; gap: 12px; }
+.tag .tag-transcript-avatar { width: 34px; height: 34px; font-size: 12px; font-weight: 700; }
+.tag .tag-transcript-copy { flex: 1; min-width: 0; }
+.tag .tag-transcript-speaker { display: flex; align-items: center; gap: 8px; min-height: 34px; }
+.tag .tag-transcript-name { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.tag .tag-transcript-time {
+  margin-left: auto; flex: none; font-size: 13px; color: var(--text3); font-variant-numeric: tabular-nums;
+}
+.tag .tag-transcript-text { font-size: 15.5px; line-height: 1.5; }
+.tag .tag-dimmer { position: absolute; inset: 0; background: var(--scrim); pointer-events: none; z-index: 2; }
+.tag .tag-sheet {
+  position: relative; z-index: 3; margin-top: auto; max-height: calc(100% - 56px);
+  min-height: 0; padding: 10px 20px 26px; background: var(--surface);
+  border-top: 1px solid var(--line); border-radius: 30px 30px 0 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.tag .tag-grabber { align-self: center; flex: none; width: 40px; height: 5px; border-radius: 3px; background: var(--off); }
+.tag .tag-body { gap: 14px; padding: 4px; margin: -4px; }
+.tag .tag-body > * { flex-shrink: 0; }
+.tag .tag-intro { display: flex; flex-direction: column; gap: 6px; }
+.tag .tag-heading { font-size: 34px; line-height: 1.05; }
+.tag .tag-description { font-size: 14px; line-height: 1.45; color: var(--text2); }
+.tag .tag-will-show {
+  display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 12px;
+  border-radius: 12px; background: var(--gold-bg); border: 1px solid var(--gold-line); font-size: 14px;
+}
+.tag .tag-will-label { flex: none; color: var(--text2); }
+.tag .tag-will-name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.tag .tag-status { flex: none; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+.tag .tag-options { display: flex; flex-direction: column; gap: 8px; }
+.tag .tag-option {
+  min-height: 58px; padding: 8px 14px; border-radius: 16px; border: 1px solid var(--line);
+  background: var(--raised); color: var(--text); font: inherit; text-align: left;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+}
+.tag .tag-option[aria-checked="true"] { border-color: var(--gold-mid); background: var(--gold-bg); }
+.tag .tag-option-avatar { width: 36px; height: 36px; font-size: 12px; font-weight: 700; }
+.tag .tag-option-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.tag .tag-option-name { font-size: 15px; font-weight: 600; }
+.tag .tag-option-detail { font-size: 13px; color: var(--text2); }
+.tag .tag-radio-ring {
+  width: 20px; height: 20px; flex: none; border-radius: 10px; border: 1.5px solid var(--text3);
+  display: flex; align-items: center; justify-content: center;
+}
+.tag .tag-radio-dot { width: 10px; height: 10px; border-radius: 5px; background: transparent; }
+.tag .tag-option[aria-checked="true"] .tag-radio-ring { border-color: var(--gold); }
+.tag .tag-option[aria-checked="true"] .tag-radio-dot { background: var(--gold); }
+.tag .tag-custom-field { display: flex; flex-direction: column; gap: 6px; }
+.tag .tag-custom-field label { font-size: 13px; font-weight: 500; color: var(--text2); }
+.tag .tag-name-input {
+  width: 100%; min-height: 48px; padding: 0 14px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--raised); font: inherit; font-size: 16px; color: var(--text);
+}
+.tag .tag-name-input.tag-custom { border-color: var(--gold-mid); }
+.tag .tag-research {
+  min-height: 48px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--text);
+  font: inherit; text-align: left; display: flex; align-items: center; gap: 12px; cursor: pointer;
+}
+.tag .tag-switch-track {
+  width: 46px; height: 28px; flex: none; border-radius: 14px; background: var(--off);
+  display: flex; align-items: center; justify-content: flex-start; padding: 3px;
+}
+.tag .tag-switch-knob { width: 22px; height: 22px; border-radius: 11px; background: var(--knob); }
+.tag .tag-research[aria-checked="true"] .tag-switch-track { background: var(--fill); justify-content: flex-end; }
+.tag .tag-research[aria-checked="true"] .tag-switch-knob { background: var(--on-fill); }
+.tag .tag-actions { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
