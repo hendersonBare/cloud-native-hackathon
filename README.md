@@ -11,7 +11,8 @@ A hackathon kit for the Cloud Native Hackathon (theme: make conferences easier).
 | `docs/SETUP.md` | Setting up kind, Elastic Cloud, Dash0, OpenAI, Radar and Gitar (about 45 min) |
 | `docs/FEATURE-DISCOVER.md` | v1.1: filter → research → swipe cards → deep dive → agent decides |
 | `docs/COSTS.md` | What it costs to run (OpenAI, Elastic) |
-| `AGENTS.md` | House rules every agent follows |
+| `docs/CNH-STARTER.md` | The [cnh-starter](https://github.com/skyhook-io/cnh-starter) template's README: getting the team cluster, Radar, and shipping with `git push` + Argo CD |
+| `AGENTS.md` | Radar/cluster notes from the template, then the house rules every agent follows |
 | `docs/workstreams/*.md` | One brief per parallel workstream |
 
 ## How the parallel build works
