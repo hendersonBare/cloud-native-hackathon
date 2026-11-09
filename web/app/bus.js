@@ -31,10 +31,10 @@ export function on(type, fn) {
 
 function dispatch(msg) {
   for (const fn of listeners.get(msg.type) || []) {
-    try { fn(msg.data, msg); } catch (err) { console.warn('bus listener failed', msg.type, err); }
+    try { fn(msg.data, msg); } catch (err) { console.warn('bus listener failed', msg.type, err?.name || 'Error'); }
   }
   for (const fn of listeners.get('*') || []) {
-    try { fn(msg.data, msg); } catch (err) { console.warn('bus listener failed', msg.type, err); }
+    try { fn(msg.data, msg); } catch (err) { console.warn('bus listener failed', msg.type, err?.name || 'Error'); }
   }
 }
 
