@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import socket
 
 import kopf
 
@@ -16,6 +17,15 @@ from rapport_common import telemetry
 
 
 LIVENESS_SCHEME = "http"
+
+
+def operator_identity() -> str:
+    """Explicit kopf identity: the pod name, else the hostname, else a fixed string.
+
+    Without one kopf calls getpass.getuser(), which raises KeyError in a container whose UID (10001) has no
+    /etc/passwd entry and no LOGNAME/USER env var.
+    """
+    return os.environ.get("POD_NAME") or socket.gethostname() or "rapport-operator"
 
 
 def main() -> None:
@@ -29,6 +39,7 @@ def main() -> None:
     kopf.run(
         clusterwide=True,
         standalone=True,
+        identity=operator_identity(),
         liveness_endpoint=f"{LIVENESS_SCHEME}://0.0.0.0:{port}/healthz",
     )
 
