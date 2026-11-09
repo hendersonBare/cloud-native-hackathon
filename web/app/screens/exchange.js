@@ -147,7 +147,7 @@ export function render(ctx) {
     const shared = Array.isArray(message.shared) ? message.shared.filter((s) => typeof s === 'string') : [];
     return h('div', { class: `exchange-message ${mine ? 'is-mine' : 'is-peer'}` },
       h('p', { class: 'exchange-bubble' },
-        h('span', { class: 'visually-hidden' }, `${mine ? 'Your' : speaker?.name || 'Other'} agent: `),
+        h('span', { class: 'visually-hidden' }, `${mine ? 'Your' : `${speaker?.name || 'Their'}’s`} agent: `),
         message.text),
       shared.length ? h('p', { class: 'exchange-shared' }, `Shared: ${shared.join(' · ')}`) : null,
       message.policy ? policyChip(message.policy) : null);
