@@ -179,6 +179,10 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
       startedAt: Date.now() + 600, status: 'talking',
     };
     store.encounter = enc;
+    // A local accept always starts a new encounter: without this, a second run with the same
+    // person (no Reset) counts as "continuing" the first one and Bo never reaches the exchange.
+    // The server's encounter_started for this accept still continues it (lastStart is set again).
+    lastStart = null;
     bus.emit('encounter:start', enc);
     if (mode !== 'live') return;
     if (req.request_id.startsWith(MOCK_REQUEST)) {

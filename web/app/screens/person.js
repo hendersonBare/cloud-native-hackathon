@@ -194,7 +194,9 @@ export function render(ctx) {
       else actionRow.replaceChildren(notNow, mode === 'connect' ? connect : noAgent);
       requestSlot.replaceChildren(...(incoming
         ? [h('p', { class: 'person-request' }, icon('agent', { size: 16 }),
-          `${subject.name}'s agent wants to connect. Accept to let your agents talk.`)]
+          incoming.initiated_by === 'agent'
+            ? `${subject.name}'s agent wants to connect. Accept to let your agents talk.`
+            : `${subject.name} wants your agents to talk. Accept to let them meet.`)]
         : []));
     }
     const pending = submitting || !!requestPending();
