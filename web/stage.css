@@ -1,0 +1,198 @@
+/* Demo stage: two iPhone frames side by side, scaled to fit the window. */
+:root {
+  --s: 1;                 /* set by stage.js */
+  --frame-w: 414px;       /* 390 screen + 2 x 12 bezel */
+  --frame-h: 868px;       /* 844 screen + 2 x 12 bezel */
+  --stage-bg: #07080B;
+  --stage-text: #F4F0E8;
+  --stage-text2: #A9AFBA;
+  --stage-line: #22262E;
+  --stage-raised: #14171D;
+  --gold: #E6C992;
+  --app-bg: #0B0D11;
+  --app-text: #F4F0E8;
+}
+:root[data-theme="light"] {
+  --stage-bg: #E4E1DA;
+  --stage-text: #14161B;
+  --stage-text2: #4A505C;
+  --stage-line: #CFCAC0;
+  --stage-raised: #F4F3EF;
+  --gold: #7A5718;
+  --app-bg: #F4F3EF;
+  --app-text: #14161B;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--stage-bg);
+  color: var(--stage-text);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Presenter toolbar */
+.toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--stage-line);
+}
+.brand { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.brand-mark {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--gold);
+  align-self: center;
+  background: radial-gradient(circle, var(--gold) 0 3px, transparent 3.5px);
+}
+.brand-name { font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; line-height: 1; }
+.brand-tag { font-size: 14px; color: var(--stage-text2); white-space: nowrap; }
+@media (max-width: 1100px) {
+  .brand-tag { display: none; }
+  .toolbar { padding: 8px 16px; }
+}
+.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.mode-badge {
+  font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 6px 10px; border-radius: 999px;
+  border: 1px solid var(--gold); color: var(--gold);
+}
+.mode-badge[data-mode="live"] { border-color: #1A8F4E; color: #3CC37A; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; min-height: 40px; padding: 0 6px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: #D2382C; margin: 0; }
+.tb-btn {
+  min-height: 40px; padding: 0 14px; border-radius: 12px;
+  border: 1px solid var(--stage-line); background: var(--stage-raised); color: var(--stage-text);
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.tb-btn:hover { border-color: var(--gold); }
+.tb-icon { width: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+
+/* Collapsed presenter bar: only a small pull tab stays at the top */
+body.controls-hidden .toolbar { display: none; }
+.show-tab {
+  position: fixed; top: 0; left: 50%; z-index: 10;
+  width: 56px; height: 24px; margin-left: -28px; padding: 0;
+  border: 1px solid var(--stage-line); border-top: 0; border-radius: 0 0 12px 12px;
+  background: var(--stage-raised); color: var(--stage-text2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: .55; transition: opacity .15s ease;
+}
+.show-tab[hidden] { display: none; }
+.show-tab:hover, .show-tab:focus-visible { opacity: 1; color: var(--stage-text); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Stage */
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(96px * var(--s));
+  padding: 12px 24px 16px;
+}
+.device {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0;
+  width: calc(var(--frame-w) * var(--s)); flex: none;
+}
+.device-label {
+  margin: 0; max-width: 100%; font-size: 15px; color: var(--stage-text2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  height: 22px; line-height: 22px;
+}
+.device-label strong { color: var(--stage-text); font-weight: 600; }
+.device-box {
+  width: calc(var(--frame-w) * var(--s));
+  height: calc(var(--frame-h) * var(--s));
+  position: relative;
+}
+
+/* iPhone frame (drawn at 1:1, then scaled) */
+.iphone {
+  position: absolute;
+  top: 0; left: 0;
+  width: var(--frame-w);
+  height: var(--frame-h);
+  padding: 12px;
+  border-radius: 66px;
+  background: #0E0F12;
+  box-shadow:
+    0 0 0 2px #45484F,
+    0 0 0 5px #1B1D21,
+    0 0 0 6px #5A5D64,
+    0 40px 80px rgba(0, 0, 0, .45);
+  transform: scale(var(--s));
+  transform-origin: 0 0;
+}
+.hw { position: absolute; width: 4px; background: #3E4148; border-radius: 2px; }
+.hw-action   { left: -9px; top: 150px; height: 34px; }
+.hw-vol-up   { left: -9px; top: 214px; height: 62px; }
+.hw-vol-down { left: -9px; top: 290px; height: 62px; }
+.hw-power    { right: -9px; top: 236px; height: 98px; }
+
+.screen {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  border-radius: 54px;
+  overflow: hidden;
+  background: var(--app-bg);
+  color: var(--app-text);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+.statusbar {
+  flex: none;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 30px 0 46px;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.sb-icons { display: inline-flex; align-items: center; gap: 6px; }
+.island {
+  position: absolute;
+  top: 11px; left: 50%;
+  width: 122px; height: 35px;
+  margin-left: -61px;
+  border-radius: 20px;
+  background: #000;
+  z-index: 2;
+}
+.screen iframe {
+  flex: 1;
+  width: 390px;
+  min-height: 0;
+  border: 0;
+  display: block;
+  background: var(--app-bg);
+}
+.home-indicator {
+  position: absolute;
+  bottom: 8px; left: 50%;
+  width: 134px; height: 5px;
+  margin-left: -67px;
+  border-radius: 3px;
+  background: var(--app-text);
+  opacity: .85;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
