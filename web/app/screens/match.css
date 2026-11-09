@@ -1,1 +1,67 @@
-/* match screen */
+.match .match-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px 0 20px;
+}
+.match .match-main { padding: 0 20px 14px; gap: 16px; }
+.match .match-main > * { flex: none; }
+.match .match-intro { display: flex; flex-direction: column; gap: 10px; }
+.match .match-avatars .avatar { border-color: var(--gold-mid); }
+.match .match-avatars > .avatar + .avatar { margin-left: -12px; }
+.match .match-title { font-size: 52px; line-height: .95; letter-spacing: -.02em; }
+.match .match-subtitle { font-size: 15px; line-height: 1.45; color: var(--text2); }
+
+.match .match-meeting { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.match .match-meeting-row { gap: 14px; }
+.match .match-date {
+  width: 46px; height: 50px; flex: none; border-radius: 13px;
+  background: var(--on-fill); color: var(--fill);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+}
+.match .match-weekday { font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+.match .match-day { font-size: 18px; font-weight: 700; line-height: 1; }
+.match .match-meeting-copy { display: flex; flex-direction: column; gap: 2px; }
+.match .match-meeting-copy h2 { font-size: 17px; font-weight: 600; line-height: 1.25; }
+.match .match-meeting-copy p { font-size: 13.5px; color: var(--on-fill2); }
+.match .match-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.match .match-actions > * {
+  min-width: 0; min-height: 46px; border-radius: 13px; padding: 8px;
+  font-size: 15px; font-weight: 600; text-align: center; overflow-wrap: anywhere;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; cursor: pointer;
+}
+.match .match-message { border: 1px solid var(--on-fill); background: transparent; color: var(--on-fill); }
+.match .match-calendar { background: var(--on-fill); color: var(--fill); }
+.match .match-actions > :focus-visible { outline-color: var(--on-fill); }
+.match .match-confirmation { font-size: 13.5px; line-height: 1.4; color: var(--on-fill); }
+.match .match-confirmation:empty { margin-top: -12px; }
+
+.match .match-summary { display: flex; flex-direction: column; gap: 8px; }
+.match .match-shared-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.match .match-shared {
+  min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px;
+  border-radius: 16px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere;
+}
+.match .match-shared-self { background: var(--gold-bg); border: 1px solid var(--gold-line); }
+.match .match-shared-peer { background: var(--steel-bg); border: 1px solid var(--steel-line); }
+.match .match-shared-label { font-size: 13px; font-weight: 600; }
+.match .match-shared-self .match-shared-label { color: var(--gold); }
+.match .match-shared-peer .match-shared-label { color: var(--steel); }
+
+.match .match-opportunities { display: flex; flex-direction: column; gap: 2px; }
+.match .match-opportunity-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.match .match-opportunity { display: flex; align-items: baseline; gap: 12px; padding: 10px 0; }
+.match .match-opportunity + .match-opportunity { border-top: 1px solid var(--line); }
+.match .match-number { width: 24px; flex: none; font-size: 14px; font-weight: 700; color: var(--gold); }
+.match .match-opportunity-copy { display: flex; flex-direction: column; gap: 2px; }
+.match .match-opportunity h3 { font-size: 15.5px; font-weight: 600; }
+.match .match-opportunity p { font-size: 14px; line-height: 1.4; color: var(--text2); }
+
+.match .match-private { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.match .match-private-heading {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--gold);
+}
+.match .match-private-heading svg { flex: none; }
+.match .match-private > p { font-size: 14px; line-height: 1.45; }
+.match .match-shared-brief { display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.4; color: var(--text2); }
+.match .match-shared-brief strong { font-size: 13px; font-weight: 600; color: var(--text); }
