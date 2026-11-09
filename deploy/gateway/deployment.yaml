@@ -1,0 +1,61 @@
+# The gateway IS the team's public app: the platform routes https://rapport.cnh.radarhq.io
+# to Service `app` port 80 in team-rapport. Keep the names `app`.
+# One replica on purpose: SSE subscribers and connect requests live in this process's memory.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: team-rapport
+  labels:
+    app: app
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+        app.kubernetes.io/part-of: rapport
+        rapport.dev/role: gateway
+    spec:
+      serviceAccountName: gateway
+      containers:
+        - name: gateway
+          image: app # kustomize sets the GHCR image and tag (deploy/kustomization.yaml)
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "rapport_gateway"]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: internal
+              containerPort: 8081
+          env:
+            - name: RAPPORT_ENV
+              value: hackathon
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+          envFrom:
+            # Created outside git (scripts/create-secrets.sh or Radar's resource editor).
+            # optional: the pod still starts before the Secrets exist.
+            - secretRef: { name: dash0-otlp, optional: true }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 512Mi }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            initialDelaySeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile: { type: RuntimeDefault }
+            capabilities: { drop: ["ALL"] }

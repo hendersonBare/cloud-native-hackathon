@@ -21,4 +21,6 @@ jobs:
           version: latest
       - name: Policy tests
         run: |
-          if ls policy/*_test.rego >/dev/null 2>&1; then opa test policy -v; else echo "no policy tests yet"; fi
+          if ls policy/*_test.rego >/dev/null 2>&1; then opa test deploy/policy policy -v; else echo "no policy tests yet"; fi
+      - name: Render deploy/ like Argo CD (kustomize)
+        run: kubectl kustomize deploy > /dev/null && echo "deploy/ renders"

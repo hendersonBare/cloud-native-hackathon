@@ -11,6 +11,9 @@ A hackathon kit for the Cloud Native Hackathon (theme: make conferences easier).
 | `docs/SETUP.md` | Setting up kind, Elastic Cloud, Dash0, OpenAI, Radar and Gitar (about 45 min) |
 | `docs/FEATURE-DISCOVER.md` | v1.1: filter → research → swipe cards → deep dive → agent decides |
 | `docs/COSTS.md` | What it costs to run (OpenAI, Elastic) |
+| `docs/REVIEW.md` | Spec concerns and the layered fast path to a working demo |
+| `docs/TRACKS.md` | Track evidence: each claim, where it lives and its proof (`docs/evidence/`) |
+| `docs/research/oss-and-light-models.md` | Open-source helpers and light-model importance gating |
 | `docs/CNH-STARTER.md` | The [cnh-starter](https://github.com/skyhook-io/cnh-starter) template's README: getting the team cluster, Radar, and shipping with `git push` + Argo CD |
 | `AGENTS.md` | Radar/cluster notes from the template, then the house rules every agent follows |
 | `docs/workstreams/*.md` | One brief per parallel workstream |
@@ -38,7 +41,7 @@ Each subagent runs in its own git worktree (`isolation: worktree`), opens a PR, 
    > Read AGENTS.md and docs/SPEC.md. Then launch these six subagents in parallel, in the background: rapport-policy-ci, rapport-memory, rapport-operator, rapport-delegate, rapport-gateway, rapport-web. Each works in its own worktree on branch ws/<name>, opens a PR and reports back with the PR URL. Don't merge anything. Tell me as each one reports.
 
 3. While they build, finish `docs/SETUP.md` steps 3–7.
-4. Merge PRs as CI and Gitar go green. Then run `make image deploy seed` and open http://localhost:8080.
+4. Merge PRs as CI and Gitar go green. Merging is the deploy: the Action builds the image to GHCR and Argo CD syncs `deploy/` into the team vcluster. Run `make seed` once, then open https://rapport.cnh.radarhq.io. **Merge the gateway first**: until `rapport_gateway` exists, the `app` pod crash-loops.
 
 Approve `git`, `gh`, `uv` and `make` commands when the subagents ask, or allow them with `/permissions`.
 

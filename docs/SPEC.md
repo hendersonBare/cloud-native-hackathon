@@ -6,6 +6,8 @@ This is the single source of truth for humans and subagents. Read it together wi
 
 **Update v1.1 (12:00 PM):** adds the Discover feature (filter → research → swipe cards → deep dive → the agent decides whether to start a handshake). See `docs/FEATURE-DISCOVER.md`. It's additive; memory, gateway and web get new tasks. Running costs are in `docs/COSTS.md`.
 
+**Update v1.2 (vcluster):** Rapport now deploys to the Radar team vcluster via GitOps, not kind. Merging to `main` builds `ghcr.io/hendersonbare/cloud-native-hackathon:<sha>` and Argo CD syncs `deploy/` (kustomize). The gateway and operator run in **`team-rapport`** (was `rapport-system`); the public URL is **https://rapport.cnh.radarhq.io** (Service `app`, port 80). Delegates report on a **cluster-only** port 8081 (`names.gateway_url()`). Every container sets requests **and** limits from `names.RESOURCES_*` (team budget) and `names.SECURITY_CONTEXT`. Details: §9 and `docs/REVIEW.md` §4.
+
 **Contracts are code.** These are read-only for workstreams. Changes follow §10.
 
 - `src/rapport_common/models.py` holds every payload.
@@ -26,7 +28,7 @@ This is the single source of truth for humans and subagents. Read it together wi
 Browser: ONE page = left phone (Ava) + swarm panel + right phone (Bo)         (web/)
    |  REST + Server-Sent Events  (/api/...)
    v
-+------------------------------ rapport-system ------------------------------+
++------------------------------- team-rapport -------------------------------+
 | gateway (FastAPI)                         operator (kopf)                  |
 |  - personas, connect/accept, uploads       - watches Encounter resources   |
 |  - creates Encounter (K8s API) ----------> - creates delegate Job + Service|
@@ -179,7 +181,7 @@ rapport.dev/side=<initiator|responder>
 
 | Object | Namespace | Spec |
 |---|---|---|
-| Job `delegate-<enc>` | each party's `org-<org>` | `backoffLimit: 0`, `activeDeadlineSeconds: 120`, `ttlSecondsAfterFinished: 600`. Pod: image `rapport:dev`, `imagePullPolicy: IfNotPresent`, command `python -m rapport_delegate`, `automountServiceAccountToken: false`, `envFrom` secrets `openai`, `dash0-otlp`, `es-delegate`, plus the env below. |
+| Job `delegate-<enc>` | each party's `org-<org>` | `backoffLimit: 0`, `activeDeadlineSeconds: 120`, `ttlSecondsAfterFinished: 600`. Pod: image from `$RAPPORT_IMAGE`, else the operator pod's own image (GHCR, set by kustomize); `imagePullPolicy: IfNotPresent`, command `python -m rapport_delegate`, `automountServiceAccountToken: false`, resources `names.RESOURCES_DELEGATE`, container `securityContext` `names.SECURITY_CONTEXT`, `envFrom` secrets `openai`, `dash0-otlp`, `es-delegate`, plus the env below. |
 | Service `delegate-<enc>` | responder namespace | Port 8080 → 8080; selector `rapport.dev/encounter=<enc>`, `rapport.dev/side=responder`. |
 | NetworkPolicy `delegate-<enc>` | responder namespace | Ingress to pods with `encounter=<enc>, side=responder` on TCP 8080, **only** from `namespaceSelector kubernetes.io/metadata.name=org-<initiator>` AND `podSelector encounter=<enc>, side=initiator`. |
 
@@ -289,7 +291,7 @@ OPA 1.x uses Rego v1 syntax (`if`, `contains`) and its server binds to localhost
 
 ## 7. HTTP APIs
 
-### 7.1 Gateway (rapport-system, port 8080; NodePort 30080 → http://localhost:8080)
+### 7.1 Gateway (team-rapport, Deployment and Service `app`: https://rapport.cnh.radarhq.io → port 8080; `/internal/*` only on port 8081 via Service `gateway-internal`)
 
 | Method | Path | Body or query | Returns |
 |---|---|---|---|
@@ -369,10 +371,12 @@ A briefer serves only personas of its own company and returns 403 for anyone els
 
 ## 9. Conventions
 
-- One image, `rapport:dev`, built from the root `Dockerfile`. Run each component with `python -m rapport_<component>`. Code lives in `src/` with `PYTHONPATH=src`.
-- All HTTP listens on `0.0.0.0:8080`. OPA listens on 8181.
-- Every manifest uses `imagePullPolicy: IfNotPresent` and the `app.kubernetes.io/part-of: rapport` label, plus `rapport.dev/role`.
-- **Secrets** (created by `make secrets`; never committed):
+- One image, built from the root `Dockerfile` by `.github/workflows/deploy.yaml` on every push to `main` and pushed to GHCR (public). Manifests say `image: app`; kustomize swaps in the tag. The image runs as UID 10001. Run each component with `python -m rapport_<component>`. Code lives in `src/` with `PYTHONPATH=src`.
+- All HTTP listens on `0.0.0.0:8080`. OPA listens on 8181. The gateway also listens on 8081 for `/internal/*`, which is **never** served on 8080.
+- `GET /healthz` on the gateway returns `{"ok": true, "version": $RAPPORT_VERSION}` so a deploy can be verified at the public URL.
+- Every container sets requests **and** limits (`names.RESOURCES_*`) and `names.SECURITY_CONTEXT`. The team budget is 2 CPU / 4 GiB requests and 4 CPU / 8 GiB limits for the whole cluster; `tests/common/test_manifests.py` checks it.
+- Every manifest uses `image: app`, `imagePullPolicy: IfNotPresent`, an explicit `namespace`, and the `app.kubernetes.io/part-of: rapport` label, plus `rapport.dev/role`. Each component lists its files in `deploy/<component>/kustomization.yaml`.
+- **Secrets** (created outside git by `make secrets` with the team kubeconfig, or in Radar's resource editor; never committed; `team-rapport` counts as "every namespace"):
 
   | Secret | Where | Keys |
   |---|---|---|
@@ -430,11 +434,26 @@ All data is fictional. Times are today in UTC (MST + 7 h).
 
 ## 12. Timeline (MST) and cut line
 
+### Build priority (v1.2): four layers, each demoable
+
+Build and integrate in this order. Each layer demos on its own, so stop at whichever one 3:30 PM finds you on. Details are in `docs/REVIEW.md` §2.
+
+| # | Layer | What runs | Workstreams | Who | Demo it gives |
+|---|---|---|---|---|---|
+| **L0** | **Mock UI** | gateway with `RAPPORT_MOCK=1` + `web/`, replaying `contracts/demo-events.json` | web, gateway (mock mode) | **Partner, in progress** | The full 3-minute story, scripted. This is also the stage fallback. |
+| **L1** | **Elasticsearch** | Both briefers as local processes (`BRIEFER_URL_*`), ES seeded | memory | Next | Real CV upload, talk search, "What did we promise Bluefin?", Discover cards |
+| **L2** | **Agent exchange** | Two OPA binaries (8181, 8182) and two delegate processes (`PEER_URL=http://localhost:<port>`), with no Kubernetes | policy-ci, delegate | After L1 | Real rounds, real policy decisions, the malicious deny, one Dash0 trace across both delegates |
+| **L3** | **Kubernetes** | operator, Encounter CRD, delegate Jobs, per-encounter NetworkPolicy on the team vcluster | operator, plus each workstream's `deploy/<component>/` | Last | Pods in the swarm panel and in Radar |
+
+- L1 and L2 run the same code the pods will run, configured only through env vars. That makes L3 mostly manifests and RBAC.
+- **Merge order to `main`:** the gateway first (mock mode is enough), because every merge deploys and `app` crash-loops until `rapport_gateway` exists. Then memory → policy-ci → delegate → operator.
+- Run `make seed` as soon as memory lands.
+
 | Time | Integrator (you) | Subagents |
 |---|---|---|
-| 11:45–12:15 | `docs/SETUP.md`: cluster, Elastic, Dash0, Gitar, Radar. Push the kit to `main` and launch the 6 subagents. | Start |
-| 12:15–2:15 | Review and merge PRs as CI and Gitar go green. Target order: **policy-ci → memory (seed + lib) → operator → delegate / gateway → web**. Run `make seed` once memory lands. | Build and open PRs |
-| 2:15–3:30 | Integration on kind: `make image deploy`. Milestones: **M1** briefs on both phones · **M2** swarm with policy decisions · **M3** malicious deny · **M4** "What did we promise Bluefin?" | Fix bugs found in integration |
+| 11:45–12:15 | `docs/SETUP.md`: team vcluster, Elastic, Dash0, Gitar, Radar. Launch the subagents. | Start |
+| 12:15–2:15 | Review and merge PRs as CI and Gitar go green, in the merge order above. Reach **L1**, then **L2**, running locally. | Build and open PRs |
+| 2:15–3:30 | Integration on the team vcluster: merge to `main`, then check the Argo CD sync and rollout in Radar. Milestones: **M1** briefs on both phones · **M2** swarm with policy decisions · **M3** malicious deny · **M4** "What did we promise Bluefin?" | Fix bugs found in integration |
 | 3:30–4:15 | Dash0 SLO and dashboard; Agent0 on a real issue; Radar AI investigation on a real issue. **Screenshot everything.** | Polish |
 | 4:15–5:00 | Rehearse the demo twice and record a backup video. Write the submission README. | — |
 | 5:00–5:30 | **Submit.** | — |

@@ -5,16 +5,16 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: app
-  namespace: team-__TEAM__
+  namespace: team-rapport
 spec:
-  project: team-__TEAM__
+  project: team-rapport
   source:
-    repoURL: https://github.com/OWNER/REPO.git
+    repoURL: https://github.com/hendersonBare/cloud-native-hackathon.git
     targetRevision: main
     path: deploy
   destination:
     server: https://kubernetes.default.svc
-    namespace: team-__TEAM__
+    namespace: team-rapport
   syncPolicy:
     automated:
       prune: true

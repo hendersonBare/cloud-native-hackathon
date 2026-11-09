@@ -132,6 +132,9 @@ def test_names_and_urls(monkeypatch):
     assert names.delegate_url("enc-1a2b3c4d", "bluefin") == (
         "http://delegate-enc-1a2b3c4d.org-bluefin.svc.cluster.local:8080"
     )
+    monkeypatch.delenv("GATEWAY_URL", raising=False)
+    assert names.gateway_url() == "http://gateway-internal.team-rapport.svc.cluster.local:8081"
+    assert names.SYSTEM_NAMESPACE == "team-rapport"
     monkeypatch.setenv("BRIEFER_URL_ACME", "http://localhost:8101")
     assert names.briefer_url("acme") == "http://localhost:8101"
     assert names.new_encounter_id().startswith("enc-") and len(names.new_encounter_id()) == 12
