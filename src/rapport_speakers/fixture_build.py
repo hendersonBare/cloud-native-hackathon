@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import json
 import random
-import re
 from pathlib import Path
 
 from rapport_memory.seed_talks import _TALKS
@@ -301,10 +300,14 @@ def _check_scenarios(recordings: list[dict], centroids: dict[str, list[float]]) 
 def main() -> None:
     data = build()
     Path(FIXTURES_PATH).parent.mkdir(parents=True, exist_ok=True)
+    # One line per embedding instead of one line per float: dump each vector compactly and splice it in.
+    compact: list[str] = []
+    for item in [c for r in data["recordings"] for c in r["clusters"]] + data["registration_clips"]:
+        compact.append(json.dumps(item["embedding"], separators=(",", ":")))
+        item["embedding"] = f"@@embedding-{len(compact) - 1}@@"
     text = json.dumps(data, indent=1)
-    # one line per embedding instead of one line per float
-    text = re.sub(r"\[\s+(-?[0-9][^\]\[{}\"]*?)\s+\]",
-                  lambda m: "[" + ",".join(x.strip() for x in m.group(1).split(",")) + "]", text)
+    for i, vector in enumerate(compact):
+        text = text.replace(f'"@@embedding-{i}@@"', vector)
     Path(FIXTURES_PATH).write_text(text + "\n")
     n_clusters = sum(len(r["clusters"]) for r in data["recordings"])
     print(f"wrote {FIXTURES_PATH} ({len(data['recordings'])} recordings, {n_clusters} clusters)")

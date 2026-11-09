@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, FastAPI, Path as PathParam, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 
 from rapport_common import telemetry
 
@@ -57,9 +57,10 @@ def make_public_router(search: SpeakerSearch) -> APIRouter:
     async def top_speakers(q: Q = "", size: Annotated[int, Query(ge=1, le=MAX_SIZE)] = 10) -> TopSpeakersResult:
         return await asyncio.to_thread(search.top_speakers, q, size=size)
 
-    @router.get("/ui", response_class=HTMLResponse, include_in_schema=False)
-    async def ui() -> HTMLResponse:
-        return HTMLResponse(UI_PATH.read_text())
+    @router.get("/ui", include_in_schema=False)
+    async def ui() -> FileResponse:
+        # A fixed file shipped with the package; no request data reaches it.
+        return FileResponse(UI_PATH, media_type="text/html; charset=utf-8")
 
     return router
 
