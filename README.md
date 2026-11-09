@@ -41,7 +41,7 @@ Each subagent runs in its own git worktree (`isolation: worktree`), opens a PR, 
    > Read AGENTS.md and docs/SPEC.md. Then launch these six subagents in parallel, in the background: rapport-policy-ci, rapport-memory, rapport-operator, rapport-delegate, rapport-gateway, rapport-web. Each works in its own worktree on branch ws/<name>, opens a PR and reports back with the PR URL. Don't merge anything. Tell me as each one reports.
 
 3. While they build, finish `docs/SETUP.md` steps 3–7.
-4. Merge PRs as CI and Gitar go green. Then run `make image deploy seed` and open http://localhost:8080.
+4. Merge PRs as CI and Gitar go green. Merging is the deploy: the Action builds the image to GHCR and Argo CD syncs `deploy/` into the team vcluster. Run `make seed` once, then open https://rapport.cnh.radarhq.io. **Merge the gateway first**: until `rapport_gateway` exists, the `app` pod crash-loops.
 
 Approve `git`, `gh`, `uv` and `make` commands when the subagents ask, or allow them with `/permissions`.
 

@@ -11,7 +11,7 @@
 - `src/rapport_memory/`: `client.py`, `seed.py`, `redact.py`, `profiles.py`.
 - `src/rapport_briefer/`: the FastAPI app and `__main__.py`.
 - `seed/`: data files plus `ava-cv-synthetic.md`.
-- `deploy/briefer/`: one Deployment and one Service named `briefer` in **each** of `org-acme` and `org-bluefin`.
+- `deploy/briefer/`: one Deployment and one Service named `briefer` in **each** of `org-acme` and `org-bluefin`, listed in `deploy/briefer/kustomization.yaml`. Image `app`, label `rapport.dev/role: briefer` (the NetworkPolicy lets only the gateway in), resources `names.RESOURCES_SERVICE` (requests **and** limits), `names.SECURITY_CONTEXT`, `automountServiceAccountToken: false`, and `envFrom` the `openai`, `dash0-otlp` and `es-briefer` Secrets.
 - `tests/memory/` and `tests/briefer/`.
 
 **Read first:** `AGENTS.md`, SPEC §4.2, §4.3, §7.2 and §11, and `rapport_common/interfaces.py`.
@@ -48,7 +48,7 @@
 
 - `make seed` prints non-zero counts for all 5 indices.
 - Unit tests use `InMemoryStore`, including redaction tests: emails and phone numbers are gone from what is indexed and what is sent to the LLM.
-- In kind:
+- Locally (`BRIEFER_URL_*` overrides) and, after merge, in the team vcluster:
   - `/v1/talks?q=ebpf` returns `talk-ebpf-zero-code` first.
   - The ask above cites `acme-note-0007`.
   - Uploading `seed/ava-cv-synthetic.md` returns a profile.

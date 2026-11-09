@@ -19,7 +19,8 @@ Rapport is a conference networking app: each company's agents meet on Kubernetes
 ## Also check
 
 - Every new service calls `init_telemetry(...)` and serves `GET /healthz`.
-- Kubernetes manifests use image `rapport:dev`, `imagePullPolicy: IfNotPresent`, labels `app.kubernetes.io/part-of: rapport` and `rapport.dev/role`, and requests of 50m CPU and 128Mi memory.
+- Kubernetes manifests use image `app` (kustomize sets the GHCR tag), an explicit `namespace`, labels `app.kubernetes.io/part-of: rapport` and `rapport.dev/role`, requests **and** limits from `rapport_common.names.RESOURCES_*`, and `names.SECURITY_CONTEXT`. They're listed in `deploy/<component>/kustomization.yaml`. Report a blocking finding for a container without limits: the team vcluster has one shared budget, and an over-budget pod stays `Pending`.
+- `/internal/*` is served only on the gateway's cluster-only port 8081, never on the public port 8080.
 - The PR description has a "Track evidence" section and, where needed, "Security review needed".
 
 Do not suppress or downgrade standard reliability or security findings.

@@ -92,7 +92,9 @@ Read `docs/SPEC.md` and your brief in `docs/workstreams/<name>.md` before writin
 - Each service runs as `python -m rapport_<component>`, listens on `0.0.0.0:8080` and has `GET /healthz`.
 - Configure through environment variables only. Use names, URLs and labels from `rapport_common.names`.
 - Use `logging` (never `print`) and log IDs, not content.
-- Kubernetes manifests: image `rapport:dev`, `imagePullPolicy: IfNotPresent`, labels `app.kubernetes.io/part-of: rapport` and `rapport.dev/role: <role>`, resource requests of 50m CPU and 128Mi memory.
+- Kubernetes manifests: image `app` (kustomize sets the GHCR tag), `imagePullPolicy: IfNotPresent`, an explicit `namespace`, labels `app.kubernetes.io/part-of: rapport` and `rapport.dev/role: <role>`, resource requests **and** limits from `rapport_common.names.RESOURCES_*` (the team budget is shared by every pod), and the container `securityContext` in `names.SECURITY_CONTEXT`. List each file in `deploy/<component>/kustomization.yaml`; `make manifests` renders what Argo CD will apply.
+- Deploying is merging to `main` (the Action builds the image; Argo CD syncs `deploy/`). Subagents never push to `main`; the integrator merges.
+- The gateway is public at https://rapport.cnh.radarhq.io. `/internal/*` is served only on the cluster-only port 8081 (`names.gateway_url()`), never on 8080.
 
 ## 4. Telemetry (Dash0 judges this)
 

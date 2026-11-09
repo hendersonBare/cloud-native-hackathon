@@ -4,30 +4,31 @@
 
 **You own:**
 
-- `policy/`: `rapport.rego`, `rapport_test.rego`, `data/acme.json` and `data/bluefin.json`.
-- `deploy/policy/`: an `opa` Deployment and Service in **each** org namespace.
+- `deploy/policy/`: `rapport.rego`, `data/acme.json`, `data/bluefin.json`, the `opa` Deployments and Services, and `kustomization.yaml` (a `configMapGenerator` per org; its comment shows how). They live here because Argo CD's kustomize can't read files outside `deploy/`.
+- `policy/`: `rapport_test.rego` only. Run `opa test deploy/policy policy -v`.
 - `.github/`.
 
 **Read first:** `AGENTS.md`, SPEC §6, and `PolicyInput` and `PolicyDecision` in `rapport_common/models.py`.
 
 ## Build (P0)
 
-1. **`policy/rapport.rego`:**
+1. **`deploy/policy/rapport.rego`:**
    - `package rapport`, written in Rego v1 (OPA 1.x syntax: `if` and `contains`).
    - It exposes `decision := {"decision", "rule_id", "reason"}`, evaluating the SPEC §6 rules **in order, first match wins**.
    - It reads company data from `data.org`.
 2. **`policy/rapport_test.rego`:** every test vector in SPEC §6, plus one where Bluefin answers Acme.
-3. **`policy/data/<org>.json`** exactly as in SPEC §6. `make policy` turns these into the `opa-policy` ConfigMap, with keys `rapport.rego` and `data.json`.
+3. **`deploy/policy/data/<org>.json`** exactly as in SPEC §6. The `configMapGenerator` in `deploy/policy/kustomization.yaml` turns these into one `opa-policy` ConfigMap per org namespace, with keys `rapport.rego` and `data.json`.
 4. **`deploy/policy/`:** for each org namespace:
    - A Deployment `opa` with image `openpolicyagent/opa` pinned to a current release tag from Docker Hub, and args `run --server --addr=0.0.0.0:8181 /policy`.
    - The ConfigMap `opa-policy` mounted at `/policy`.
    - A readiness probe of `GET /health` on port 8181 and the label `rapport.dev/role: opa`.
+   - Resources `names.RESOURCES_SMALL` (requests **and** limits) and `allowPrivilegeEscalation: false`; `tests/common/test_manifests.py` fails without them.
    - A Service `opa` on port 8181.
 5. **CI:** keep `.github/workflows/ci.yml` under 2 minutes; add uv caching if it's easy. Make failure output readable, because Gitar diagnoses CI failures from it.
 
 ## Done when
 
-- `opa test policy -v` passes locally and in CI.
+- `opa test deploy/policy policy -v` passes locally and in CI, and `make manifests` renders.
 - After `make policy deploy`:
 
   ```bash

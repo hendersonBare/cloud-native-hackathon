@@ -1,0 +1,22 @@
+# Port 8080 (public site) is open to the platform router. Port 8081 (/internal/events) accepts
+# only pods from company namespaces (delegates). Whether the vcluster enforces NetworkPolicy
+# depends on the host; docs/REVIEW.md has the one-minute check.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway
+  namespace: team-rapport
+  labels: { app.kubernetes.io/part-of: rapport }
+spec:
+  podSelector:
+    matchLabels: { rapport.dev/role: gateway }
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - { protocol: TCP, port: 8080 }
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - { key: rapport.dev/org, operator: Exists }
+      ports:
+        - { protocol: TCP, port: 8081 }

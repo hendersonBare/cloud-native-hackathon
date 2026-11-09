@@ -1,12 +1,5 @@
-# One namespace per company (the trust boundary) plus the shared system namespace.
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: rapport-system
-  labels:
-    app.kubernetes.io/part-of: rapport
-    rapport.dev/system: "true"
----
+# One namespace per company (the trust boundary). The gateway and operator run in
+# team-rapport, which the platform created; it is not declared here.
 apiVersion: v1
 kind: Namespace
 metadata:

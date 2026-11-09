@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Creates or updates the Kubernetes Secrets from your local .env (gitignored). Idempotent.
-# Values are never printed.
+# Values are never printed. Needs kubectl pointed at the team vcluster (docs/CNH-STARTER.md, "kubectl");
+# without it, create the same Secrets in Radar's resource editor instead. Never put them in git.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck disable=SC1091
@@ -21,7 +22,7 @@ apply_secret() { # namespace name key=value...
 }
 
 otlp_headers="Authorization=Bearer ${DASH0_AUTH_TOKEN}"
-for ns in rapport-system org-acme org-bluefin; do
+for ns in team-rapport org-acme org-bluefin; do
   apply_secret "$ns" openai "OPENAI_API_KEY=${OPENAI_API_KEY}"
   apply_secret "$ns" dash0-otlp "OTEL_EXPORTER_OTLP_ENDPOINT=${DASH0_OTLP_ENDPOINT}" "OTEL_EXPORTER_OTLP_HEADERS=${otlp_headers}"
 done
