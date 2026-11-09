@@ -23,7 +23,7 @@ Every error is JSON `{"detail": "<message>"}`. Validation errors from FastAPI ha
 | 413 | upload over 2 MB |
 | 415 | upload that is not `.pdf`, `.md` or `.txt` |
 | 422 | body or query does not validate; persona has no agent (`kestrel.*`, `harborline.*`, ...); connecting two people of one company; neither `file` nor `text` |
-| 429 | more than 30 LLM-backed calls per minute from one client (ask, research, right swipes, context uploads). `Retry-After` header, in seconds |
+| 429 | more than 30 LLM-backed calls per minute from one client (ask, research, right swipes, context uploads, accept). `Retry-After` header, in seconds |
 | 502 / 504 | the person's briefer failed / timed out |
 | 503 | a briefer is unreachable, or Kubernetes is not available (accept) |
 

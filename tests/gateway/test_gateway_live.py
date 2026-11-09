@@ -259,3 +259,20 @@ def test_encounter_manifest_matches_the_crd_contract():
     assert body["spec"]["responder"] == {"orgId": "bluefin", "personaId": BO, "malicious": True}
     assert body["spec"]["ttlSeconds"] == 600
     assert "annotations" in encounter_manifest("enc-x", spec, None)["metadata"]
+
+
+async def test_accept_is_rate_limited_because_it_starts_pods_and_briefs(briefers):
+    s = await make_stack(llm_calls_per_minute=1)
+    try:
+        brief_route(briefers, ACME_BRIEFER, AVA, BO)
+        brief_route(briefers, BLUEFIN_BRIEFER, BO, AVA)
+        ids = []
+        for _ in range(2):
+            body = {"from_persona_id": AVA, "to_persona_id": BO}
+            ids.append((await s.client.post("/api/connect", json=body)).json()["request_id"])
+        first = await s.client.post(f"/api/connect/{ids[0]}/accept", json={"persona_id": BO})
+        second = await s.client.post(f"/api/connect/{ids[1]}/accept", json={"persona_id": BO})
+        assert (first.status_code, second.status_code) == (200, 429)
+        assert int(second.headers["retry-after"]) >= 1 and len(s.launcher.launched) == 1
+    finally:
+        await s.close()

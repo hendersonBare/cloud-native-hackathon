@@ -202,12 +202,12 @@ class PodWatcher:
         self._stop.set()
 
     def _run(self, namespace: str) -> None:
-        configured = self._load_config is None
+        load_config = self._load_config
+        configured = load_config is None
         while not self._stop.is_set():
             try:
-                if not configured:
-                    assert self._load_config is not None
-                    self._load_config()
+                if not configured and load_config is not None:
+                    load_config()
                     configured = True
                 for event in self._stream(namespace):
                     if self._stop.is_set():

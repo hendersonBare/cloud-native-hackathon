@@ -46,7 +46,7 @@ class SlidingWindowLimiter:
     def hit(self, key: str) -> float:
         """Record a hit if allowed and return 0, else return the seconds to wait (nothing is recorded)."""
         wait = self.retry_after(key)
-        if wait == 0.0:
+        if wait <= 0:
             self.record(key)
         return wait
 

@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from rapport_common.models import AcceptBody, ConnectBody
 
 from ..schemas import EncounterCreated, RequestCreated
-from .guards import DepsDep
+from .guards import DepsDep, LlmLimited
 
 router = APIRouter(prefix="/api", tags=["connect"])
 
@@ -25,11 +25,13 @@ async def create_connect_request(body: ConnectBody, deps: DepsDep) -> RequestCre
 @router.post(
     "/connect/{request_id}/accept",
     response_model=EncounterCreated,
+    dependencies=[LlmLimited],  # an accept creates two delegate pods and two LLM-backed briefs
     summary="The asked person accepts: creates the Encounter and starts both delegates",
     responses={
         403: {"description": "only the person who was asked can accept"},
         404: {"description": "unknown request"},
         502: {"description": "the cluster refused the Encounter"},
+        429: {"description": "rate limited (Retry-After header)"},
         503: {"description": "Kubernetes is not available"},
     },
 )
