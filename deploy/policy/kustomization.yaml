@@ -1,19 +1,30 @@
 # Owned by the policy-ci workstream. Argo CD builds deploy/ with kustomize on every push to main.
 #
 # Argo CD's kustomize can't read files outside deploy/, so the Rego and per-company data live
-# HERE and policy/ keeps only the tests (`opa test deploy/policy policy`). Generate one
-# `opa-policy` ConfigMap per company namespace, for example:
+# HERE and policy/ keeps only the tests (`opa test deploy/policy policy`). One `opa-policy`
+# ConfigMap per company namespace, with keys rapport.rego and data.json (SPEC section 6).
 #
-#   configMapGenerator:
-#     - name: opa-policy
-#       namespace: org-acme
-#       files: [rapport.rego, data.json=data/acme.json]
-#     - name: opa-policy
-#       namespace: org-bluefin
-#       files: [rapport.rego, data.json=data/bluefin.json]
+# Layout, shaped by one OPA quirk: `opa test deploy/policy policy` loads EVERY .json and .yaml
+# file under deploy/policy as data, namespaced by its directory. Two files in the same directory
+# that share a top-level key (for example "org" or "apiVersion") fail with a merge conflict.
+# So each org gets its own directory for the manifests (acme/opa.yaml, bluefin/opa.yaml) and for
+# the data (data/<org>/data.json); the tests supply data.org with `with`.
 #
 # The opa containers use the pinned openpolicyagent/opa image (not `app`), with explicit
 # requests AND limits (rapport_common.names.RESOURCES_SMALL).
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources: []
+resources:
+  - acme/opa.yaml
+  - bluefin/opa.yaml
+configMapGenerator:
+  - name: opa-policy
+    namespace: org-acme
+    files:
+      - rapport.rego
+      - data.json=data/acme/data.json
+  - name: opa-policy
+    namespace: org-bluefin
+    files:
+      - rapport.rego
+      - data.json=data/bluefin/data.json

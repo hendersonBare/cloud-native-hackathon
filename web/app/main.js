@@ -23,6 +23,8 @@ root.lang = person(meId).lang || 'en';
 // Messages from the stage (index.html).
 window.addEventListener('message', (e) => {
   if (e.origin !== location.origin || !e.data) return;
+  // Live mode: the stage reads the swarm stream once and relays exchange events to both phones.
+  if (e.data.type === 'gateway-swarm' && e.data.event) bus.emitLocal('gateway:swarm', e.data.event);
   if (e.data.type === 'config') {
     store.config.malicious = !!e.data.malicious;
     bus.emitLocal('config', store.config);

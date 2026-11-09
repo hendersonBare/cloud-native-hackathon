@@ -3,6 +3,7 @@ import { h, avatar, nextId } from './ui.js';
 import { person } from './data.js';
 import { api } from './api.js';
 import { showNotification } from './notify.js';
+import { initLiveEvents } from './live-events.js';
 
 // Mock mode has no server request id, so the phone makes one with this prefix.
 const MOCK_REQUEST = 'req-mock-';
@@ -292,6 +293,31 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
   }));
 
   if (mode === 'live') {
+    // The gateway sends exchange_message and policy_decision to the swarm stream only (SPEC 7.1),
+    // which the stage relays as 'gateway:swarm'. They are also accepted here, deduplicated, in case
+    // a gateway ever routes them to a phone stream.
+    const seenExchange = new Set();
+    const applyExchange = (event) => {
+      const data = event.data || {};
+      const encounter_id = event.encounter_id;
+      const key = JSON.stringify([event.type, event.ts, encounter_id, data]);
+      if (seenExchange.has(key)) return;
+      seenExchange.add(key);
+      if (event.type === 'exchange_message') {
+        const parties = [store.encounter?.initiator, store.encounter?.responder];
+        const sender = parties.map(person).find((p) => p?.org === data.from_org)
+          || [me, peer].find((p) => p.org === data.from_org);
+        bus.emitLocal('exchange:message', {
+          ...data, encounter_id, from: sender?.id || data.from_org, text: data.display,
+        });
+      } else if (event.type === 'policy_decision') {
+        bus.emitLocal('exchange:policy', { ...data, encounter_id, allow: data.decision === 'allow' });
+      }
+    };
+    cleanups.push(bus.on('gateway:swarm', (event) => {
+      if (event?.type === 'exchange_message' || event?.type === 'policy_decision') applyExchange(event);
+    }));
+    cleanups.push(initLiveEvents({ me, store, bus, toast }));
     cleanups.push(api.openStream(`persona_id=${encodeURIComponent(me.id)}`, (event) => {
       const data = event.data;
       const encounter_id = event.encounter_id;
@@ -307,20 +333,13 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
             startedAt: Number.isNaN(Date.parse(event.ts)) ? Date.now() : Date.parse(event.ts),
           });
           break;
-        case 'exchange_message': {
-          const parties = [store.encounter?.initiator, store.encounter?.responder];
-          const sender = parties.map(person).find((p) => p?.org === data.from_org)
-            || [me, peer].find((p) => p.org === data.from_org);
-          bus.emitLocal('exchange:message', {
-            ...data, encounter_id, from: sender?.id || data.from_org, text: data.display,
-          });
-          break;
-        }
+        case 'exchange_message':
         case 'policy_decision':
-          bus.emitLocal('exchange:policy', { ...data, encounter_id, allow: data.decision === 'allow' });
+          applyExchange(event);
           break;
         case 'encounter_completed':
           bus.emitLocal('encounter:done', { ...data, encounter_id });
+          if (data.status === 'failed') toast('The agents could not finish the conversation.', { tone: 'error' });
           break;
       }
       // Keep the envelope (including trace/persona ids) intact and local to this phone.

@@ -36,6 +36,8 @@ byte-identical copy of `src/rapport_calendar/data/seed.json`) and syncs the two 
 | `app/main.js` | Hash router (`#/home`, `#/profile`, `#/calendar`, `#/live`, `#/tag`, `#/memory`, `#/people`, `#/person`, `#/exchange`, `#/match`). |
 | `app/bus.js` | Event bus between the two phones; the event contract is in its header. |
 | `app/flow.js`, `app/api.js` | Cross-phone connect flow and the gateway client. |
+| `app/live-events.js`, `app/screens/match-live.js` | Live mode only: briefs, deep dive, agent decision and error events from the gateway. |
+| `swarm/` | The swarm panel between the phones (toggle in the presenter bar). `model.js` is a pure reducer over swarm events, `view.js`/`panel.js` render it, `driver.js` feeds it (live: `/api/stream?view=swarm`; mock: replays `swarm/demo-events.json` when an encounter starts). |
 | `app/data.js` | Demo cast and per-persona content (all fictional). |
 | `app/calendar-api.js`, `app/calendar-mock.js` | Calendar client: live calls `/api/calendar/*`; mock is an in-browser replica with the same rules. Screens call `calendarClient(ctx)` and never branch on the mode. |
 | `app/time.js` | Times are stored as UTC and always shown in America/Denver with the zone label (e.g. `3:30 PM MST`). |

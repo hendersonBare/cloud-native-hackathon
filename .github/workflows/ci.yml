@@ -4,23 +4,65 @@ on:
   push:
     branches: [main]
 
+# A newer push to the same PR cancels the older run; main runs always finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
       - uses: astral-sh/setup-uv@v5
-      - name: Install
-        run: uv sync --frozen
-      - name: Lint
-        run: uv run ruff check src tests
-      - name: Unit and contract tests
-        run: uv run pytest -q
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
       - uses: open-policy-agent/setup-opa@v2
         with:
-          version: latest
-      - name: Policy tests
+          version: 1.22.2 # keep in step with the image in deploy/policy/*/opa.yaml
+
+      - name: "1 Install Python dependencies (uv sync)"
+        run: uv sync --frozen --no-build
+
+      - name: "2 Lint (ruff check src tests)"
+        run: uv run --frozen --no-build ruff check --output-format=concise src tests
+
+      - name: "3 Python tests (pytest)"
+        run: uv run --frozen --no-build pytest -q --tb=short
+
+      - name: "4 Policy format and syntax (opa fmt, opa check)"
         run: |
-          if ls policy/*_test.rego >/dev/null 2>&1; then opa test deploy/policy policy -v; else echo "no policy tests yet"; fi
-      - name: Render deploy/ like Argo CD (kustomize)
+          opa fmt --list --fail deploy/policy/rapport.rego policy/
+          opa check --strict deploy/policy policy
+
+      - name: "5 Policy tests (opa test deploy/policy policy -v)"
+        run: opa test deploy/policy policy -v
+
+      - name: "6 Render deploy/ like Argo CD (kubectl kustomize deploy)"
         run: kubectl kustomize deploy > /dev/null && echo "deploy/ renders"
+
+      - name: "7 Frontend tests (node --test web/tests/), only when web/tests exists"
+        run: |
+          if [ -d web/tests ]; then
+            echo "web/tests found"
+            echo "RUN_WEB_TESTS=1" >> "$GITHUB_ENV"
+          else
+            echo "no web/tests yet, skipping"
+          fi
+
+      - name: "7a Set up Node 22"
+        if: env.RUN_WEB_TESTS == '1'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: "7b Run frontend tests (node built-ins only, no npm install)"
+        if: env.RUN_WEB_TESTS == '1'
+        run: node --test web/tests/

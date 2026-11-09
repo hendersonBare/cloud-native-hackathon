@@ -1,0 +1,61 @@
+# One replica, and Recreate so two operators never overlap during a rollout (it runs standalone, with no
+# leader election). It reuses its own image for the delegate Jobs it creates, so delegates always match
+# the deployed commit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operator
+  namespace: team-rapport
+  labels:
+    app: operator
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: operator
+  template:
+    metadata:
+      labels:
+        app: operator
+        app.kubernetes.io/part-of: rapport
+        rapport.dev/role: operator
+    spec:
+      serviceAccountName: operator
+      containers:
+        - name: operator
+          image: app # kustomize sets the GHCR image and tag (deploy/kustomization.yaml)
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "rapport_operator"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: RAPPORT_ENV
+              value: hackathon
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+          envFrom:
+            # Created outside git; optional so the pod still starts before the Secret exists.
+            - secretRef: { name: dash0-otlp, optional: true }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 200m, memory: 256Mi }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 20
+            initialDelaySeconds: 20
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile: { type: RuntimeDefault }
+            capabilities: { drop: ["ALL"] }

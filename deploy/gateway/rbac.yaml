@@ -1,0 +1,89 @@
+# What the gateway may do in the Kubernetes API (SPEC 4.5): create and read Encounters (cluster-scoped, so a
+# ClusterRole) and watch delegate pods in the two company namespaces (a Role in each). Nothing else.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rapport-gateway-encounters
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+rules:
+  - apiGroups: ["rapport.dev"]
+    resources: ["encounters"]
+    verbs: ["create", "get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rapport-gateway-encounters
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rapport-gateway-encounters
+subjects:
+  - kind: ServiceAccount
+    name: gateway
+    namespace: team-rapport
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rapport-gateway-pods
+  namespace: org-acme
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rapport-gateway-pods
+  namespace: org-acme
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rapport-gateway-pods
+subjects:
+  - kind: ServiceAccount
+    name: gateway
+    namespace: team-rapport
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rapport-gateway-pods
+  namespace: org-bluefin
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rapport-gateway-pods
+  namespace: org-bluefin
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rapport-gateway-pods
+subjects:
+  - kind: ServiceAccount
+    name: gateway
+    namespace: team-rapport

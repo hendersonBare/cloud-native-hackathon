@@ -107,6 +107,7 @@ export function render(ctx) {
       const encounter_id = ctx.store.encounter?.encounter_id;
       if (encounter_id) st.finished[encounter_id] = true;
       ctx.bus.emitLocal('encounter:done', { encounter_id, stopped: true });
+      ctx.bus.emit('encounter:stopped', { encounter_id }); // lets the stage's swarm panel stop its replay
       ctx.go('home');
     },
   }, 'Stop');

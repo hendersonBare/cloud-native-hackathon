@@ -1,0 +1,82 @@
+# Briefer for bluefin: the company's private memory API (SPEC 7.2). Reachable only from this namespace and the
+# gateway (deploy/base/network-policies.yaml). All three Secrets are optional: without them the pod still starts
+# and degrades to the template fallback (no OPENAI_API_KEY) and the in-memory seed store (no ES keys).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: briefer
+  namespace: org-bluefin
+  labels:
+    app: briefer
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: briefer
+    rapport.dev/org: bluefin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: briefer
+  template:
+    metadata:
+      labels:
+        app: briefer
+        app.kubernetes.io/part-of: rapport
+        rapport.dev/role: briefer
+        rapport.dev/org: bluefin
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: briefer
+          image: app # kustomize sets the GHCR image and tag (deploy/kustomization.yaml)
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "rapport_briefer"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: RAPPORT_ORG_ID
+              value: bluefin
+            - name: RAPPORT_ENV
+              value: hackathon
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+          envFrom:
+            # Created outside git (make secrets or Radar's resource editor).
+            - secretRef: { name: openai, optional: true }
+            - secretRef: { name: dash0-otlp, optional: true }
+            - secretRef: { name: es-briefer, optional: true }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 512Mi }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            initialDelaySeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile: { type: RuntimeDefault }
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: briefer
+  namespace: org-bluefin
+  labels:
+    app: briefer
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: briefer
+    rapport.dev/org: bluefin
+spec:
+  selector:
+    app: briefer
+  ports:
+    - name: http
+      port: 8080 # names.briefer_url(org) = http://briefer.org-bluefin.svc.cluster.local:8080
+      targetPort: http
