@@ -49,10 +49,15 @@ spec:
           readinessProbe:
             httpGet: { path: /healthz, port: http }
             periodSeconds: 10
+          # Slow cold starts must not trip liveness: it only begins once this succeeds (up to 120 s).
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 40
           livenessProbe:
             httpGet: { path: /healthz, port: http }
             periodSeconds: 20
-            initialDelaySeconds: 20
             failureThreshold: 3
           securityContext:
             runAsNonRoot: true
