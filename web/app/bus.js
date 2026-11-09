@@ -4,6 +4,7 @@
 //
 // Event contract (persona ids like 'acme.ava'):
 //   ui:connect        {from, to, initiated_by: 'human'|'agent'}  a phone asks to connect agents (broadcast)
+//   ui:swipe          {from, to, direction}                       live mode: a Home swipe (local); flow.js calls POST /api/swipe
 //   ui:pass           {from, to}                                  swiped left (local)
 //   encounter:start   {encounter_id, initiator, responder, startedAt}  responder accepted (broadcast)
 //   encounter:declined{encounter_id, initiator, responder}        responder declined (broadcast)

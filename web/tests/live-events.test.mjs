@@ -46,15 +46,17 @@ test('events addressed to another persona are ignored', () => {
 });
 
 test('deep dive, agent decision, profile and error events tell the person what happened', () => {
-  const { store, send, toasts } = setup();
+  const { store, send, toasts, emitted } = setup();
   send('deep_dive_started', envelope('deep_dive_started', { target_persona_id: 'bluefin.bo' }, 'acme.ava'));
   send('deep_dive_ready', envelope('deep_dive_ready', { target_persona_id: 'bluefin.bo', summary: 'x' }, 'acme.ava'));
   send('agent_decision', envelope('agent_decision', { target_persona_id: 'bluefin.bo', action: 'agent_handshake' }, 'acme.ava'));
   send('profile_updated', envelope('profile_updated', { persona_id: 'acme.ava' }, 'acme.ava'));
   send('error', envelope('error', { message: 'x'.repeat(500) }));
   assert.equal(store.gateway.deepDives['bluefin.bo'].summary, 'x');
+  assert.equal(store.gateway.decisions['bluefin.bo'].action, 'agent_handshake');
+  assert.equal(store.gateway.researching, null);
+  assert.ok(emitted.some(([type]) => type === 'deepdive:update'));
   assert.deepEqual(toasts.map(([text]) => text.slice(0, 60)), [
-    'Researching Bo…',
     'Research on Bo is ready',
     "Request sent to Bo's agent, waiting for Bo",
     'Your agent updated your profile',

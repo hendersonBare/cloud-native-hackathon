@@ -3,12 +3,12 @@
 // All strings are rendered as text nodes through h().
 import { h, icon, eyebrow, nextId } from '../ui.js';
 
-function list(items, label) {
+export function list(items, label) {
   const rows = (Array.isArray(items) ? items : []).filter((item) => typeof item === 'string' && item);
   return rows.length ? h('ul', { class: 'match-live-list', 'aria-label': label }, rows.map((t) => h('li', null, t))) : null;
 }
 
-function waiting(text) {
+export function waiting(text) {
   return h('p', { class: 'match-live-waiting' }, text);
 }
 

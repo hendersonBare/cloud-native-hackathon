@@ -132,7 +132,7 @@ export const TABS = [
 
 /** Which tab is highlighted for each route. */
 export const TAB_FOR = {
-  home: 'home', profile: 'home', find: 'home',
+  home: 'home', profile: 'home', find: 'home', deepdive: 'home',
   live: 'live', tag: 'live',
   memory: 'memory',
   calendar: 'calendar',

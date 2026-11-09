@@ -12,6 +12,8 @@ import './swarm-model.test.mjs';
 import './swarm-driver.test.mjs';
 import './swarm-panel.test.mjs';
 import './live-events.test.mjs';
+import './deepdive.test.mjs';
+import './exchange-mock.test.mjs';
 import './time.test.mjs';
 import './calendar.test.mjs';
 import './people.test.mjs';
