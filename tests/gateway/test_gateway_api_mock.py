@@ -36,14 +36,18 @@ async def test_health_and_personas(stack):
 async def test_openapi_is_on_with_tags_and_response_models(stack):
     spec = (await stack.client.get("/openapi.json")).json()
     assert (await stack.client.get("/docs")).status_code == 200
-    assert {t["name"] for t in spec["tags"]} >= {"personas", "stream", "connect", "discover", "demo"}
+    assert {t["name"] for t in spec["tags"]} >= {"personas", "stream", "connect", "discover", "demo", "calendar"}
     for path, ops in spec["paths"].items():
         for method, op in ops.items():
             if path == "/api/stream":
                 continue
-            assert op["responses"].get("200") or op["responses"].get("202"), (method, path)
-            ok = op["responses"].get("200") or op["responses"].get("202")
-            assert ok["content"]["application/json"]["schema"], (method, path)
+            # every operation documents its success: a JSON model, 204 No Content, or the calendar's .ics file
+            code = next((c for c in ("200", "201", "202", "204") if c in op["responses"]), None)
+            assert code, (method, path)
+            if code == "204":
+                continue
+            content = op["responses"][code]["content"]
+            assert content.get("application/json", {}).get("schema") or "text/calendar" in content, (method, path)
 
 
 async def test_profile_defaults_to_the_fixture(stack):

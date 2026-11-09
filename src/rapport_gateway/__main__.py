@@ -12,6 +12,7 @@ from rapport_common.telemetry import init_telemetry
 
 from .app import create_app, create_internal_app
 from .deps import build_deps
+from .logfilters import install_log_filters
 from .settings import Settings
 
 log = logging.getLogger("rapport.gateway")
@@ -44,6 +45,7 @@ def make_servers(public_app, internal_app, settings: Settings) -> tuple[uvicorn.
     return public, internal
 
 
+
 async def serve(settings: Settings) -> None:
     deps = build_deps(settings)
     public_app = create_app(settings, deps)
@@ -57,6 +59,8 @@ async def serve(settings: Settings) -> None:
         log.exception("could not instrument the internal app")
 
     public, internal = make_servers(public_app, internal_app, settings)
+    # after uvicorn.Config (in make_servers), which (re)configures uvicorn's loggers: request logs keep paths only
+    install_log_filters()
     # Only the public server installs signal handlers; stopping it stops the internal one too.
     internal.capture_signals = contextlib.nullcontext  # type: ignore[method-assign]
     internal_task = asyncio.create_task(internal.serve())
