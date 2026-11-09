@@ -1,0 +1,87 @@
+.find [hidden] { display: none !important; }
+.find .find-main { padding: 6px 20px 16px; gap: 14px; }
+.find .find-main > * { flex: none; }
+
+.find .find-summary {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--gold-line); border-radius: 20px; box-shadow: var(--shadow);
+}
+.find .find-name { font-size: 18px; font-weight: 600; margin: 0; }
+.find .find-status { font-size: 15px; font-weight: 600; color: var(--gold); }
+.find .find-fresh { font-size: 13px; color: var(--text2); }
+.find .find-fresh:empty { display: none; }
+
+/* Floor plan */
+.find .find-map-wrap { display: flex; flex-direction: column; gap: 8px; }
+.find .find-map { margin: 0; padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+.find .find-map:empty { min-height: 190px; }
+.find .find-map svg { display: block; width: 100%; height: auto; }
+.find .room { fill: var(--raised); stroke: var(--line); stroke-width: .4; }
+.find .room.corridor { fill: var(--bg); }
+.find .room.is-me { fill: var(--steel-bg); stroke: var(--steel-line); }
+.find .room.is-peer { fill: var(--gold-bg); stroke: var(--gold-line); }
+.find .door { stroke: var(--gold-mid); stroke-width: .9; stroke-linecap: round; }
+.find .room-label { font-family: Inter, system-ui, sans-serif; font-size: 3px; font-weight: 600; fill: var(--text3); text-anchor: middle; }
+.find .corridor-label { font-size: 2.4px; letter-spacing: .3px; text-transform: uppercase; }
+.find .route {
+  fill: none; stroke: var(--gold-mid); stroke-width: 1; stroke-dasharray: 2 1.4;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.find .accuracy { fill: var(--steel); fill-opacity: .08; stroke: var(--steel); stroke-opacity: .25; stroke-width: .3; }
+.find .me-halo { fill: var(--steel); fill-opacity: .22; }
+.find .me-dot { fill: var(--steel); stroke: var(--surface); stroke-width: .7; }
+.find .peer-dot { stroke-width: .5; }
+.find .peer-dot.tone-gold { fill: var(--gold-bg); stroke: var(--gold); }
+.find .peer-dot.tone-steel { fill: var(--steel-bg); stroke: var(--steel); }
+.find .peer-dot.tone-sage { fill: var(--sage-bg); stroke: var(--sage); }
+.find .peer-dot.tone-lilac { fill: var(--lilac-bg); stroke: var(--lilac); }
+.find .peer-initial { font-family: Inter, system-ui, sans-serif; font-size: 3px; font-weight: 700; fill: var(--text); text-anchor: middle; }
+
+.find .find-legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 0 6px; font-size: 12px; color: var(--text2); }
+.find .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.find .legend-dot { width: 10px; height: 10px; border-radius: 5px; box-sizing: border-box; }
+.find .legend-dot.me { background: var(--steel); }
+.find .legend-line { width: 16px; border-top: 2px dashed var(--gold-mid); }
+
+/* Directions */
+.find .find-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.find .find-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; }
+.find .find-step { counter-increment: step; display: flex; align-items: center; gap: 12px; font-size: 15px; line-height: 21px; padding: 8px 0; }
+.find .find-step + .find-step { border-top: 1px solid var(--line2); }
+.find .find-step::before {
+  content: counter(step); flex: none; width: 24px; height: 24px; border-radius: 12px;
+  background: var(--gold-bg); color: var(--gold); font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.find .find-step.muted::before { display: none; }
+.find .find-step.leg-arrive { font-weight: 600; }
+
+/* Location sharing switch */
+.find .find-share {
+  min-height: 66px; padding: 11px 16px; border-radius: 18px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); font: inherit; text-align: left;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+}
+.find .find-share:disabled { cursor: default; opacity: .6; }
+.find .find-share-title { font-size: 15px; font-weight: 600; }
+.find .find-share-note { font-size: 13px; color: var(--text2); }
+.find .share-track {
+  width: 46px; height: 28px; flex: none; border-radius: 14px; background: var(--off);
+  display: flex; align-items: center; justify-content: flex-start; padding: 3px; box-sizing: border-box;
+}
+.find .share-knob { width: 22px; height: 22px; border-radius: 11px; background: var(--knob); }
+.find [role="switch"][aria-checked="true"] .share-track { background: var(--fill); justify-content: flex-end; }
+.find [role="switch"][aria-checked="true"] .share-knob { background: var(--on-fill); }
+
+/* Empty and error states */
+.find .find-error-slot:empty { display: none; }
+.find .find-state {
+  padding: 26px 20px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.find .empty-title { font-size: 16px; font-weight: 600; }
+.find .empty-note { font-size: 14px; color: var(--text2); }
+.find .find-retry { width: auto; padding: 0 22px; margin-top: 6px; }

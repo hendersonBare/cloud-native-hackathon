@@ -6,6 +6,7 @@ import * as bus from './bus.js';
 import { initFlow } from './flow.js';
 import { parseHash, hashFor } from './route.js';
 import { calendarClient } from './calendar-api.js';
+import { venueClient } from './venue-api.js';
 
 const params = new URLSearchParams(location.search);
 const meId = person(params.get('persona')) ? params.get('persona') : 'acme.ava';
@@ -93,4 +94,5 @@ initFlow({ me: person(meId), peer: person(peerOf(meId)), store, mode, go, bus, o
 // Create the calendar client now, not on first visit to Calendar or People: in mock mode it is a
 // replica that must be listening for the other phone's calendar:sync from the start.
 calendarClient(makeCtx(parseHash(location.hash)));
+venueClient(makeCtx(parseHash(location.hash))); // same reason: the mock listens for venue:sync
 showSafely(false);

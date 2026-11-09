@@ -15,3 +15,4 @@ import './live-events.test.mjs';
 import './time.test.mjs';
 import './calendar.test.mjs';
 import './people.test.mjs';
+import './venue.test.mjs';

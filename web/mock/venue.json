@@ -1,0 +1,41 @@
+{
+  "id": "conference-level-1",
+  "name": "Conference center, level 1",
+  "width_m": 120,
+  "height_m": 70,
+  "corridor_y": 35,
+  "geo": { "lat": 39.742, "lng": -104.999 },
+  "gps_ttl_s": 600,
+  "outside_margin_m": 15,
+  "max_accuracy_m": 100,
+  "rooms": [
+    { "id": "main-hall", "name": "Main hall", "x": 0, "y": 40, "w": 50, "h": 30, "door": [25, 40] },
+    { "id": "room-a", "name": "Room A", "x": 50, "y": 40, "w": 24, "h": 30, "door": [62, 40] },
+    { "id": "room-b", "name": "Room B", "x": 74, "y": 40, "w": 24, "h": 30, "door": [86, 40] },
+    { "id": "room-c", "name": "Room C", "x": 98, "y": 40, "w": 22, "h": 30, "door": [109, 40] },
+    { "id": "expo-hall", "name": "Expo hall", "x": 0, "y": 0, "w": 60, "h": 30, "door": [30, 30] },
+    { "id": "lobby-cafe", "name": "Lobby café", "x": 60, "y": 0, "w": 30, "h": 30, "door": [75, 30] },
+    { "id": "registration", "name": "Registration", "x": 90, "y": 0, "w": 30, "h": 30, "door": [105, 30] },
+    { "id": "concourse", "name": "Concourse", "x": 0, "y": 30, "w": 120, "h": 10, "door": null, "corridor": true }
+  ],
+  "checkins": {
+    "acme.ava": [70, 18],
+    "acme.sam": [20, 12],
+    "bluefin.bo": [81, 21],
+    "bluefin.kai": [62, 55],
+    "kestrel.mia": [88, 58],
+    "harborline.lena": [22, 58],
+    "tidewater.sofia": [105, 15],
+    "lumenly.priya": [110, 60]
+  },
+  "sharing": {
+    "acme.ava": true,
+    "acme.sam": true,
+    "bluefin.bo": true,
+    "bluefin.kai": true,
+    "kestrel.mia": true,
+    "harborline.lena": false,
+    "tidewater.sofia": true,
+    "lumenly.priya": true
+  }
+}

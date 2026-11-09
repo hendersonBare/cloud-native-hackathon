@@ -42,12 +42,13 @@ byte-identical copy of `src/rapport_calendar/data/seed.json`) and syncs the two 
 | `app/calendar-api.js`, `app/calendar-mock.js` | Calendar client: live calls `/api/calendar/*`; mock is an in-browser replica with the same rules. Screens call `calendarClient(ctx)` and never branch on the mode. |
 | `app/time.js` | Times are stored as UTC and always shown in America/Denver with the zone label (e.g. `3:30 PM MST`). |
 | `app/people-model.js` | People directory, suggestions, "met" and search filters (pure, unit-tested). |
-| `mock/` | Mock-mode data: the calendar seed and the research deck (`contracts/demo-research.json`). |
+| `app/venue-api.js`, `app/venue-mock.js`, `app/venue-model.js` | Venue map and directions: live calls `/api/venue/*` (`src/rapport_venue`); mock applies the same rules in the browser. `venue-model.js` is the shared geometry (GPS to floor-plan metres, door-corridor-door routes), pure and unit-tested. Screens call `venueClient(ctx)`. |
+| `mock/` | Mock-mode data: the calendar seed, the venue floor plan (`venue.json`, byte-identical to `src/rapport_venue/data/venue.json`) and the research deck (`contracts/demo-research.json`). |
 | `app/screens/<name>.js` / `.css` | One module per screen, each exporting `render(ctx)`. |
 
 ## Demo keys
 
-- Home deck: drag the card, use the ✕ / ✓ buttons, or focus the card and press ← / →.
+- Home deck: drag the card, use the ✕ / ✓ buttons, or focus the card and press ← / →. The direction button beside **Talk about** opens **Find**: the floor plan with a walking route to that person. The route starts at your phone's GPS when **Share my location** is on and you are inside the venue, otherwise at your check-in spot; a person who isn't sharing shows nothing.
 - Presenter: tick **Malicious responder** before Bo accepts to show the blocked prompt injection.
 - Calendar: pick a day in the week strip; **+** adds an event, **Agenda** adds a talk, Accept / Decline answers a meeting your agents proposed.
 - People: search or filter, open a person, then **Find a time** books coffee in the first slot free for both of you (free/busy only crosses companies).
