@@ -1,4 +1,4 @@
-// Demo cast and per-persona screen content. All people and companies are
+// Demo cast; per-persona Home content is in views.json. All people and companies are
 // fictional (see src/rapport_common/data/personas.json). Screens read from
 // here in mock mode; live mode overlays gateway data on top.
 
@@ -37,41 +37,5 @@ export function peerOf(id) {
   return id === DEMO.right ? DEMO.left : DEMO.right;
 }
 
-// Per-persona content for each screen. Screens add their own keys here
-// (keep them under the screen's name, e.g. VIEWS[id].calendar).
-export const VIEWS = {
-  'acme.ava': {
-    home: {
-      event: 'KubeCon',
-      live: { title: 'Hallway conversation', elapsedSec: 252 },
-      opportunities: [
-        { id: 'kestrel.mia', topics: ['Low-overhead tracing at the edge', 'eBPF on small clusters', 'Robots that run Kubernetes'] },
-        { id: 'bluefin.bo', topics: ['Tracing with no code changes', 'Cutting observability costs', 'A hospital platform migration'] },
-        { id: 'harborline.lena', topics: ['Cutting incident time', 'Rolling out OpenTelemetry', 'Compliance for telemetry data'] },
-      ],
-      peerBanner: { body: 'Comparing notes on eBPF tracing · tap to watch' },
-      agreed: { with: 'lumenly.priya', title: 'Priya · agents agreed', body: 'eBPF overhead numbers · Coffee Tue 3:00 PM' },
-      upNext: [
-        { time: '3:30 PM', title: 'Zero-code tracing with eBPF', status: 'Transcribing' },
-        { time: '6:30 PM', title: 'Partner dinner', status: 'Capture off' },
-      ],
-    },
-  },
-  'bluefin.bo': {
-    home: {
-      event: 'KubeCon',
-      live: { title: 'Platform track Q&A', elapsedSec: 98 },
-      opportunities: [
-        { id: 'tidewater.sofia', topics: ['A 30% smaller cloud bill', 'FinOps for Kubernetes', 'Right-sizing clusters'] },
-        { id: 'acme.ava', topics: ['Zero-code eBPF tracing', 'A hospital rollout: 40% faster incidents', 'OpenTelemetry on Kubernetes'] },
-        { id: 'lumenly.priya', topics: ['Cloud spend without blind spots', 'eBPF without the overhead', 'Running a small platform team'] },
-      ],
-      peerBanner: { body: 'Comparing notes on tracing costs · tap to watch' },
-      agreed: { with: 'tidewater.sofia', title: 'Sofia · agents agreed', body: 'FinOps dashboards · Coffee Tue 10:00 AM' },
-      upNext: [
-        { time: '3:30 PM', title: 'Zero-code tracing with eBPF', status: 'Transcribing' },
-        { time: '5:00 PM', title: 'Platform team sync', status: 'Capture off' },
-      ],
-    },
-  },
-};
+// Per-persona Home content lives in views.json (data, not code).
+export { default as VIEWS } from './views.json' with { type: 'json' };

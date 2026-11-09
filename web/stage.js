@@ -10,7 +10,22 @@ const params = new URLSearchParams(location.search);
 const mode = params.get('live') === '1' ? 'live' : 'mock';
 const root = document.documentElement;
 const toolbar = document.querySelector('.toolbar');
-const frames = [...document.querySelectorAll('iframe[data-persona]')];
+
+// Build each phone from the single frame template.
+const template = document.getElementById('device-template');
+const frames = [...document.querySelectorAll('.device[data-persona]')].map((device, i) => {
+  const { persona, name, role } = device.dataset;
+  device.append(template.content.cloneNode(true));
+  const label = device.querySelector('.device-label');
+  label.id = `device-label-${i}`;
+  label.querySelector('strong').textContent = name;
+  label.querySelector('span').textContent = ` · ${role}`;
+  device.setAttribute('aria-labelledby', label.id);
+  const frame = device.querySelector('iframe');
+  frame.title = `${name}'s phone`;
+  frame.dataset.persona = persona;
+  return frame;
+});
 const themeBtn = document.getElementById('theme-btn');
 const malicious = document.getElementById('malicious');
 
@@ -83,8 +98,8 @@ document.getElementById('reset-btn').addEventListener('click', async () => {
 
 const fsBtn = document.getElementById('fs-btn');
 fsBtn.addEventListener('click', () => {
-  if (document.fullscreenElement) document.exitFullscreen();
-  else root.requestFullscreen?.();
+  const toggle = document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen?.();
+  toggle?.catch((err) => console.warn('Full screen unavailable', err?.name || 'Error'));
 });
 document.addEventListener('fullscreenchange', () => {
   const on = !!document.fullscreenElement;

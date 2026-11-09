@@ -101,6 +101,10 @@ async function show(focus) {
   }
 }
 
-window.addEventListener('hashchange', () => show(true));
+function showSafely(focus) {
+  show(focus).catch((err) => console.error('screen render failed', err?.name || 'Error'));
+}
+
+window.addEventListener('hashchange', () => showSafely(true));
 initFlow({ me: person(meId), peer: person(peerOf(meId)), store, mode, go, bus, overlay });
-show(false);
+showSafely(false);
