@@ -27,7 +27,7 @@ Judges want: deep OTel (traces, metrics, logs, RUM); Agent0 or MCP used on a rea
 | LLM cost and tokens per encounter (OpenLIT, `gen_ai.*`) with no content captured | `telemetry.py` (`capture_message_content=False`) | LLM span attributes: tokens and model, no prompt text | | ⬜ |
 | Custom metrics: brief latency, exchange duration, policy decisions by rule | SPEC §8 | Dashboard panels | | ⬜ |
 | SLO: 95% of private briefs within 5 s | Dash0 UI | SLO page | | ⬜ |
-| RUM on the two-phone page | `web/` (Dash0 Web SDK) | Session view for the demo run | | ⬜ |
+| RUM on the two-phone page | `web/app/rum.js`, `GET /api/rum-config` (Dash0 Web SDK; token from the `dash0-rum` Secret) | Session view for the demo run; a browser fetch span as the parent of the gateway span | | 🟨 |
 | Agent0 or Dash0 MCP found a **real** bug from today | `docs/evidence/LOG.md` entry | Agent0 transcript, then the fix commit | | ⬜ |
 | K8s infrastructure telemetry (optional: Dash0 operator) | Helm | Pod and node view | | ⬜ |
 
