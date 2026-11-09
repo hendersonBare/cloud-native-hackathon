@@ -61,7 +61,7 @@ def sync_status(enc_name: str, ops: KubeOps, now: datetime) -> dict[str, Any] | 
     patch = status_from_jobs(enc, jobs_by_side, now)
     if patch is not None:
         ops.patch_encounter_status(enc_name, patch)
-        log.info("encounter %s: phase %s", enc_name, patch["phase"])
+        log.info("encounter %s: status updated, phase %s", enc_name, patch.get("phase", "unchanged"))
     return patch
 
 

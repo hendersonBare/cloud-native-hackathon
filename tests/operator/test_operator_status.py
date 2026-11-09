@@ -115,7 +115,25 @@ def test_no_patch_when_nothing_changed():
 
 @pytest.mark.parametrize("phase", ["Completed", "Failed"])
 def test_terminal_phase_is_never_rewritten(phase):
-    assert st.status_from_jobs(enc(current_status={"phase": phase}), {}, NOW) is None
+    patch = st.status_from_jobs(
+        enc(current_status={"phase": phase}), {"initiator": job(active=1), "responder": job(active=1)}, NOW
+    )
+    assert "phase" not in patch and "completedAt" not in patch and "message" not in patch
+
+
+def test_terminal_status_records_the_second_job_and_keeps_collected_jobs():
+    initiator = {"orgId": "acme", "side": "initiator", "job": "delegate-enc-1", "phase": "Running"}
+    responder = {"orgId": "bluefin", "side": "responder", "job": "delegate-enc-1", "phase": "Failed"}
+    failed = enc(current_status={"phase": "Failed", "delegates": [initiator, responder]})
+    both_failed = {"initiator": job(failed=1), "responder": job(failed=1)}
+    assert st.status_from_jobs(failed, both_failed, NOW) == {"delegates": [{**initiator, "phase": "Failed"}, responder]}
+    # the responder Job was garbage-collected: its recorded phase is kept, not reset to Pending
+    only_initiator = {"initiator": job(failed=1)}
+    assert st.status_from_jobs(failed, only_initiator, NOW) == {
+        "delegates": [{**initiator, "phase": "Failed"}, responder]
+    }
+    # nothing new to record
+    assert st.status_from_jobs(failed, {"initiator": job(active=1), "responder": job(failed=1)}, NOW) is None
 
 
 def test_is_expired_uses_ttl_from_creation():

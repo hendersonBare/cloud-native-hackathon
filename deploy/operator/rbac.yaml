@@ -17,6 +17,11 @@ rules:
   - apiGroups: [rapport.dev]
     resources: [encounters/status]
     verbs: [get, patch, update]
+  # Children carry ownerReferences with blockOwnerDeletion: true. A cluster that enforces
+  # OwnerReferencesPermissionEnforcement refuses to create them without this verb.
+  - apiGroups: [rapport.dev]
+    resources: [encounters/finalizers]
+    verbs: [update]
   - apiGroups: [batch]
     resources: [jobs]
     verbs: [create, get, list, watch, delete]

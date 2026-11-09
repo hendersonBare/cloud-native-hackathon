@@ -90,12 +90,16 @@ def status_from_jobs(
     """The status patch for the current Job state, or None when nothing changes.
 
     A terminal phase is never rewritten (Jobs are garbage-collected after their own TTL, and a late
-    event must not move a finished encounter back to Running).
+    event must not move a finished encounter back to Running); only delegates[] keeps following the Jobs.
     """
     current = enc.get("status") or {}
-    if current.get("phase") in TERMINAL_PHASES:
-        return None
     delegates = delegate_entries(enc, jobs_by_side)
+    if current.get("phase") in TERMINAL_PHASES:
+        # The phase is final, but delegates[] still follow the Jobs that exist (so the second Job's final
+        # phase is recorded). A Job already garbage-collected keeps its last recorded phase.
+        recorded = {d.get("side"): d for d in current.get("delegates") or []}
+        merged = [d if jobs_by_side.get(d["side"]) else recorded.get(d["side"], d) for d in delegates]
+        return None if merged == current.get("delegates") else {"delegates": merged}
     phase = encounter_phase(delegates)
     if phase == current.get("phase") and delegates == current.get("delegates"):
         return None

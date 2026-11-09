@@ -51,6 +51,7 @@ def test_rbac_covers_spec_4_5_and_kopf_and_nothing_wide():
     }
     assert granted[("rapport.dev", "encounters")] == {"get", "list", "watch", "patch", "update", "delete"}
     assert {"patch", "update"} <= granted[("rapport.dev", "encounters/status")]
+    assert granted[("rapport.dev", "encounters/finalizers")] == {"update"}
     for key in [("batch", "jobs"), ("", "services"), ("networking.k8s.io", "networkpolicies")]:
         assert granted[key] == {"create", "get", "list", "watch", "delete"}
     assert granted[("", "pods")] == {"get", "list", "watch"}

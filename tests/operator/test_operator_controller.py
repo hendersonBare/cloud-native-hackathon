@@ -78,8 +78,8 @@ def test_sync_status_ignores_unknown_encounter_and_terminal_state():
     assert controller.sync_status("gone", FakeOps(), NOW) is None
     ops = FakeOps(make_enc(status={"phase": "Completed"}))
     ops.jobs = [labelled_job("initiator", failed=1)]
-    assert controller.sync_status("enc-1", ops, NOW) is None
-    assert ops.patches == []
+    patch = controller.sync_status("enc-1", ops, NOW)
+    assert "phase" not in patch  # only delegates[] may follow the Jobs; the final phase stays
 
 
 def test_ttl_deletes_only_after_expiry():
