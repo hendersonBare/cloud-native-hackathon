@@ -115,7 +115,13 @@ data: {"type":"agent_decision","ts":"2026-11-09T21:00:03.600000Z","encounter_id"
 
 : keepalive
 ```
-`data` is a `GatewayEvent`: `type, ts, encounter_id, persona_id, trace_id, data`. A `: keepalive` comment arrives every 15 s. The gateway replays recent events (the last 200 that match the stream) to every new connection, so a reload mid-demo catches up. **Dedupe on `type + ts + encounter_id`**: replays resend the same events, and the gateway guarantees distinct events never share that key.
+`data` is a `GatewayEvent`: `type, ts, encounter_id, persona_id, trace_id, data`. A `: keepalive` comment arrives every 15 s (every half of `RAPPORT_SSE_MAX_SECONDS` when that is shorter). The gateway replays recent events (the last 200 that match the stream) to a new connection, so a reload mid-demo catches up. **Dedupe on `type + ts + encounter_id`**: replays resend the same events, and the gateway guarantees distinct events never share that key.
+
+Reconnecting (the platform's edge proxy cuts any stream after about 15 s, so the gateway ends each stream cleanly about every 12 s and `EventSource` reconnects by itself):
+- Every event frame starts with an `id:` line (`id: 1731186003600123`). Ids increase across all events in the gateway process (and keep increasing after a restart); treat them as opaque numbers. A replayed event keeps its id.
+- Every stream begins with `retry: 1000`, so the browser reconnects within a second.
+- On a reconnect `EventSource` sends the `Last-Event-ID` header automatically. The gateway then replays only the buffered events with a greater id that match the stream's routing (phone or swarm; the swarm still never sees `private_brief`, `profile_updated`, `deep_dive_started` or `deep_dive_ready`). Without it, a new connection gets today's full replay. For a client that cannot set the header, `?last_event_id=<id>` does the same; the header wins when both are present.
+- `RAPPORT_SSE_MAX_SECONDS` (default `12`, `0` turns rotation off) sets how long a stream lives before the gateway closes it. A close followed by an immediate reconnect is normal: keep the dedupe key above and do not show a "disconnected" state for it.
 
 | Event | `data` model | Phone stream | Swarm stream |
 |---|---|---|---|
