@@ -1,0 +1,69 @@
+# Encounter: two people agreed to connect. Cluster-scoped so it can own the delegate
+# Jobs, Services and NetworkPolicies it creates in BOTH companies' namespaces
+# (namespaced dependents may have a cluster-scoped owner; deleting the Encounter
+# garbage-collects everything). Contract owner: integrator. Python mirror: EncounterSpec.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: encounters.rapport.dev
+spec:
+  group: rapport.dev
+  scope: Cluster
+  names:
+    plural: encounters
+    singular: encounter
+    kind: Encounter
+    shortNames: [enc]
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - { name: Phase, type: string, jsonPath: .status.phase }
+        - { name: Initiator, type: string, jsonPath: .spec.initiator.personaId }
+        - { name: Responder, type: string, jsonPath: .spec.responder.personaId }
+        - { name: Malicious, type: boolean, jsonPath: .spec.responder.malicious }
+        - { name: Age, type: date, jsonPath: .metadata.creationTimestamp }
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [initiator, responder]
+              properties:
+                initiator:
+                  type: object
+                  required: [orgId, personaId]
+                  properties:
+                    orgId: { type: string, pattern: "^[a-z][a-z0-9-]{1,30}$" }
+                    personaId: { type: string }
+                    malicious: { type: boolean, default: false }
+                responder:
+                  type: object
+                  required: [orgId, personaId]
+                  properties:
+                    orgId: { type: string, pattern: "^[a-z][a-z0-9-]{1,30}$" }
+                    personaId: { type: string }
+                    malicious: { type: boolean, default: false }
+                ttlSeconds: { type: integer, minimum: 60, maximum: 3600, default: 600 }
+            status:
+              type: object
+              # kopf stores handler progress/results under status; keep unknown fields.
+              x-kubernetes-preserve-unknown-fields: true
+              properties:
+                phase: { type: string, enum: [Pending, Running, Completed, Failed] }
+                message: { type: string }
+                startedAt: { type: string, format: date-time }
+                completedAt: { type: string, format: date-time }
+                delegates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      orgId: { type: string }
+                      side: { type: string, enum: [initiator, responder] }
+                      job: { type: string }
+                      phase: { type: string }

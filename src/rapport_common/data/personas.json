@@ -1,0 +1,39 @@
+{
+  "_comment": "All companies and people are fictional. agents_enabled=true companies run Rapport (namespace, briefer, OPA, delegates); the rest appear only in the Discover directory.",
+  "orgs": [
+    {"org_id": "acme", "name": "Acme Observability", "namespace": "org-acme", "blurb": "Fictional vendor of eBPF-based observability tools.", "color": "#3b6cf6", "agents_enabled": true},
+    {"org_id": "bluefin", "name": "Bluefin Health", "namespace": "org-bluefin", "blurb": "Fictional hospital network modernising its platform.", "color": "#0f9d77", "agents_enabled": true},
+    {"org_id": "kestrel", "name": "Kestrel Robotics", "namespace": "org-kestrel", "blurb": "Fictional warehouse-robot maker running Kubernetes at the edge.", "color": "#c2410c"},
+    {"org_id": "harborline", "name": "Harborline Bank", "namespace": "org-harborline", "blurb": "Fictional regional bank building an internal platform.", "color": "#7c3aed"},
+    {"org_id": "tidewater", "name": "Tidewater Logistics", "namespace": "org-tidewater", "blurb": "Fictional freight company cutting cloud costs.", "color": "#0e7490"},
+    {"org_id": "lumenly", "name": "Lumenly Energy", "namespace": "org-lumenly", "blurb": "Fictional energy start-up with a small platform team.", "color": "#a16207"}
+  ],
+  "personas": [
+    {"persona_id": "acme.ava", "org_id": "acme", "name": "Ava", "title": "Solutions Engineer", "language": "en",
+     "interests": ["ebpf", "observability", "opentelemetry", "kubernetes"],
+     "goals": ["Meet platform teams evaluating eBPF tracing", "Find a design partner in healthcare"], "demo_phone": "left"},
+    {"persona_id": "acme.sam", "org_id": "acme", "name": "Sam", "title": "Account Executive", "language": "en",
+     "interests": ["healthcare", "platform-engineering"], "goals": ["Close the Bluefin pilot"]},
+    {"persona_id": "bluefin.bo", "org_id": "bluefin", "name": "Bo", "title": "Platform Lead", "language": "es",
+     "interests": ["kubernetes", "ebpf", "cost", "platform-engineering"],
+     "goals": ["Cut observability costs", "Find tracing that needs no code changes"], "demo_phone": "right"},
+    {"persona_id": "bluefin.kai", "org_id": "bluefin", "name": "Kai", "title": "Security Architect", "language": "en",
+     "interests": ["security", "compliance", "hipaa"], "goals": ["Approve vendors that meet HIPAA requirements"]},
+    {"persona_id": "kestrel.mia", "org_id": "kestrel", "name": "Mia", "title": "Platform Engineer", "language": "en",
+     "interests": ["ebpf", "kubernetes", "edge", "robotics"], "goals": ["Low-overhead tracing for edge clusters"]},
+    {"persona_id": "kestrel.raj", "org_id": "kestrel", "name": "Raj", "title": "CTO", "language": "en",
+     "interests": ["ai-agents", "robotics", "hiring"], "goals": ["Hire platform engineers"]},
+    {"persona_id": "harborline.lena", "org_id": "harborline", "name": "Lena", "title": "SRE Manager", "language": "en",
+     "interests": ["observability", "opentelemetry", "compliance"], "goals": ["Reduce incident time", "Evaluate observability vendors"]},
+    {"persona_id": "harborline.omar", "org_id": "harborline", "name": "Omar", "title": "Security Engineer", "language": "en",
+     "interests": ["security", "zero-trust", "compliance"], "goals": ["Roll out zero-trust networking"]},
+    {"persona_id": "tidewater.sofia", "org_id": "tidewater", "name": "Sofia", "title": "Platform Lead", "language": "es",
+     "interests": ["kubernetes", "cost", "finops"], "goals": ["Cut the cloud bill by 30%"]},
+    {"persona_id": "tidewater.ken", "org_id": "tidewater", "name": "Ken", "title": "Data Engineer", "language": "en",
+     "interests": ["elasticsearch", "search", "data"], "goals": ["Improve search over shipment records"]},
+    {"persona_id": "lumenly.priya", "org_id": "lumenly", "name": "Priya", "title": "Head of Infrastructure", "language": "en",
+     "interests": ["kubernetes", "ebpf", "cost"], "goals": ["Cut cloud spend without losing visibility"]},
+    {"persona_id": "lumenly.tom", "org_id": "lumenly", "name": "Tom", "title": "Developer Advocate", "language": "en",
+     "interests": ["accessibility", "community", "kubernetes"], "goals": ["Make community events more inclusive"]}
+  ]
+}

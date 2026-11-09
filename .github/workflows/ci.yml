@@ -1,0 +1,24 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check src tests
+      - name: Unit and contract tests
+        run: uv run pytest -q
+      - uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+      - name: Policy tests
+        run: |
+          if ls policy/*_test.rego >/dev/null 2>&1; then opa test policy -v; else echo "no policy tests yet"; fi

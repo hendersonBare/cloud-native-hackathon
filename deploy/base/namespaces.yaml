@@ -1,0 +1,24 @@
+# One namespace per company (the trust boundary) plus the shared system namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rapport-system
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/system: "true"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: org-acme
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/org: acme
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: org-bluefin
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/org: bluefin

@@ -1,0 +1,8 @@
+{
+  "rapport-delegate-acme": {
+    "cluster": ["monitor_inference"],
+    "indices": [
+      { "names": ["rapport-acme-shareable", "rapport-conference"], "privileges": ["read"] }
+    ]
+  }
+}

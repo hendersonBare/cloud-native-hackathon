@@ -1,0 +1,16 @@
+# Single-node kind cluster (light enough for a laptop).
+# The gateway Service is a NodePort 30080 -> http://localhost:8080 on your Mac.
+# If NetworkPolicy turns out not to be enforced (scripts/setup-cluster.sh tells you),
+# uncomment `networking` below, recreate the cluster and install Calico (docs/SETUP.md).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: rapport
+# networking:
+#   disableDefaultCNI: true
+#   podSubnet: 192.168.0.0/16
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP

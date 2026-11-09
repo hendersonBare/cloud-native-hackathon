@@ -1,0 +1,60 @@
+{
+  "index_patterns": ["rapport-*"],
+  "priority": 500,
+  "_meta": { "owner": "rapport", "contract": "rapport_common.models.MemoryRecord" },
+  "template": {
+    "mappings": {
+      "dynamic": false,
+      "properties": {
+        "memory_id": { "type": "keyword" },
+        "org_id": { "type": "keyword" },
+        "share_level": { "type": "keyword" },
+        "kind": { "type": "keyword" },
+        "title": { "type": "text", "fields": { "keyword": { "type": "keyword", "ignore_above": 256 } } },
+        "text": { "type": "text" },
+        "summary": { "type": "text" },
+        "text_semantic": { "type": "semantic_text", "inference_id": "__INFERENCE_ID__" },
+        "tags": { "type": "keyword" },
+        "about_org_ids": { "type": "keyword" },
+        "about_persona_ids": { "type": "keyword" },
+        "owner_persona_id": { "type": "keyword" },
+        "created_at": { "type": "date" },
+        "source": {
+          "properties": {
+            "type": { "type": "keyword" },
+            "encounter_id": { "type": "keyword" },
+            "filename": { "type": "keyword" },
+            "url": { "type": "keyword" }
+          }
+        },
+        "talk": {
+          "properties": {
+            "starts_at": { "type": "date" },
+            "ends_at": { "type": "date" },
+            "room": { "type": "keyword" },
+            "speakers": { "type": "text" },
+            "track": { "type": "keyword" }
+          }
+        },
+        "followup": {
+          "properties": {
+            "status": { "type": "keyword" },
+            "owner_org_id": { "type": "keyword" },
+            "owner_persona_id": { "type": "keyword" },
+            "counterparty_org_id": { "type": "keyword" },
+            "due": { "type": "keyword" }
+          }
+        },
+        "profile": {
+          "properties": {
+            "visibility": { "type": "keyword" },
+            "headline": { "type": "text" },
+            "interests": { "type": "keyword" },
+            "goals": { "type": "text" },
+            "highlights": { "type": "text" }
+          }
+        }
+      }
+    }
+  }
+}
