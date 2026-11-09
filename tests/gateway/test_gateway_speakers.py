@@ -29,6 +29,21 @@ async def test_top_speakers_and_ui_are_served(mock_stack):
     assert ui.status_code == 200 and ui.headers["content-type"].startswith("text/html")
 
 
+async def test_speaker_utterances_are_served(mock_stack):
+    r = await mock_stack.client.get("/api/speakers/speakers/kestrel.mia/utterances")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["speaker"] == "kestrel.mia" and body["utterances"]
+    assert {u["speaker_id"] for u in body["utterances"]} == {"kestrel.mia"}
+    assert all(u["spoken_at"].endswith("Z") and u["spoken_at_label"].endswith("MST") for u in body["utterances"])
+    starts = [u["spoken_at"] for u in body["utterances"]]
+    assert starts == sorted(starts)  # by time
+    assert "vector" not in r.text  # the public router never returns voiceprints
+
+    long_id = await mock_stack.client.get(f"/api/speakers/speakers/{'x' * 81}/utterances")
+    assert long_id.status_code == 422
+
+
 async def test_erasure_is_not_reachable_on_the_public_port(mock_stack):
     for path in ("/api/speakers/people/kestrel.mia", "/internal/speakers/people/kestrel.mia"):
         assert (await mock_stack.client.delete(path)).status_code == 404
