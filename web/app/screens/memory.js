@@ -284,6 +284,17 @@ export function render(ctx) {
     editButton.focus();
   }
 
+  // saveContext already turns upload errors into a message; this catches anything else so the
+  // editor never stays stuck on "Saving…".
+  function submitContextSafely() {
+    submitContext().catch((err) => {
+      console.warn('Context save failed', err?.name || 'Error');
+      if (disposed) return;
+      Object.assign(edit, { saving: false, status: 'Your agent could not save that. Try again.', error: true });
+      drawContext();
+    });
+  }
+
   async function submitContext() {
     if (edit.saving) return;
     edit.saving = true;
@@ -348,7 +359,7 @@ export function render(ctx) {
           h('span', null, label))));
     return [h('form', {
       class: 'memory-context-form', 'aria-label': 'Edit your context',
-      onSubmit: (event) => { event.preventDefault(); submitContext(); },
+      onSubmit: (event) => { event.preventDefault(); submitContextSafely(); },
     },
     h('label', { class: 'memory-context-label', for: noteId }, 'What should your agent know about you?'),
     note,
