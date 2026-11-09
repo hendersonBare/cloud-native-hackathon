@@ -182,6 +182,33 @@ def test_cv_is_present_and_synthetic():
     assert "synthetic" in cv.lower() and len(cv) < 2_000_000
 
 
+def test_seed_loader_upserts_everything_and_reports_counts(monkeypatch, caplog):
+    import rapport_memory.client as client_module
+
+    seen = {}
+
+    class StubClient:
+        def __init__(self, es_url, api_key, *, allowed_indices=None, **_):
+            seen.update(url=es_url, allowed=allowed_indices)
+
+        def write(self, records):
+            seen["written"] = records
+            return len(records)
+
+        def count(self, indices):
+            return {i: 1 for i in indices}
+
+    monkeypatch.setattr(client_module, "MemoryClient", StubClient)
+    monkeypatch.setenv("ES_URL", "https://es.invalid:443")
+    monkeypatch.setenv("ES_ADMIN_API_KEY", "not-a-real-key")
+    with caplog.at_level("INFO", logger="rapport.memory.seed"):
+        assert main() == 0
+    assert {r.memory_id for r in seen["written"]} == set(BY_ID)
+    assert set(seen["allowed"]) == set(all_indices())
+    logged = "\n".join(rec.getMessage() for rec in caplog.records)
+    assert all(index in logged for index in all_indices()) and "not-a-real-key" not in logged
+
+
 def test_seed_loader_exits_nonzero_without_credentials(monkeypatch, capsys):
     monkeypatch.delenv("ES_URL", raising=False)
     monkeypatch.delenv("ES_ADMIN_API_KEY", raising=False)
