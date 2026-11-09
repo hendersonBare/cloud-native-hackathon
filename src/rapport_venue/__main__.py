@@ -17,9 +17,10 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     app = create_app(web_dir=os.environ.get("RAPPORT_WEB_DIR"))
     init_telemetry("rapport-venue", fastapi_app=app)
-    # The container listens on all interfaces. Access log lines carry only paths and persona ids (GPS is in PUT
-    # bodies, which are never logged).
-    uvicorn.run(app, host="0.0.0.0", port=HTTP_PORT)
+    # Only a local dev server: in the cluster the venue runs inside the gateway, so this listens on localhost unless
+    # RAPPORT_VENUE_HOST says otherwise. Access log lines carry only paths and persona ids (GPS is in PUT bodies,
+    # which are never logged).
+    uvicorn.run(app, host=os.environ.get("RAPPORT_VENUE_HOST", "127.0.0.1"), port=HTTP_PORT)
 
 
 if __name__ == "__main__":

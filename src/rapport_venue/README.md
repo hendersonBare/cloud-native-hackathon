@@ -99,7 +99,7 @@ replace the service with `app.dependency_overrides[get_service]` (the demo reset
 RAPPORT_WEB_DIR=web PYTHONPATH=src uv run python -m rapport_venue
 ```
 
-It listens on `0.0.0.0:8080`. Tests: `make test`, or `PYTHONPATH=src uv run pytest tests/venue`.
+It listens on `127.0.0.1:8080`; set `RAPPORT_VENUE_HOST=0.0.0.0` to reach it from another machine. Tests: `make test`, or `PYTHONPATH=src uv run pytest tests/venue`.
 
 ## Security review needed
 
