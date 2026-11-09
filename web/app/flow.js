@@ -1,7 +1,11 @@
 // App-lifetime listeners run before screen listeners and own encounter state.
-import { h, avatar, icon, nextId } from './ui.js';
+import { h, avatar, nextId } from './ui.js';
 import { person } from './data.js';
 import { api } from './api.js';
+import { showNotification } from './notify.js';
+
+// Mock mode has no server request id, so the phone makes one with this prefix.
+const MOCK_REQUEST = 'req-mock-';
 
 const CONTENT = {
   'bluefin.bo': 'Acme does zero-code eBPF tracing — no changes to clinical apps.',
@@ -114,19 +118,84 @@ function encounterSuffix() {
 
 export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
   flowOverlay = overlay;
-  let pending = null;
   let lastStart = null;
   let disposed = false;
+  let closeNotice = null;
+  let noticeDismissed = false;
   const started = new Set();
   const cleanups = [];
+  // Incoming connect request for this phone, or null. Written only here; person.js
+  // and people.js render Accept/Decline from it and answer with a local 'ui:respond'.
+  store.incoming = null;
 
-  function dismissPending() {
-    if (!pending) return;
-    const request = pending;
-    pending = null;
-    request.settled = true;
-    request.close();
+  function hideNotice() {
+    closeNotice?.();
+    closeNotice = null;
   }
+
+  function clearIncoming() {
+    if (!store.incoming) return;
+    const { request_id } = store.incoming;
+    store.incoming = null;
+    noticeDismissed = false;
+    hideNotice();
+    bus.emitLocal('request:cleared', { request_id });
+  }
+
+  function showIncomingNotice() {
+    const req = store.incoming;
+    const requester = req && person(req.from);
+    if (!requester) return;
+    hideNotice();
+    closeNotice = showNotification(overlayRoot(), {
+      title: req.initiated_by === 'agent'
+        ? `${requester.name}'s agent wants to connect`
+        : `${requester.name} wants your agents to talk`,
+      body: CONTENT[me.id] || `${requester.role}`,
+      cta: 'See what your agent found',
+      avatarEl: avatar(requester.initials, requester.tone, 38, 14),
+      onOpen: () => {
+        closeNotice = null;
+        go('person', { id: req.from, request: req.request_id, from: 'request' });
+      },
+      onDismiss: () => {
+        closeNotice = null;
+        noticeDismissed = true;
+      },
+    });
+  }
+
+  function respond(accept) {
+    const req = store.incoming;
+    if (!req) return;
+    clearIncoming();
+    if (!accept) {
+      bus.emit('encounter:declined', { encounter_id: null, initiator: req.from, responder: me.id });
+      return;
+    }
+    const enc = {
+      encounter_id: `enc-${encounterSuffix()}`, initiator: req.from, responder: me.id,
+      startedAt: Date.now() + 600, status: 'talking',
+    };
+    store.encounter = enc;
+    bus.emit('encounter:start', enc);
+    if (mode !== 'live') return;
+    if (req.request_id.startsWith(MOCK_REQUEST)) {
+      console.warn('Cannot accept a live connection without a request_id');
+      return;
+    }
+    store.encounter.request_id = req.request_id;
+    api.accept(req.request_id, { persona_id: me.id }).catch(() => {
+      if (disposed) return;
+      console.warn('Accept request failed');
+      toast('Could not confirm the connection. Try again.', { tone: 'error' });
+    });
+  }
+
+  cleanups.push(bus.on('ui:respond', ({ request_id, accept } = {}) => {
+    if (!store.incoming || (request_id && request_id !== store.incoming.request_id)) return;
+    respond(accept === true);
+  }));
 
   cleanups.push(bus.on('ui:connect', ({ from, to, initiated_by = 'human', request_id }) => {
     if (from === me.id) {
@@ -151,79 +220,37 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
       }
     }
     if (to !== me.id) return;
-    const requester = person(from);
-    if (!requester) {
+    if (!person(from)) {
       console.warn('Connect request has an unknown persona');
       return;
     }
-    const title = initiated_by === 'agent'
-      ? `${requester.name}'s agent wants to connect`
-      : `${requester.name} wants your agents to talk`;
-
-    // A local broadcast can arrive before the server's request id. Enrich the
-    // existing sheet so its Accept button uses the authoritative request.
-    if (pending?.from === from && pending.to === to && (!request_id || !pending.request_id
-      || request_id === pending.request_id)) {
-      if (request_id) pending.request_id = request_id;
-      pending.title.textContent = title;
-      pending.label.textContent = title;
+    // The other phone's local broadcast can arrive before the server's request id:
+    // enrich the pending request instead of replacing it.
+    const current = store.incoming;
+    if (current && current.from === from && current.to === to
+      && (!request_id || current.request_id.startsWith(MOCK_REQUEST) || request_id === current.request_id)) {
+      if (request_id) current.request_id = request_id;
+      current.initiated_by = initiated_by;
+      bus.emitLocal('request:incoming', current);
+      if (closeNotice) showIncomingNotice();
       return;
     }
-    dismissPending();
-    const request = { from, to, request_id, settled: false };
-    pending = request;
-
-    function decline() {
-      if (request.settled) return;
-      request.settled = true;
-      request.close();
-      if (pending === request) pending = null;
-      bus.emit('encounter:declined', { encounter_id: null, initiator: from, responder: me.id });
-    }
-    function accept() {
-      if (request.settled) return;
-      request.settled = true;
-      request.close();
-      if (pending === request) pending = null;
-      const random = encounterSuffix();
-      const enc = {
-        encounter_id: `enc-${random}`, initiator: from, responder: me.id,
-        startedAt: Date.now() + 600, status: 'talking',
-      };
-      store.encounter = enc;
-      bus.emit('encounter:start', enc);
-      if (mode === 'live') {
-        if (request.request_id) {
-          store.encounter.request_id = request.request_id;
-          api.accept(request.request_id, { persona_id: me.id }).catch(() => {
-            if (disposed) return;
-            console.warn('Accept request failed');
-            toast('Could not confirm the connection. Try again.', { tone: 'error' });
-          });
-        } else {
-          console.warn('Cannot accept a live connection without a request_id');
-        }
-      }
-    }
-
-    request.title = h('h2', { class: 'serif flow-connect-title' }, title);
-    const content = h('div', { class: 'flow-connect' },
-      h('div', { class: 'avatar-pair flow-connect-avatars', 'aria-hidden': 'true' },
-        avatar(requester.initials, requester.tone, 52, 18), avatar(me.initials, me.tone, 52, 18)),
-      request.title,
-      h('p', { class: 'flow-connect-why' }, CONTENT[me.id]),
-      h('div', { class: 'flow-connect-sharing' },
-        h('p', { class: 'eyebrow' }, 'Their agent will share'),
-        h('ul', { class: 'flow-connect-chips', 'aria-label': 'What their agent will share' },
-          ['Role', 'Case study', 'Free/busy'].map((text) => h('li', { class: 'pill' }, text)))),
-      h('p', { class: 'flow-connect-lock' }, icon('lock', { size: 16 }), 'Your private memory is never shared'),
-      h('div', { class: 'action-row flow-connect-actions' },
-        h('button', { type: 'button', class: 'btn', onClick: decline }, 'Decline'),
-        h('button', { type: 'button', class: 'btn btn-primary', onClick: accept }, 'Accept')),
-    );
-    request.close = openSheet(content, { label: title, onClose: decline });
-    request.label = content.parentElement.querySelector('.visually-hidden');
+    clearIncoming();
+    store.incoming = { request_id: request_id || `${MOCK_REQUEST}${encounterSuffix().slice(0, 12)}`, from, to, initiated_by };
+    bus.emitLocal('request:incoming', store.incoming);
+    showIncomingNotice();
   }));
+
+  // A pending request the person opened but didn't answer comes back when they
+  // leave its brief (not after they dismissed the banner themselves).
+  function onRoute() {
+    const req = store.incoming;
+    if (!req || closeNotice || noticeDismissed) return;
+    const onBrief = /^#\/person\?/.test(location.hash) && new URLSearchParams(location.hash.split('?')[1]).get('id') === req.from;
+    if (!onBrief) showIncomingNotice();
+  }
+  window.addEventListener('hashchange', onRoute);
+  cleanups.push(() => window.removeEventListener('hashchange', onRoute));
 
   cleanups.push(bus.on('encounter:start', (enc) => {
     if (enc.initiator !== me.id && enc.responder !== me.id) return;
@@ -235,7 +262,7 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     store.encounter = { ...enc, status: 'talking' };
     started.add(key);
     lastStart = enc;
-    dismissPending();
+    if (store.incoming?.from === enc.initiator) clearIncoming();
     if (continuing) return;
     go('exchange');
     if (enc.initiator === me.id) {
@@ -253,7 +280,7 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     }
     if (responder === me.id) {
       store.encounter = null;
-      dismissPending();
+      if (store.incoming?.from === initiator) clearIncoming();
     }
   }));
 
@@ -305,7 +332,7 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     if (disposed) return;
     disposed = true;
     for (const close of cleanups) close();
-    dismissPending();
+    hideNotice();
     activeSheet?.();
     activeToast?.();
     started.clear();

@@ -263,7 +263,7 @@ export function render(ctx) {
       h('div', { class: 'memory-suggestions', role: 'group', 'aria-label': 'Suggested questions' },
         content.questions.map((item) => h('button', {
           type: 'button', class: 'memory-suggestion', onClick: () => { askSafely(item.question); },
-        }, item.question)),
+        }, icon('sparkle', { size: 14, stroke: 1.9 }), h('span', null, item.question))),
       ),
       answerRegion,
       h('section', { class: 'memory-section', 'aria-labelledby': scopeId },

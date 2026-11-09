@@ -3,6 +3,7 @@
 // Main.dc.html (v2 design).
 
 import { h, svg, icon, avatar, bottomNav, eyebrow } from '../ui.js';
+import { hashFor } from '../route.js';
 
 const SWIPE_AT = 80;
 
@@ -198,7 +199,8 @@ export function render(ctx) {
       }
     } else {
       badge = h('span', { class: 'latest-badge agreed' }, icon('check', { size: 13, stroke: 3 }), 'Agents agreed');
-      action = h('a', { class: 'latest-action', href: '#/calendar', 'aria-label': `Create an event with ${who.name}` },
+      // Calendar opens its Add event sheet prefilled with this person (calendar.js reads ?add=1&with=).
+      action = h('a', { class: 'latest-action', href: hashFor('calendar', { add: '1', with: who.id }), 'aria-label': `Create an event with ${who.name}` },
         h('span', { class: 'decide-chip add', 'aria-hidden': 'true' }, icon('plus', { size: 18, stroke: 2.2 })));
     }
 
