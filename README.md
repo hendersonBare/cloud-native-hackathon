@@ -14,7 +14,8 @@ A hackathon kit for the Cloud Native Hackathon (theme: make conferences easier).
 | `docs/REVIEW.md` | Spec concerns and the layered fast path to a working demo |
 | `docs/TRACKS.md` | Track evidence: each claim, where it lives and its proof (`docs/evidence/`) |
 | `docs/research/oss-and-light-models.md` | Open-source helpers and light-model importance gating |
-| `AGENTS.md` | House rules every agent follows |
+| `docs/CNH-STARTER.md` | The [cnh-starter](https://github.com/skyhook-io/cnh-starter) template's README: getting the team cluster, Radar, and shipping with `git push` + Argo CD |
+| `AGENTS.md` | Radar/cluster notes from the template, then the house rules every agent follows |
 | `docs/workstreams/*.md` | One brief per parallel workstream |
 
 ## How the parallel build works
