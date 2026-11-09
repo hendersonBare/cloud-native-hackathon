@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -101,7 +101,8 @@ def test_headline_talk_is_exactly_as_specified():
     t = BY_ID["talk-ebpf-zero-code"]
     local = t.talk.starts_at.astimezone(DENVER)
     assert t.title == "Zero-code tracing with eBPF on Kubernetes"
-    assert (local.hour, local.minute, local.tzname()) == (15, 30, "MST")
+    expected_zone = datetime.combine(conference_day(), time(15, 30), tzinfo=DENVER).tzname()  # MST or MDT
+    assert (local.hour, local.minute, local.tzname()) == (15, 30, expected_zone)
     assert t.talk.room == "Room B" and t.talk.track == "Observability"
     assert t.tags == ["ebpf", "observability", "kubernetes"]
     assert (t.org_id, t.share_level) == ("conference", "public")

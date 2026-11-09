@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 import pytest
 from elastic_transport import ApiResponseMeta, HttpHeaders, NodeConfig
-from elasticsearch import AuthorizationException, BadRequestError
+from elasticsearch import ApiError, AuthorizationException, BadRequestError
 
 from rapport_common.models import MemoryRecord
 from rapport_common.names import CONFERENCE_INDEX, internal_index, shareable_index
@@ -233,6 +233,22 @@ def test_rerank_wraps_the_retriever_and_falls_back_on_error():
     assert "rrf" in second["retriever"]  # retried without rerank, still hybrid
     c.search("ebpf", indices=[CONFERENCE_INDEX])
     assert "text_similarity_reranker" not in str(es.searches[-1])  # remembered
+
+
+def test_transient_rerank_error_skips_rerank_once_but_is_not_remembered():
+    calls = {"n": 0}
+
+    def fail_first(kw):
+        calls["n"] += 1
+        return ApiError("unavailable", _meta(503), {}) if calls["n"] == 1 else None
+
+    es = FakeES(fail_when=fail_first)
+    c = client(es, rerank_inference_id=".rerank-test")
+    c.search("ebpf", indices=[CONFERENCE_INDEX])
+    assert "text_similarity_reranker" in str(es.searches[0]["retriever"])
+    assert "text_similarity_reranker" not in str(es.searches[1]["retriever"])  # retried plain, same call
+    c.search("ebpf", indices=[CONFERENCE_INDEX])
+    assert "text_similarity_reranker" in str(es.searches[2]["retriever"])  # next call tries rerank again
 
 
 def test_rerank_is_configured_from_the_environment(monkeypatch):

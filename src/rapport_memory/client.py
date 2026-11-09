@@ -189,11 +189,13 @@ class MemoryClient:
             except ApiError as exc:
                 if exc.status_code in (401, 403):
                     raise  # a permission problem is not a rerank problem
+                if exc.status_code in (400, 404):  # the request or the inference endpoint was rejected: stop trying
+                    self._rerank_id = None
+                # anything else (429, 5xx) may be transient: skip rerank for this call only
                 log.warning("rerank failed (status=%s); continuing without rerank", exc.status_code)
-                self._rerank_id = None
         while True:
             try:
-                return self._run(indices, self.build_body(query, filters=filters, size=size))
+                return self._run(indices, self.build_body(query, filters=filters, size=size, rerank=False))
             except BadRequestError as exc:
                 next_mode = _MODES.index(self._mode) + 1
                 if next_mode >= len(_MODES):

@@ -66,7 +66,7 @@ def doc_records(now: datetime | None = None) -> list[MemoryRecord]:
             "acme-doc-0005", "acme", "public", "document", "Acme at the conference: booth 12, demo times",
             "Visit Acme at booth 12. Live demos run at 2:00 PM, 3:00 PM and 4:00 PM Mountain Time. Ask for a "
             "walkthrough of zero-code tracing on a sample Kubernetes app, or book a follow-up conversation.",
-            "Acme is at booth 12 with live demos at 2:00, 3:00 and 4:00 PM MST.",
+            "Acme is at booth 12 with live demos at 2:00, 3:00 and 4:00 PM Mountain Time.",
             ["conference"], minute=5,
         ),
         # ---- Acme, internal -------------------------------------------------------------------------------
