@@ -63,7 +63,7 @@ async def deep_dive(b: Briefer, req: DeepDiveRequest) -> DeepDive:
         raise HTTPException(status_code=422, detail="cannot deep dive on yourself")
     lang = viewer.language
 
-    card, notes, talks_map, offers, goals, past, score = await asyncio.gather(
+    card, notes, talks_map, offers, goals, past, score, blocked = await asyncio.gather(
         b.get(names.attendee_card_id(target.persona_id), indices=[b.conference]),
         notes_about_org(b, target),
         _talks_by_person(b, " ".join(target.interests)),
@@ -71,6 +71,7 @@ async def deep_dive(b: Briefer, req: DeepDiveRequest) -> DeepDive:
         _viewer_goals(b, viewer),
         _past_outcomes(b, target),
         score_for(b, viewer, target),
+        _do_not_contact(b, target),  # its own tag-filtered query: never limited by the notes shown in the prompt
     )
     notes = notes[:5]
     talks = talks_map.get(target.persona_id, [])
@@ -129,9 +130,7 @@ async def deep_dive(b: Briefer, req: DeepDiveRequest) -> DeepDive:
         cited = [*notes[:2], *offers[:2], *past[:1]]
     intro = _human_intro_reason(lang, target, talks, shared)
 
-    action, reason, checks = _guardrails(
-        lang, action, reason, confidence, score, target, bool(_do_not_contact(notes, target)), intro
-    )
+    action, reason, checks = _guardrails(lang, action, reason, confidence, score, target, blocked, intro)
     return DeepDive(
         persona_id=viewer.persona_id,
         target_persona_id=target.persona_id,
@@ -169,8 +168,14 @@ async def _past_outcomes(b: Briefer, target: Persona) -> list[MemoryRecord]:
     )
 
 
-def _do_not_contact(notes: list[MemoryRecord], target: Persona) -> list[MemoryRecord]:
-    return [n for n in notes if "do-not-contact" in n.tags and target.persona_id in n.about_persona_ids]
+async def _do_not_contact(b: Briefer, target: Persona) -> bool:
+    """True if the viewer's company has a `do-not-contact` note about this person, or about their whole company
+    (a company-level note names no individuals)."""
+    notes = await b.search(f"{target.name} do not contact", indices=[b.internal], tags=["do-not-contact"], size=50)
+    return any(
+        target.persona_id in n.about_persona_ids or (target.org_id in n.about_org_ids and not n.about_persona_ids)
+        for n in notes
+    )
 
 
 def _dedupe(cites: list[Citation]) -> list[Citation]:

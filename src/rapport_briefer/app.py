@@ -58,10 +58,12 @@ def create_app(org_id: str, store: MemoryStore, llm: LLM | None = None) -> FastA
     # ------------------------------------------------------------------ memory
     @memory.post("/remember", response_model=Written)
     async def remember(body: RememberRequest) -> Written:
-        mine = [r for r in body.records if r.org_id == b.org_id]  # never write for another company
+        # Never write for another company, and never into the shared conference index: talks and attendee cards
+        # route there (names.index_for) and every company's Discover deck trusts them, so a briefer must not forge them.
+        mine = [r for r in body.records if r.org_id == b.org_id and names.index_for(r) != names.CONFERENCE_INDEX]
         skipped = len(body.records) - len(mine)
         if skipped:
-            log.warning("remember skipped %d record(s) of another org", skipped)
+            log.warning("remember skipped %d record(s) of another org or for the conference index", skipped)
         return Written(written=await b.write(mine) if mine else 0)
 
     # ------------------------------------------------------------------ assistant

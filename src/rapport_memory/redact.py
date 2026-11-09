@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 
 PLACEHOLDER = "[redacted]"
+_HSPACE = re.compile(r"[^\S\r\n]")  # any whitespace except line breaks, including Unicode spaces
 
 _STREET_WORDS = (
     r"(?:street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr|court|ct|way|place|pl|square|sq|"
@@ -45,6 +46,7 @@ _PATTERNS: list[re.Pattern[str]] = [
 
 def redact(text: str) -> str:
     """Replace emails, phone numbers and postal addresses with "[redacted]"."""
+    text = _HSPACE.sub(" ", text)  # NBSP / thin spaces from PDFs and Word behave like a plain space
     for pattern in _PATTERNS:
         text = pattern.sub(PLACEHOLDER, text)
     return text

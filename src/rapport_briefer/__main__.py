@@ -38,7 +38,10 @@ def main() -> None:
         raise SystemExit(f"RAPPORT_ORG_ID must be one of {sorted(names.orgs())}, got {org_id!r}")
     app = create_app(org_id, build_store(org_id))
     init_telemetry("rapport-briefer", org_id=org_id, fastapi_app=app)
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", names.HTTP_PORT)), log_level="info")
+    # A pod must listen on every interface to be reachable by its Service (house rule: 0.0.0.0:8080). Ingress is
+    # restricted by deploy/base/network-policies.yaml (only the gateway and the same namespace).
+    host = "0.0.0.0"  # NOSONAR
+    uvicorn.run(app, host=host, port=int(os.environ.get("PORT", names.HTTP_PORT)), log_level="info")
 
 
 if __name__ == "__main__":
