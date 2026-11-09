@@ -76,6 +76,14 @@ export function focusFallbacks(key, day) {
   return keys;
 }
 
+/**
+ * Run an async action without awaiting it. The calendar's async functions report their own failures
+ * (toast or error card); this only makes sure nothing is left unhandled, logging the error class only.
+ */
+function settle(promise, what) {
+  return promise.catch((err) => console.warn(`Calendar ${what} failed`, err?.name || 'Error'));
+}
+
 /** `?add=1&with=<id>` -> what the add sheet opens with, or null when the link asks for nothing. */
 export function addLinkPrefill(params = {}, personOf = () => null) {
   if (params.add !== '1') return null;
@@ -204,7 +212,7 @@ export function render(ctx) {
       h('p', { class: 'empty-note' }, error?.status === 404
         ? 'The calendar service is not available yet.'
         : calendarErrorMessage(error, 'load your calendar')),
-      h('button', { type: 'button', class: 'btn btn-sm calendar-retry', onClick: () => load() }, 'Retry')));
+      h('button', { type: 'button', class: 'btn btn-sm calendar-retry', onClick: () => settle(load(), 'load') }, 'Retry')));
   }
 
   // ---------------------------------------------------------------- data
@@ -691,7 +699,7 @@ export function render(ctx) {
       if (failure) {
         list.replaceChildren(h('div', { class: 'agenda-state', role: 'alert' },
           h('p', { class: 'empty-note' }, calendarErrorMessage(failure, 'load the agenda')),
-          h('button', { type: 'button', class: 'btn btn-sm', onClick: () => run(query) }, 'Retry')));
+          h('button', { type: 'button', class: 'btn btn-sm', onClick: () => settle(run(query), 'agenda search') }, 'Retry')));
         return;
       }
       if (!result) {
@@ -722,7 +730,7 @@ export function render(ctx) {
           type: 'button', class: `btn btn-sm agenda-add${added ? ' is-added' : ''}`, 'aria-disabled': added ? 'true' : null,
           'aria-label': added ? `${item.talk.title} is on your calendar` : `Add ${item.talk.title} to your calendar`,
           dataset: { focusKey: `talk:${item.talk.talk_id}` },
-          onClick: () => { if (!added) addTalk(item); },
+          onClick: () => { if (!added) settle(addTalk(item), 'add talk'); },
         }, added ? icon('check', { size: 16, stroke: 2 }) : null, added ? 'Added' : 'Add'));
     }
 
@@ -780,7 +788,7 @@ export function render(ctx) {
 
     input.addEventListener('input', () => {
       clearTimeout(timer);
-      timer = setTimeout(() => run(input.value.trim()), DEBOUNCE_MS);
+      timer = setTimeout(() => settle(run(input.value.trim()), 'agenda search'), DEBOUNCE_MS);
     });
 
     const content = h('div', { class: 'cal-sheet' },
@@ -801,22 +809,22 @@ export function render(ctx) {
         closeSheet = null;
       },
     });
-    run('');
+    settle(run(''), 'agenda search');
   }
 
   // ---------------------------------------------------------------- refresh
 
   ctx.onCleanup(bus.on('calendar:changed', (data) => {
-    if (!data?.persona_ids || data.persona_ids.includes(me.id)) load({ silent: true });
+    if (!data?.persona_ids || data.persona_ids.includes(me.id)) settle(load({ silent: true }), 'refresh');
   }));
   const clock = setInterval(() => draw(), CLOCK_MS);
   ctx.onCleanup(() => clearInterval(clock));
   if (ctx.mode === 'live') {
-    const poll = setInterval(() => load({ silent: true }), POLL_MS);
+    const poll = setInterval(() => settle(load({ silent: true }), 'refresh'), POLL_MS);
     ctx.onCleanup(() => clearInterval(poll));
   }
 
-  load();
+  settle(load(), 'load');
 
   return h('div', { class: 'screen calendar' }, main, bottomNav('calendar'));
 }
