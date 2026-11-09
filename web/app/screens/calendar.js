@@ -427,8 +427,9 @@ export function render(ctx) {
       icon('check', { size: 18, stroke: 2, label: 'Done' }));
   }
 
-  const noteFor = (event) => [event.location, `${durationOf(event)} min`, event.capture ? 'Auto-transcribe on' : 'Capture off']
-    .filter(Boolean).join(' · ');
+  // event.note is server text such as "Going with Bo · suggested by your agents" (templated, never counterparty text).
+  const noteFor = (event) => [event.location, `${durationOf(event)} min`, event.capture ? 'Auto-transcribe on' : 'Capture off',
+    event.note].filter(Boolean).join(' · ');
 
   /** A scheduled event: time, copy, the Auto-transcribe switch, and Remove for events the person added. */
   function eventRow(event) {

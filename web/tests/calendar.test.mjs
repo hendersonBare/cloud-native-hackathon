@@ -1198,6 +1198,22 @@ describe('calendar screen', () => {
     stop();
   });
 
+  test('a scheduled row shows the event note, such as who the agents said you are going with', async () => {
+    cleanFocus();
+    const note = 'Going with Bo · suggested by your agents';
+    const withNote = (view) => ({
+      ...view, events: view.events.map((e) => (e.event_id === 'evt-ava-otel' ? { ...e, note } : e)),
+    });
+    const { ctx, stop } = screenCtx({
+      wrap: (mock) => ({ ...mock, view: async (...args) => withNote(await mock.view(...args)) }),
+    });
+    const root = mountScreen(ctx);
+    await tick();
+    const notes = root.querySelectorAll('.event-note').map((el) => el.textContent);
+    assert.ok(notes.some((text) => text.includes('Room B') && text.endsWith(note)), notes.join(' | '));
+    stop();
+  });
+
   test('a capture switch flips at once and reverts with a toast when the call fails', async () => {
     cleanFocus();
     const { ctx, stop } = screenCtx({
