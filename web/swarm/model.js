@@ -22,6 +22,7 @@ export function createState() {
     lanes: [], // [{ org, side, pods: [{ name, phase }] }]
     timeline: [], // entries, oldest first
     detail: null,
+    superseded: [], // encounter ids replaced by a newer request; their late events are ignored
     seq: 0,
   };
 }
@@ -68,6 +69,7 @@ function copy(state) {
 }
 
 function sameEncounter(state, event) {
+  if (event.encounter_id && state.superseded.includes(event.encounter_id)) return false;
   return !state.encounterId || !event.encounter_id || state.encounterId === event.encounter_id;
 }
 
@@ -87,6 +89,7 @@ export function reduce(previous, event) {
       next.status = 'requested';
       next.initiator = party(data.from_persona_id);
       next.responder = party(data.to_persona_id);
+      next.superseded = [...state.superseded, state.encounterId].filter(Boolean).slice(-20);
       next.seq = state.seq;
       push(next, {
         kind: 'step', step: 'requested', ts, persona: next.initiator?.persona,
@@ -105,6 +108,8 @@ export function reduce(previous, event) {
       next.seq = state.seq;
       next.status = 'running';
       next.encounterId = text(event.encounter_id) || null;
+      // An id that starts again (the mock fixture reuses one id) is active, not superseded.
+      next.superseded = state.superseded.filter((id) => id !== next.encounterId);
       next.initiator = party(data.initiator_persona_id);
       next.responder = party(data.responder_persona_id);
       if (next.initiator) lane(next, next.initiator.org, 'initiator');

@@ -151,6 +151,23 @@ test('a connect_request for a new pair replaces a running encounter; a repeat fo
   assert.equal(replaced.status, 'requested');
   assert.equal(replaced.encounterId, null);
   assert.equal(replaced.lanes.length, 0);
+  // Late events of the replaced encounter (still on the stream) are ignored; the new one is adopted.
+  const late = { type: 'pod_status', encounter_id: 'enc-1', ts: 't', data: { org_id: 'acme', side: 'initiator', pod: 'p', phase: 'Running' } };
+  assert.equal(reduce(replaced, late), replaced);
+  const completedLate = { type: 'encounter_completed', encounter_id: 'enc-1', ts: 't', data: { status: 'completed' } };
+  assert.equal(reduce(replaced, completedLate), replaced);
+  const fresh = reduce(replaced, { ...late, encounter_id: 'enc-2' });
+  assert.equal(fresh.lanes.length, 1);
+});
+
+test('the mock fixture can be replayed twice in a row (it reuses one encounter id)', () => {
+  const request = { type: 'connect_request', ts: 't', data: { from_persona_id: 'acme.ava', to_persona_id: 'bluefin.bo' } };
+  let state = replay(acceptPhase(fixture));
+  state = reduce(state, request);
+  state = replay(acceptPhase(fixture), state);
+  assert.equal(state.status, 'completed');
+  assert.equal(state.timeline.filter((e) => e.kind === 'message').length, 6);
+  assert.equal(state.lanes.length, 2);
 });
 
 test('long server strings are clipped', () => {
