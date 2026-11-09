@@ -204,9 +204,73 @@ test('the live client calls the venue API paths', async () => {
   assert.deepEqual(calls, [
     ['/api/venue?persona_id=acme.ava', 'GET', undefined],
     ['/api/venue/directions?persona_id=acme.ava&to=kestrel.mia', 'GET', undefined],
-    ['/api/venue/location', 'PUT', { persona_id: 'acme.ava', ...INSIDE }],
+    ['/api/venue/location', 'PUT', { persona_id: 'acme.ava', ...INSIDE, sharing_token: null }],
     ['/api/venue/sharing', 'PUT', { persona_id: 'acme.ava', enabled: false }],
   ]);
+});
+
+// A fake venue API with the server's per-device rules, for the live client's token handling.
+function tokenServer(seedSharing = false) {
+  const calls = [];
+  let held = null;
+  let sharing = seedSharing;
+  let n = 0;
+  const fail = (status, detail) => Object.assign(new Error(`failed with status ${status}`), { status, detail });
+  const fetchJson = async (url, { method, body } = {}) => {
+    calls.push([url, method, body]);
+    if (url === '/api/venue/sharing') {
+      if (!body.enabled) { sharing = false; held = null; return { persona_id: body.persona_id, enabled: false, sharing_token: null }; }
+      if (held && body.sharing_token !== held) throw fail(403, 'shared_from_another_device');
+      if (!held) held = `tok-${(n += 1)}-${'x'.repeat(20)}`;
+      sharing = true;
+      return { persona_id: body.persona_id, enabled: true, sharing_token: held };
+    }
+    if (url === '/api/venue/location') {
+      if (!sharing) throw fail(409, 'sharing_off');
+      if (!held || body.sharing_token !== held) throw fail(403, 'not_this_device');
+      return { persona_id: body.persona_id, source: 'gps' };
+    }
+    return null;
+  };
+  return { calls, fetchJson, token: () => held };
+}
+
+test('live: turning sharing on keeps the token inside the client and sends it with every fix', async () => {
+  const srv = tokenServer();
+  const api = liveVenue(srv.fetchJson);
+  const state = await api.setSharing({ persona_id: 'acme.ava', enabled: true });
+  assert.deepEqual(state, { persona_id: 'acme.ava', enabled: true }, 'the screen never sees the token');
+  assert.equal((await api.updateLocation({ persona_id: 'acme.ava', ...INSIDE })).source, 'gps');
+  assert.equal(srv.calls.at(-1)[2].sharing_token, srv.token());
+  await api.setSharing({ persona_id: 'acme.ava', enabled: true });
+  assert.equal(srv.calls.at(-1)[2].sharing_token, srv.token(), 'turning it on again proves it is this device');
+});
+
+test('live: turning sharing off drops the token; the next fix is refused as sharing_off', async () => {
+  const srv = tokenServer();
+  const api = liveVenue(srv.fetchJson);
+  await api.setSharing({ persona_id: 'acme.ava', enabled: true });
+  await api.setSharing({ persona_id: 'acme.ava', enabled: false });
+  assert.equal(srv.calls.at(-1)[2].sharing_token, undefined, 'turning off sends no token');
+  await assert.rejects(api.updateLocation({ persona_id: 'acme.ava', ...INSIDE }), { status: 409 });
+});
+
+test('live: sharing on from the seed is claimed once by the first fix, then sent normally', async () => {
+  const srv = tokenServer(true);
+  const api = liveVenue(srv.fetchJson);
+  assert.equal((await api.updateLocation({ persona_id: 'acme.ava', ...INSIDE })).source, 'gps');
+  assert.deepEqual(srv.calls.map(([url]) => url), ['/api/venue/location', '/api/venue/sharing', '/api/venue/location']);
+  await api.updateLocation({ persona_id: 'acme.ava', ...INSIDE });
+  assert.equal(srv.calls.length, 4, 'no second claim');
+});
+
+test('live: a device that lost its token to another one does not keep retrying', async () => {
+  const srv = tokenServer();
+  const mine = liveVenue(srv.fetchJson);
+  await mine.setSharing({ persona_id: 'acme.ava', enabled: true });
+  const other = liveVenue(srv.fetchJson);
+  await assert.rejects(other.updateLocation({ persona_id: 'acme.ava', ...INSIDE }), { status: 403 });
+  await assert.rejects(other.setSharing({ persona_id: 'acme.ava', enabled: true }), { status: 403 });
 });
 
 test('steps read naturally and keep numbers next to their unit', () => {

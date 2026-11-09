@@ -19,6 +19,13 @@ def gps(venue: dict, persona_id: str, x: float, y: float, **extra) -> dict:
     return {"persona_id": persona_id, "lat": lat, "lng": lng, **extra}
 
 
+async def claim(http: httpx.AsyncClient, persona_id: str) -> str:
+    """Turn sharing on as this device, the way a phone does, and return the device's sharing token."""
+    res = await http.put(f"{VENUE}/sharing", json={"persona_id": persona_id, "enabled": True})
+    assert res.status_code == 200, res.text
+    return res.json()["sharing_token"]
+
+
 # ----------------------------------------------------------------------------- GET /api/venue
 async def test_get_venue(client):
     res = await client.get(VENUE, params={"persona_id": AVA})
@@ -47,7 +54,8 @@ async def test_get_venue_errors(client):
 
 # ----------------------------------------------------------------------------- PUT /api/venue/location
 async def test_put_location(client, venue):
-    res = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 42.79, 22.26, accuracy_m=9))
+    token = await claim(client, AVA)
+    res = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 42.79, 22.26, accuracy_m=9, sharing_token=token))
     assert res.status_code == 200
     assert res.json() == {
         "persona_id": AVA,
@@ -65,9 +73,13 @@ async def test_put_location(client, venue):
 async def test_put_location_rule_errors(client, venue):
     off = await client.put(f"{VENUE}/location", json=gps(venue, LENA, 30, 55))
     assert (off.status_code, off.json()) == (409, {"detail": "sharing_off"})
-    blurry = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55, accuracy_m=250))
+    stranger = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55))
+    assert (stranger.status_code, stranger.json()) == (403, {"detail": "not_this_device"})
+    token = await claim(client, AVA)
+    blurry = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55, accuracy_m=250, sharing_token=token))
     assert (blurry.status_code, blurry.json()) == (422, {"detail": "too_inaccurate"})
-    away = await client.put(f"{VENUE}/location", json={"persona_id": AVA, "lat": 40.0, "lng": -105.5})
+    away_body = {"persona_id": AVA, "lat": 40.0, "lng": -105.5, "sharing_token": token}
+    away = await client.put(f"{VENUE}/location", json=away_body)
     assert (away.status_code, away.json()) == (422, {"detail": "outside_venue"})
     unknown = await client.put(f"{VENUE}/location", json=gps(venue, "nobody.here", 30, 55))
     assert (unknown.status_code, unknown.json()) == (404, {"detail": "unknown_persona"})
@@ -99,15 +111,18 @@ async def test_put_location_validation(client, venue):
 
 # ----------------------------------------------------------------------------- PUT /api/venue/sharing
 async def test_put_sharing(client, venue):
-    await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55))
+    token = await claim(client, AVA)
+    await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55, sharing_token=token))
     res = await client.put(f"{VENUE}/sharing", json={"persona_id": AVA, "enabled": False})
-    assert (res.status_code, res.json()) == (200, {"persona_id": AVA, "enabled": False})
+    assert (res.status_code, res.json()) == (200, {"persona_id": AVA, "enabled": False, "sharing_token": None})
     view = (await client.get(VENUE, params={"persona_id": AVA})).json()
     assert view["sharing"] is False and view["me"]["source"] == "checkin"
-    blocked = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55))
+    blocked = await client.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55, sharing_token=token))
     assert (blocked.status_code, blocked.json()) == (409, {"detail": "sharing_off"})
-    on = await client.put(f"{VENUE}/sharing", json={"persona_id": LENA, "enabled": True})
-    assert on.json() == {"persona_id": LENA, "enabled": True}
+    on = (await client.put(f"{VENUE}/sharing", json={"persona_id": LENA, "enabled": True})).json()
+    assert (on["persona_id"], on["enabled"], len(on["sharing_token"]) >= 32) == (LENA, True, True)
+    taken = await client.put(f"{VENUE}/sharing", json={"persona_id": LENA, "enabled": True})
+    assert (taken.status_code, taken.json()) == (403, {"detail": "shared_from_another_device"})
 
 
 async def test_put_sharing_needs_a_real_boolean(client):
@@ -212,7 +227,8 @@ async def test_the_gateway_serves_the_venue_and_its_demo_reset_resets_it(monkeyp
     gateway = create_gateway(Settings(mock=True, version="test", web_dir=None, mock_speed=1000.0))
     try:
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=gateway), base_url="http://gw") as http:
-            moved = await http.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55))
+            token = await claim(http, AVA)
+            moved = await http.put(f"{VENUE}/location", json=gps(venue, AVA, 30, 55, sharing_token=token))
             assert moved.status_code == 200 and moved.json()["source"] == "gps"
             off = await http.put(f"{VENUE}/sharing", json={"persona_id": BO, "enabled": False})
             assert off.status_code == 200

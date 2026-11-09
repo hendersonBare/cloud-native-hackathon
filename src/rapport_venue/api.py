@@ -40,6 +40,7 @@ async def get_venue(service: Service, persona_id: PersonaId) -> VenueView:
     response_model=Position,
     responses={
         **_UNKNOWN_PERSONA,
+        403: {"description": "not_this_device: missing or wrong sharing_token"},
         409: {"description": "sharing_off"},
         422: {"description": "too_inaccurate, outside_venue or a validation error"},
     },
@@ -49,9 +50,14 @@ async def put_location(body: LocationUpdate, service: Service) -> Position:
     return service.update_location(body)
 
 
-@router.put("/sharing", response_model=SharingState, responses=_UNKNOWN_PERSONA)
+@router.put(
+    "/sharing",
+    response_model=SharingState,
+    responses={**_UNKNOWN_PERSONA, 403: {"description": "shared_from_another_device"}},
+)
 async def put_sharing(body: SharingBody, service: Service) -> SharingState:
-    """Consent to be found. Turning it off deletes my stored GPS fix at once."""
+    """Consent to be found. Turning it on returns a sharing_token for this device only; turning it off needs no
+    token and deletes my stored GPS fix at once."""
     return service.set_sharing(body)
 
 

@@ -16,8 +16,8 @@ All under `/api/venue`. Errors are `{"detail": "<code>"}`; validation errors are
 | Method | Path | Body / query | Returns | Errors |
 |---|---|---|---|---|
 | GET | `` | `persona_id` | `VenueView`: the public floor plan, my `sharing` flag, `me` (my `Position`) | 404 `unknown_persona` |
-| PUT | `/location` | `LocationUpdate`: `persona_id`, `lat` (-90..90), `lng` (-180..180), `accuracy_m?` (0..5000) | `Position` (`source: "gps"`) | 404 `unknown_persona`, 409 `sharing_off`, 422 `too_inaccurate`, 422 `outside_venue` |
-| PUT | `/sharing` | `SharingBody`: `persona_id`, `enabled` (a JSON boolean) | `SharingState` | 404 `unknown_persona` |
+| PUT | `/location` | `LocationUpdate`: `persona_id`, `lat` (-90..90), `lng` (-180..180), `accuracy_m?` (0..5000), `sharing_token` | `Position` (`source: "gps"`) | 404 `unknown_persona`, 403 `not_this_device`, 409 `sharing_off`, 422 `too_inaccurate`, 422 `outside_venue` |
+| PUT | `/sharing` | `SharingBody`: `persona_id`, `enabled` (a JSON boolean), `sharing_token?` | `SharingState` (with this device's `sharing_token` when turned on) | 404 `unknown_persona`, 403 `shared_from_another_device` |
 | GET | `/directions` | `persona_id`, `to` | `Directions` (the JSON key is `from`) | 404 `unknown_persona`, 422 `same_person` |
 
 The standalone app also serves `GET /healthz` -> `{"ok": true, "version": ...}`.
@@ -57,6 +57,13 @@ to promote them into `rapport_common.models`.
   kept, in memory, while the person shares and for at most `gps_ttl_s`. Latitude and longitude never go on a span or
   a log line, and no response contains them.
 - Consent: nobody is placed by GPS unless their `sharing` flag is on, and turning it off deletes their fix.
+- Per-device consent: turning sharing on returns a random `sharing_token` to that device only; the service keeps
+  only its SHA-256. GPS fixes need the token (403 `not_this_device`), and so does turning sharing on again while a
+  device holds it (403 `shared_from_another_device`), so nobody else can feed or take over someone's location.
+  Turning sharing off never needs the token: it only reduces exposure, and it lets a person switch off sharing that
+  someone else switched on. Demo reset forgets every token. The token is never logged or put on a span.
+- What remains: the gateway has no logins, so anyone can still switch sharing on for a person who isn't sharing.
+  That reveals only the person's check-in spot (no GPS), and anyone, including that person, can switch it off.
 - `peer_status: "not_sharing"` reveals nothing about the peer: `to` is `null`, `route` and `legs` are empty and
   `distance_m`, `bearing_deg` and `compass` are `null`. The answer is the same whether or not they ever shared.
 - `GET /api/venue` returns the public floor plan only: never other people's check-in spots, sharing flags or the GPS

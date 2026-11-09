@@ -21,9 +21,24 @@ AVA, SAM, BO, MIA, LENA, RAJ, PRIYA = (
 )
 
 
-def fix(venue: dict, persona_id: str, x: float, y: float, accuracy_m: float | None = 8.0) -> LocationUpdate:
+def fix(
+    venue: dict, persona_id: str, x: float, y: float, accuracy_m: float | None = 8.0, token: str | None = None,
+) -> LocationUpdate:
     lat, lng = geo_for(venue, x, y)
-    return LocationUpdate(persona_id=persona_id, lat=lat, lng=lng, accuracy_m=accuracy_m)
+    return LocationUpdate(persona_id=persona_id, lat=lat, lng=lng, accuracy_m=accuracy_m, sharing_token=token)
+
+
+def device_token(svc: VenueService, persona_id: str) -> str:
+    """This test's device token for a persona that shares (set directly, like a device that turned sharing on)."""
+    token = f"test-device-{persona_id}"
+    if svc._sharing.get(persona_id):
+        svc._tokens[persona_id] = service_module._digest(token)
+    return token
+
+
+def located(svc: VenueService, venue: dict, persona_id: str, x: float, y: float, **kwargs) -> object:
+    """A GPS fix sent by the persona's own sharing device."""
+    return svc.update_location(fix(venue, persona_id, x, y, token=device_token(svc, persona_id), **kwargs))
 
 
 def error_of(call) -> tuple[int, str]:
@@ -45,12 +60,13 @@ def test_sharing_toggles(service):
     assert service.set_sharing(SharingBody(persona_id=LENA, enabled=False)).model_dump() == {
         "persona_id": LENA,
         "enabled": False,
+        "sharing_token": None,
     }
     assert service.view(LENA).sharing is False
 
 
 def test_turning_sharing_off_deletes_the_gps_fix_at_once(service, venue):
-    assert service.update_location(fix(venue, AVA, 30, 55)).source == "gps"
+    assert located(service, venue, AVA, 30, 55).source == "gps"
     service.set_sharing(SharingBody(persona_id=AVA, enabled=False))
     assert AVA not in service._fixes
     assert service.view(AVA).me.source == "checkin"
@@ -60,14 +76,16 @@ def test_turning_sharing_off_deletes_the_gps_fix_at_once(service, venue):
 
 
 def test_location_needs_sharing(service, venue):
-    assert error_of(lambda: service.update_location(fix(venue, LENA, 30, 55))) == (409, "sharing_off")
+    assert error_of(lambda: located(service, venue, LENA, 30, 55)) == (409, "sharing_off")
     assert LENA not in service._fixes
 
 
 # ----------------------------------------------------------------------------- placing a fix
 def test_update_location_places_the_fix(service, venue):
     lat, lng = geo_for(venue, 42.79, 22.26)
-    pos = service.update_location(LocationUpdate(persona_id=AVA, lat=lat, lng=lng, accuracy_m=12.5))
+    token = device_token(service, AVA)
+    update = LocationUpdate(persona_id=AVA, lat=lat, lng=lng, accuracy_m=12.5, sharing_token=token)
+    pos = service.update_location(update)
     assert pos.model_dump() == {
         "persona_id": AVA,
         "x": 42.8,
@@ -82,28 +100,29 @@ def test_update_location_places_the_fix(service, venue):
 
 def test_only_the_placed_point_is_stored(service, venue):
     lat, lng = geo_for(venue, 42.79, 22.26)
-    service.update_location(LocationUpdate(persona_id=AVA, lat=lat, lng=lng, accuracy_m=5))
+    token = device_token(service, AVA)
+    service.update_location(LocationUpdate(persona_id=AVA, lat=lat, lng=lng, accuracy_m=5, sharing_token=token))
     stored = dataclasses.asdict(service._fixes[AVA])
     assert stored == {"x": 42.8, "y": 22.3, "accuracy_m": 5, "at": NOW}
     assert lat not in stored.values() and lng not in stored.values()
 
 
 def test_a_fix_just_outside_is_clamped_and_far_outside_is_rejected(service, venue):
-    pos = service.update_location(fix(venue, AVA, -10, 80))
+    pos = located(service, venue, AVA, -10, 80)
     assert (pos.x, pos.y, pos.room_id) == (0, 70, "main-hall")
-    assert error_of(lambda: service.update_location(fix(venue, AVA, -16, 10))) == (422, "outside_venue")
-    far = LocationUpdate(persona_id=AVA, lat=40.0, lng=-105.5)
+    assert error_of(lambda: located(service, venue, AVA, -16, 10)) == (422, "outside_venue")
+    far = LocationUpdate(persona_id=AVA, sharing_token=device_token(service, AVA), lat=40.0, lng=-105.5)
     assert error_of(lambda: service.update_location(far)) == (422, "outside_venue")
     assert service.view(AVA).me.x == 0  # the rejected fixes left the last good one alone
 
 
 def test_too_inaccurate(service, venue):
-    assert error_of(lambda: service.update_location(fix(venue, AVA, 30, 55, accuracy_m=100.5))) == (
+    assert error_of(lambda: located(service, venue, AVA, 30, 55, accuracy_m=100.5)) == (
         422,
         "too_inaccurate",
     )
-    assert service.update_location(fix(venue, AVA, 30, 55, accuracy_m=100)).source == "gps"  # the limit is inclusive
-    assert service.update_location(fix(venue, AVA, 30, 55, accuracy_m=None)).accuracy_m is None
+    assert located(service, venue, AVA, 30, 55, accuracy_m=100).source == "gps"  # the limit is inclusive
+    assert located(service, venue, AVA, 30, 55, accuracy_m=None).accuracy_m is None
 
 
 def test_unknown_persona(service, venue):
@@ -113,14 +132,14 @@ def test_unknown_persona(service, venue):
         404,
         "unknown_persona",
     )
-    assert error_of(lambda: service.update_location(fix(venue, nobody, 30, 55))) == (404, "unknown_persona")
+    assert error_of(lambda: located(service, venue, nobody, 30, 55)) == (404, "unknown_persona")
     assert error_of(lambda: service.directions(nobody, AVA)) == (404, "unknown_persona")
     assert error_of(lambda: service.directions(AVA, nobody)) == (404, "unknown_persona")
 
 
 # ----------------------------------------------------------------------------- freshness
 def test_gps_is_used_while_fresh_then_falls_back_to_the_check_in(service, venue, clock):
-    service.update_location(fix(venue, AVA, 30, 55))
+    located(service, venue, AVA, 30, 55)
     clock.advance(600)  # gps_ttl_s: still fresh
     assert service.view(AVA).me.source == "gps"
     clock.advance(1)
@@ -165,8 +184,8 @@ def test_directions_between_check_ins_match_the_reference(service):
 
 
 def test_directions_use_fresh_gps_on_both_ends(service, venue, clock):
-    service.update_location(fix(venue, AVA, 25, 55))  # main hall
-    service.update_location(fix(venue, MIA, 62, 60))  # room A
+    located(service, venue, AVA, 25, 55)  # main hall
+    located(service, venue, MIA, 62, 60)  # room A
     found = service.directions(AVA, MIA)
     assert (found.from_.source, found.to.source) == ("gps", "gps")
     assert found.route == [[25, 55], [25, 40], [25, 35], [62, 35], [62, 40], [62, 60]]
@@ -177,7 +196,7 @@ def test_directions_use_fresh_gps_on_both_ends(service, venue, clock):
 
 
 def test_a_peer_who_is_not_sharing_reveals_nothing(service, venue):
-    service.update_location(fix(venue, MIA, 62, 60))
+    located(service, venue, MIA, 62, 60)
     service.set_sharing(SharingBody(persona_id=MIA, enabled=False))
     for peer in (MIA, LENA, RAJ):
         found = service.directions(AVA, peer)
@@ -209,9 +228,9 @@ def test_origin_from_the_environment(monkeypatch, venue, clock):
     monkeypatch.setenv("RAPPORT_VENUE_ORIGIN", "40.0, -105.25")
     moved = VenueService(clock=clock)
     anchored = {**venue, "geo": {"lat": 40.0, "lng": -105.25}}
-    pos = moved.update_location(fix(anchored, AVA, 30, 55))
+    pos = located(moved, anchored, AVA, 30, 55)
     assert (pos.x, pos.y, pos.room_id) == (30, 55, "main-hall")
-    assert error_of(lambda: moved.update_location(fix(venue, AVA, 30, 55))) == (422, "outside_venue")
+    assert error_of(lambda: located(moved, venue, AVA, 30, 55)) == (422, "outside_venue")
     assert "geo" not in moved.view(AVA).model_dump()["venue"]  # the anchor is never public
 
 
@@ -220,12 +239,12 @@ def test_a_malformed_origin_is_ignored_with_a_warning(monkeypatch, caplog, venue
     monkeypatch.setenv("RAPPORT_VENUE_ORIGIN", raw)
     with caplog.at_level(logging.WARNING, logger="rapport.venue"):
         svc = VenueService(clock=clock)
-    assert svc.update_location(fix(venue, AVA, 30, 55)).x == 30  # still the file's anchor
+    assert located(svc, venue, AVA, 30, 55).x == 30  # still the file's anchor
     assert "RAPPORT_VENUE_ORIGIN" in caplog.text and raw not in caplog.text
 
 
 def test_reset_restores_the_seed(service, venue):
-    service.update_location(fix(venue, AVA, 30, 55))
+    located(service, venue, AVA, 30, 55)
     service.set_sharing(SharingBody(persona_id=LENA, enabled=True))
     service.set_sharing(SharingBody(persona_id=BO, enabled=False))
     service.reset()
@@ -266,7 +285,7 @@ def spans(monkeypatch) -> InMemorySpanExporter:
 
 def test_spans_carry_ids_only(service, venue, spans):
     service.view(AVA)
-    service.update_location(fix(venue, AVA, 30, 55))
+    located(service, venue, AVA, 30, 55)
     service.set_sharing(SharingBody(persona_id=MIA, enabled=False))
     service.directions(AVA, BO)
     service.directions(AVA, MIA)
@@ -281,14 +300,77 @@ def test_spans_carry_ids_only(service, venue, spans):
 
 
 def test_gps_degrees_never_reach_logs_or_spans(service, venue, spans, caplog):
-    update = fix(venue, AVA, 42.79, 22.26)
+    update = fix(venue, AVA, 42.79, 22.26, token=device_token(service, AVA))
+    away = LocationUpdate(persona_id=AVA, sharing_token=device_token(service, AVA), lat=40.0, lng=-105.5)
     with caplog.at_level(logging.DEBUG):
         service.update_location(update)
         service.directions(BO, AVA)
-        error_of(lambda: service.update_location(LocationUpdate(persona_id=AVA, lat=40.0, lng=-105.5)))
+        error_of(lambda: service.update_location(away))
     exported = " ".join(
         str(dict(s.attributes)) + str([dict(e.attributes) for e in s.events]) for s in spans.get_finished_spans()
     )
     for degrees in (update.lat, update.lng, 40.0, -105.5):
         for text in (str(degrees), f"{degrees:.4f}"):
             assert text not in caplog.text and text not in exported
+
+
+# ----------------------------------------------------------------------------- per-device consent
+def test_turning_sharing_on_returns_a_token_for_that_device_only(service, venue):
+    state = service.set_sharing(SharingBody(persona_id=LENA, enabled=True))
+    assert state.enabled is True and len(state.sharing_token) >= 32
+    assert service._tokens[LENA] != state.sharing_token.encode()  # only a hash is kept
+    lat, lng = geo_for(venue, 30, 55)
+    pos = service.update_location(LocationUpdate(persona_id=LENA, lat=lat, lng=lng, sharing_token=state.sharing_token))
+    assert pos.source == "gps"
+
+
+def test_location_needs_the_sharing_device_token(service, venue):
+    token = service.set_sharing(SharingBody(persona_id=LENA, enabled=True)).sharing_token
+    assert error_of(lambda: service.update_location(fix(venue, LENA, 30, 55))) == (403, "not_this_device")
+    wrong = fix(venue, LENA, 30, 55, token="x" * 43)
+    assert error_of(lambda: service.update_location(wrong)) == (403, "not_this_device")
+    assert LENA not in service._fixes
+    assert service.update_location(fix(venue, LENA, 30, 55, token=token)).source == "gps"
+
+
+def test_nobody_else_can_take_over_sharing_while_a_device_holds_it(service):
+    token = service.set_sharing(SharingBody(persona_id=LENA, enabled=True)).sharing_token
+    hijack = SharingBody(persona_id=LENA, enabled=True)
+    assert error_of(lambda: service.set_sharing(hijack)) == (403, "shared_from_another_device")
+    forged = SharingBody(persona_id=LENA, enabled=True, sharing_token="y" * 43)
+    assert error_of(lambda: service.set_sharing(forged)) == (403, "shared_from_another_device")
+    again = service.set_sharing(SharingBody(persona_id=LENA, enabled=True, sharing_token=token))
+    assert again.sharing_token == token  # the holder may turn it on again and keeps its token
+
+
+def test_anyone_can_turn_sharing_off_and_it_forgets_the_device(service, venue):
+    token = service.set_sharing(SharingBody(persona_id=LENA, enabled=True)).sharing_token
+    service.update_location(fix(venue, LENA, 30, 55, token=token))
+    off = service.set_sharing(SharingBody(persona_id=LENA, enabled=False))  # no token needed
+    assert (off.enabled, off.sharing_token) == (False, None)
+    assert LENA not in service._fixes and LENA not in service._tokens
+    fresh = service.set_sharing(SharingBody(persona_id=LENA, enabled=True)).sharing_token
+    assert fresh != token
+    assert error_of(lambda: service.update_location(fix(venue, LENA, 30, 55, token=token))) == (403, "not_this_device")
+
+
+def test_seeded_sharing_is_claimed_by_the_first_device_to_turn_it_on(service, venue):
+    assert service.view(AVA).sharing is True and AVA not in service._tokens  # the seed: no device yet
+    assert error_of(lambda: service.update_location(fix(venue, AVA, 30, 55))) == (403, "not_this_device")
+    token = service.set_sharing(SharingBody(persona_id=AVA, enabled=True)).sharing_token
+    assert service.update_location(fix(venue, AVA, 30, 55, token=token)).source == "gps"
+
+
+def test_reset_forgets_every_device(service):
+    service.set_sharing(SharingBody(persona_id=LENA, enabled=True))
+    service.reset()
+    assert service._tokens == {}
+
+
+def test_sharing_tokens_never_reach_logs_or_spans(service, venue, spans, caplog):
+    with caplog.at_level(logging.DEBUG):
+        token = service.set_sharing(SharingBody(persona_id=LENA, enabled=True)).sharing_token
+        service.update_location(fix(venue, LENA, 30, 55, token=token))
+        service.set_sharing(SharingBody(persona_id=LENA, enabled=False))
+    exported = " ".join(str(dict(s.attributes)) for s in spans.get_finished_spans())
+    assert token not in caplog.text and token not in exported

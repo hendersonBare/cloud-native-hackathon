@@ -36,6 +36,7 @@ PersonaId = Annotated[str, Field(min_length=1, max_length=64)]
 FiniteFloat = Annotated[float, BeforeValidator(_no_nan)]
 PositionSource = Literal["gps", "checkin"]
 PeerStatus = Literal["sharing", "not_sharing"]
+SharingToken = Annotated[str, Field(min_length=16, max_length=128)]
 LegKind = Literal["same_room", "leave", "walk", "enter", "arrive"]
 
 
@@ -85,16 +86,20 @@ class LocationUpdate(Contract):
     lat: FiniteFloat = Field(ge=-90, le=90, allow_inf_nan=False)
     lng: FiniteFloat = Field(ge=-180, le=180, allow_inf_nan=False)
     accuracy_m: FiniteFloat | None = Field(default=None, ge=0, le=5000, allow_inf_nan=False)
+    sharing_token: SharingToken | None = None  # proves this is the device that turned sharing on
 
 
 class SharingBody(Contract):
     persona_id: PersonaId
     enabled: StrictBool  # consent: only a JSON true turns sharing on
+    sharing_token: SharingToken | None = None  # needed to turn sharing on again while this device holds it
 
 
 class SharingState(Contract):
     persona_id: str
     enabled: bool
+    # Returned only to the device that turned sharing on; never stored in clear, logged or put on a span.
+    sharing_token: str | None = None
 
 
 class Leg(Contract):
