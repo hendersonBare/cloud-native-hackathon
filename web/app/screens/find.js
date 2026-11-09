@@ -27,6 +27,9 @@ function ago(iso, now = Date.now()) {
   return `${Math.round(sec / 60)} min ago`;
 }
 
+// Every promise is awaited or ends here, so a rejection never goes unhandled. Logs the error name only.
+const settle = (p) => p.catch((err) => console.warn('find: request failed', err?.name || 'Error'));
+
 const metres = (n) => `${n} m`; // no line break between the number and the unit
 
 /** One turn-by-turn step in words. */
@@ -78,6 +81,7 @@ export function render(ctx) {
   let latestFix = null;
   let lastSent = 0;
   let sending = false;
+  let sendGen = 0; // bumped when sharing stops, so a send already in flight is ignored when it lands
   let seq = 0;
 
   const roomName = (id) => rooms.get(id)?.name || 'the venue';
@@ -107,7 +111,7 @@ export function render(ctx) {
   const shareNote = h('span', { id: 'find-share-note', class: 'find-share-note', 'aria-live': 'polite' });
   const shareSwitch = h('button', {
     type: 'button', class: 'find-share', role: 'switch', 'aria-checked': 'false', disabled: true,
-    'aria-labelledby': shareTitle, 'aria-describedby': 'find-share-note', onClick: () => toggleSharing(),
+    'aria-labelledby': shareTitle, 'aria-describedby': 'find-share-note', onClick: () => settle(toggleSharing()),
   },
   h('span', { class: 'grow stack', style: { gap: '2px' } },
     h('span', { id: shareTitle, class: 'find-share-title' }, 'Share my location'),
@@ -204,7 +208,7 @@ export function render(ctx) {
     errorSlot.replaceChildren(h('div', { class: 'find-state', role: 'alert' },
       h('p', { class: 'empty-title' }, 'Directions did not load'),
       h('p', { class: 'empty-note' }, 'Check your connection and try again.'),
-      h('button', { type: 'button', class: 'btn btn-sm find-retry', onClick: () => load() }, 'Retry')));
+      h('button', { type: 'button', class: 'btn btn-sm find-retry', onClick: () => settle(load()) }, 'Retry')));
   }
 
   // ---------------------------------------------------------------- data
@@ -244,21 +248,25 @@ export function render(ctx) {
     if (!force && Date.now() - lastSent < SEND_MS) return;
     sending = true;
     lastSent = Date.now();
+    const gen = ++sendGen;
     const fix = latestFix;
+    // Only the latest send of a screen that is still open with sharing on may change the note.
+    const current = () => alive && sharing && gen === sendGen;
     try {
       await api.updateLocation({ persona_id: me.id, ...fix });
-      if (!alive) return;
-      gpsState = 'on';
-      accuracy = fix.accuracy_m;
+      if (current()) {
+        gpsState = 'on';
+        accuracy = fix.accuracy_m;
+      }
     } catch (error) {
-      if (!alive) return;
       // 422 is outside the venue (weak fixes are filtered before sending); 409 means sharing went off.
-      gpsState = error?.status === 422 ? 'outside' : gpsState;
+      if (current() && error?.status === 422) gpsState = 'outside';
     } finally {
       sending = false;
     }
+    if (!current()) return;
     drawShare();
-    refresh();
+    await refresh();
   }
 
   function startGps() {
@@ -276,7 +284,7 @@ export function render(ctx) {
       }
       const first = latestFix == null;
       latestFix = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy_m: Number.isFinite(acc) ? acc : null };
-      sendFix(first);
+      settle(sendFix(first));
     }, (err) => {
       if (!alive) return;
       gpsState = err?.code === 1 ? 'denied' : 'unavailable';
@@ -289,6 +297,7 @@ export function render(ctx) {
     watchId = null;
     latestFix = null;
     accuracy = null;
+    sendGen += 1;
   }
 
   async function toggleSharing() {
@@ -305,13 +314,13 @@ export function render(ctx) {
     }
     if (!alive) return;
     drawShare();
-    refresh();
+    await refresh();
   }
 
   // ---------------------------------------------------------------- lifecycle
 
-  const poll = setInterval(() => { refresh(); sendFix(); }, POLL_MS);
-  const offChanged = bus.on('venue:changed', () => refresh());
+  const poll = setInterval(() => { settle(refresh()); settle(sendFix()); }, POLL_MS);
+  const offChanged = bus.on('venue:changed', () => settle(refresh()));
   ctx.onCleanup(() => {
     alive = false;
     clearInterval(poll);
@@ -320,7 +329,7 @@ export function render(ctx) {
   });
 
   drawShare();
-  load();
+  settle(load());
 
   return h('div', { class: 'screen find' },
     topbar({ back: 'home', backLabel: 'Back to home', title: `Find ${peer.name}` }),

@@ -16,3 +16,4 @@ import './time.test.mjs';
 import './calendar.test.mjs';
 import './people.test.mjs';
 import './venue.test.mjs';
+import './find.test.mjs';
