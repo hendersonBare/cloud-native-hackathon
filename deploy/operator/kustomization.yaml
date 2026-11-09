@@ -1,7 +1,10 @@
-# Owned by the operator workstream. Add this component's manifests here and list them under
-# resources. Argo CD builds deploy/ with kustomize on every push to main.
+# Owned by the operator workstream. sample-encounter.yaml is deliberately NOT listed: Argo CD would
+# keep re-creating it after the TTL deletes it. Apply it by hand (see the file).
 # Every container: image `app` (kustomize swaps in GHCR), explicit requests AND limits
 # (rapport_common.names.RESOURCES_*), and names.SECURITY_CONTEXT.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources: []
+resources:
+  - serviceaccount.yaml
+  - rbac.yaml
+  - deployment.yaml

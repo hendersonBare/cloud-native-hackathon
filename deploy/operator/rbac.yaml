@@ -1,0 +1,56 @@
+# The operator runs cluster-wide (it creates objects in every org-* namespace), so this is a ClusterRole.
+# SPEC 4.5 plus what kopf 1.45 needs to watch cluster-wide (checked against its installed source):
+#   - customresourcedefinitions + namespaces: list/watch for its resource and namespace scanning
+#   - events: it posts core v1 Events (POST only; it never reads or lists them)
+#   - no kopfpeerings access: it runs --standalone (no peering)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rapport-operator
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: operator
+rules:
+  - apiGroups: [rapport.dev]
+    resources: [encounters]
+    verbs: [get, list, watch, patch, update, delete]
+  - apiGroups: [rapport.dev]
+    resources: [encounters/status]
+    verbs: [get, patch, update]
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [create, get, list, watch, delete]
+  - apiGroups: [""]
+    resources: [services]
+    verbs: [create, get, list, watch, delete]
+  - apiGroups: [networking.k8s.io]
+    resources: [networkpolicies]
+    verbs: [create, get, list, watch, delete]
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create, patch]
+  - apiGroups: [apiextensions.k8s.io]
+    resources: [customresourcedefinitions]
+    verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rapport-operator
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rapport-operator
+subjects:
+  - kind: ServiceAccount
+    name: operator
+    namespace: team-rapport
