@@ -1,0 +1,132 @@
+{
+  "persona_id": "bluefin.bo",
+  "cards": [
+    {
+      "persona_id": "acme.ava",
+      "name": "Ava",
+      "title": "Solutions Engineer",
+      "org_id": "acme",
+      "org_name": "Acme Observability",
+      "language": "en",
+      "headline": "Solutions engineer helping platform teams adopt zero-code eBPF tracing",
+      "interests": [
+        "ebpf",
+        "observability",
+        "opentelemetry",
+        "kubernetes"
+      ],
+      "looking_for": [
+        "Meet platform-engineering teams evaluating eBPF tracing",
+        "Learn from Kubernetes migrations in regulated industries"
+      ],
+      "agent_available": true,
+      "match_score": 86,
+      "shared_interests": [
+        "ebpf",
+        "kubernetes"
+      ],
+      "why_meet": "Ava implementó rastreo eBPF sin cambios de código en una red de hospitales, justo el problema de tu migración de 300 servicios. Bluefin ya tiene un piloto abierto con Acme.",
+      "their_talks": [],
+      "company_history": [
+        {
+          "memory_id": "bluefin-note-0003",
+          "title": "Vendor evaluation: Acme",
+          "kind": "account_note",
+          "snippet": "Kai must sign off on HIPAA; cost is the main concern."
+        }
+      ]
+    },
+    {
+      "persona_id": "lumenly.priya",
+      "name": "Priya",
+      "title": "Head of Infrastructure",
+      "org_id": "lumenly",
+      "org_name": "Lumenly Energy",
+      "language": "en",
+      "headline": "Runs a lean platform team; wants cheaper visibility",
+      "interests": [
+        "kubernetes",
+        "ebpf",
+        "cost"
+      ],
+      "looking_for": [
+        "Cut cloud spend without losing visibility"
+      ],
+      "agent_available": false,
+      "match_score": 74,
+      "shared_interests": [
+        "kubernetes",
+        "ebpf",
+        "cost"
+      ],
+      "why_meet": "Priya habla sobre ahorro de costos con eBPF a las 2:30 PM, una charla que ya está en tu calendario; pregúntale cómo mantiene baja la sobrecarga del rastreo.",
+      "their_talks": [
+        {
+          "talk_id": "talk-ebpf-cost",
+          "title": "Cutting the cloud bill with eBPF",
+          "starts_at": "2026-11-09T21:30:00Z",
+          "room": "Room A",
+          "track": "Cost",
+          "speakers": [
+            "Priya"
+          ],
+          "reason": null
+        }
+      ],
+      "company_history": []
+    },
+    {
+      "persona_id": "tidewater.sofia",
+      "name": "Sofia",
+      "title": "Platform Lead",
+      "org_id": "tidewater",
+      "org_name": "Tidewater Logistics",
+      "language": "es",
+      "headline": "Platform lead cutting the cloud bill by 30%",
+      "interests": [
+        "kubernetes",
+        "cost",
+        "finops"
+      ],
+      "looking_for": [
+        "Cut the cloud bill by 30%"
+      ],
+      "agent_available": false,
+      "match_score": 68,
+      "shared_interests": [
+        "kubernetes",
+        "cost"
+      ],
+      "why_meet": "Sofia dirige un programa de FinOps que mide el costo de la nube por equipo; comparen notas sobre el ajuste de recursos antes de que la migración aumente la factura.",
+      "their_talks": [],
+      "company_history": []
+    },
+    {
+      "persona_id": "kestrel.mia",
+      "name": "Mia",
+      "title": "Platform Engineer",
+      "org_id": "kestrel",
+      "org_name": "Kestrel Robotics",
+      "language": "en",
+      "headline": "Tracing Kubernetes clusters on warehouse robots",
+      "interests": [
+        "ebpf",
+        "kubernetes",
+        "edge",
+        "robotics"
+      ],
+      "looking_for": [
+        "Low-overhead tracing for edge clusters"
+      ],
+      "agent_available": false,
+      "match_score": 52,
+      "shared_interests": [
+        "ebpf",
+        "kubernetes"
+      ],
+      "why_meet": "Mia usa rastreo eBPF con muy poca sobrecarga; buenos datos de referencia, aunque la robótica en el borde está lejos de las cargas de un hospital.",
+      "their_talks": [],
+      "company_history": []
+    }
+  ]
+}

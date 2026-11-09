@@ -22,3 +22,4 @@ import './venue.test.mjs';
 import './find.test.mjs';
 import './rum.test.mjs';
 import './mode.test.mjs';
+import './context.test.mjs';

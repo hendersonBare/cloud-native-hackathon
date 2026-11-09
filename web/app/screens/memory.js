@@ -1,5 +1,7 @@
-// Memory: hierarchical search, cited answers, and arriving transcripts.
+// Memory: hierarchical search, cited answers, the context your agent carries (and a way to
+// change it), and arriving transcripts.
 import { h, icon, bottomNav, nextId } from '../ui.js';
+import { currentContext, saveContext, MAX_NOTE_CHARS, FILE_TYPES } from '../context-model.js';
 
 const CONTENT = {
   'acme.ava': {
@@ -253,9 +255,148 @@ export function render(ctx) {
     });
   }
 
+  // Your context: what your agent carries about you, and an editor to change it.
+  const contextId = nextId('memory-context');
+  const contextBodyId = nextId('memory-context-body');
+  const noteId = nextId('memory-context-note');
+  const fileId = nextId('memory-context-file');
+  const visibilityName = nextId('memory-context-visibility');
+  const edit = { open: false, saving: false, file: null, status: '', error: false };
+  const contextBody = h('div', { id: contextBodyId, class: 'memory-context card' });
+  const editButton = h('button', {
+    type: 'button', class: 'memory-context-edit', 'aria-controls': contextBodyId, 'aria-expanded': 'false',
+    onClick: () => (edit.open ? closeEditor() : openEditor()),
+  });
+
+  function openEditor() {
+    const now = currentContext(ctx);
+    st.contextDraft ??= now.note;
+    st.contextVisibility ??= now.visibility;
+    Object.assign(edit, { open: true, file: null, status: '', error: false });
+    drawContext();
+    contextBody.querySelector('textarea')?.focus();
+  }
+  function closeEditor(status = '') {
+    Object.assign(edit, { open: false, saving: false, file: null, status, error: false });
+    st.contextDraft = undefined;
+    st.contextVisibility = undefined;
+    drawContext();
+    editButton.focus();
+  }
+
+  // saveContext already turns upload errors into a message; this catches anything else so the
+  // editor never stays stuck on "Saving…".
+  function submitContextSafely() {
+    submitContext().catch((err) => {
+      console.warn('Context save failed', err?.name || 'Error');
+      if (disposed) return;
+      Object.assign(edit, { saving: false, status: 'Your agent could not save that. Try again.', error: true });
+      drawContext();
+    });
+  }
+
+  async function submitContext() {
+    if (edit.saving) return;
+    edit.saving = true;
+    edit.status = 'Saving…';
+    edit.error = false;
+    drawContext();
+    const result = await saveContext(ctx, {
+      text: st.contextDraft, file: edit.file, visibility: st.contextVisibility,
+    });
+    if (disposed) return;
+    if (result.ok) {
+      closeEditor(result.savedTo === 'agent' ? 'Saved. Your agent carries this now.' : 'Saved on this phone.');
+      return;
+    }
+    Object.assign(edit, { saving: false, status: result.message, error: true });
+    drawContext();
+  }
+
+  function contextView() {
+    const now = currentContext(ctx);
+    return [
+      h('ul', { class: 'memory-context-topics', 'aria-label': 'Topics your agent carries' },
+        now.topics.map((topic) => h('li', { class: 'pill' }, topic))),
+      now.workingOn ? h('p', { class: 'memory-context-working', lang: now.lang }, now.workingOn) : null,
+      now.note ? h('div', { class: 'memory-context-note' },
+        h('p', { class: 'eyebrow' }, 'Your note'),
+        h('p', { class: 'memory-context-note-text' }, now.note)) : null,
+      now.filename ? h('p', { class: 'memory-context-file' },
+        icon('file', { size: 16, stroke: 1.8 }), h('span', null, now.filename)) : null,
+      h('p', { class: 'memory-context-meta' },
+        icon(now.visibility === 'private' ? 'lock' : 'user', { size: 14, stroke: 1.9 }),
+        h('span', null, now.visibility === 'private' ? 'Private to your agent' : 'Shared with people you meet')),
+    ].filter(Boolean);
+  }
+
+  function contextEditor() {
+    const note = h('textarea', {
+      id: noteId, class: 'memory-context-input', rows: 5, maxlength: MAX_NOTE_CHARS,
+      placeholder: 'What you’re working on, who you want to meet, what your agent should know',
+      disabled: edit.saving,
+      onInput: () => { st.contextDraft = note.value; count.textContent = counter(note.value); },
+    });
+    note.value = st.contextDraft || '';
+    const count = h('span', { class: 'memory-context-count', 'aria-hidden': 'true' }, counter(note.value));
+    const fileInput = h('input', {
+      id: fileId, class: 'visually-hidden', type: 'file', accept: FILE_TYPES.join(','), disabled: edit.saving,
+      onChange: (event) => {
+        edit.file = event.target.files?.[0] || null;
+        edit.status = '';
+        edit.error = false;
+        drawContext();
+      },
+    });
+    const visibility = h('fieldset', { class: 'memory-context-visibility' },
+      h('legend', { class: 'visually-hidden' }, 'Who can see this'),
+      [['shareable', 'Share with people I meet'], ['private', 'Private to my agent']].map(([value, label]) =>
+        h('label', { class: 'memory-context-choice' },
+          h('input', {
+            type: 'radio', name: visibilityName, value, checked: st.contextVisibility === value, disabled: edit.saving,
+            onChange: (event) => { if (event.target.checked) st.contextVisibility = value; },
+          }),
+          h('span', null, label))));
+    return [h('form', {
+      class: 'memory-context-form', 'aria-label': 'Edit your context',
+      onSubmit: (event) => { event.preventDefault(); submitContextSafely(); },
+    },
+    h('label', { class: 'memory-context-label', for: noteId }, 'What should your agent know about you?'),
+    note,
+    h('div', { class: 'memory-context-row' },
+      h('label', { class: 'memory-context-attach', for: fileId },
+        icon('file', { size: 16, stroke: 1.8 }),
+        h('span', null, edit.file ? edit.file.name : 'Attach a CV or notes'), fileInput),
+      count),
+    visibility,
+    h('p', { class: `memory-context-status${edit.error ? ' is-error' : ''}`, role: 'status' }, edit.status),
+    h('div', { class: 'memory-context-actions' },
+      h('button', {
+        type: 'button', class: 'memory-context-cancel', disabled: edit.saving, onClick: () => closeEditor(),
+      }, 'Cancel'),
+      h('button', { type: 'submit', class: 'memory-context-save', disabled: edit.saving },
+        edit.saving ? 'Saving…' : 'Save')))];
+  }
+
+  function counter(value) {
+    return `${value.length.toLocaleString('en-US')} / ${MAX_NOTE_CHARS.toLocaleString('en-US')}`;
+  }
+
+  function drawContext() {
+    editButton.setAttribute('aria-expanded', String(edit.open));
+    editButton.replaceChildren(
+      icon(edit.open ? 'close' : 'edit', { size: 15, stroke: 1.9 }), h('span', null, edit.open ? 'Close' : 'Edit'));
+    contextBody.classList.toggle('is-editing', edit.open);
+    contextBody.replaceChildren(...(edit.open ? contextEditor() : [
+      ...contextView(),
+      edit.status ? h('p', { class: 'memory-context-status', role: 'status' }, edit.status) : null,
+    ].filter(Boolean)));
+  }
+
   drawMic();
   drawScope();
   drawAnswer();
+  drawContext();
   return h('div', { class: 'screen memory', lang: 'en' },
     h('main', { class: 'scroll memory-main' },
       h('h1', { class: 'serif memory-title' }, 'Memory'),
@@ -266,6 +407,13 @@ export function render(ctx) {
         }, icon('sparkle', { size: 14, stroke: 1.9 }), h('span', null, item.question))),
       ),
       answerRegion,
+      h('section', { class: 'memory-section', 'aria-labelledby': contextId },
+        h('div', { class: 'memory-section-head' },
+          h('h2', { id: contextId, class: 'eyebrow' }, 'Your context'),
+          editButton,
+        ),
+        contextBody,
+      ),
       h('section', { class: 'memory-section', 'aria-labelledby': scopeId },
         h('div', { class: 'memory-section-head' },
           h('h2', { id: scopeId, class: 'eyebrow' }, 'Search scope'),

@@ -54,7 +54,7 @@ byte-identical copy of `src/rapport_calendar/data/seed.json`) and syncs the two 
 | `app/time.js` | Times are stored as UTC and always shown in America/Denver with the zone label (e.g. `3:30 PM MST`). |
 | `app/people-model.js` | People directory, suggestions, "met" and search filters (pure, unit-tested). |
 | `app/venue-api.js`, `app/venue-mock.js`, `app/venue-model.js` | Venue map and directions: live calls `/api/venue/*` (`src/rapport_venue`); mock applies the same rules in the browser. `venue-model.js` is the shared geometry (GPS to floor-plan metres, door-corridor-door routes), pure and unit-tested. Screens call `venueClient(ctx)`. |
-| `mock/` | Mock-mode data: the calendar seed, the venue floor plan (`venue.json`, byte-identical to `src/rapport_venue/data/venue.json`) and the research deck (`contracts/demo-research.json`). |
+| `mock/` | Mock-mode data: the calendar seed, the venue floor plan (`venue.json`, byte-identical to `src/rapport_venue/data/venue.json`) and the research decks: Ava's (`demo-research.json`, a copy of `contracts/demo-research.json`) and Bo's (`demo-research-bo.json`), picked per viewer by `app/mock-research.js`. |
 | `app/screens/<name>.js` / `.css` | One module per screen, each exporting `render(ctx)`. |
 
 ## Demo keys
