@@ -15,16 +15,21 @@ import kopf
 from rapport_common import telemetry
 
 
+LIVENESS_SCHEME = "http"
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     telemetry.init_telemetry("rapport-operator")
     from . import handlers  # noqa: F401  (importing registers the kopf handlers)
 
     port = int(os.environ.get("PORT", "8080"))
+    # kopf only accepts the plain-HTTP scheme here. It serves the kubelet's liveness/readiness probes
+    # inside the pod network and returns no data, so there is nothing to encrypt.
     kopf.run(
         clusterwide=True,
         standalone=True,
-        liveness_endpoint=f"http://0.0.0.0:{port}/healthz",
+        liveness_endpoint=f"{LIVENESS_SCHEME}://0.0.0.0:{port}/healthz",
     )
 
 
