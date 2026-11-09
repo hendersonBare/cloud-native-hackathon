@@ -82,34 +82,26 @@ describe('context model', () => {
     assert.equal(now.lang, undefined);
   });
 
-  it("falls back to the phone when the gateway doesn't serve the route", async () => {
-    for (const status of [404, 405, 501]) {
-      const ctx = ctxFor(AVA, 'live');
-      const result = await saveContext(ctx, { text: 'Pilots' }, { upload: async () => { throw httpError(status); } });
-      assert.deepEqual(result, { ok: true, savedTo: 'phone' }, String(status));
-    }
-  });
-
-  it('does not save on the phone after a transient failure', async (t) => {
-    // mode.isUnavailable treats 502/503/504 and dropped connections as transient: the server may
-    // have written, so the phone reports the failure instead of keeping its own copy.
-    t.mock.method(console, 'warn', () => {});
-    for (const error of [httpError(502), httpError(503), httpError(504), new TypeError('network')]) {
+  it("falls back to the phone when the gateway doesn't serve the API", async () => {
+    for (const error of [httpError(404), httpError(405), httpError(501)]) {
       const ctx = ctxFor(AVA, 'live');
       const result = await saveContext(ctx, { text: 'Pilots' }, { upload: async () => { throw error; } });
-      assert.equal(result.ok, false, String(error.status || error.name));
-      assert.match(result.message, /could not save/);
-      assert.equal(ctx.store.context, undefined);
+      assert.deepEqual(result, { ok: true, savedTo: 'phone' }, String(error.status || error.name));
     }
   });
 
   it('reports a real refusal and changes nothing', async (t) => {
     t.mock.method(console, 'warn', () => {});
-    for (const [status, pattern] of [[429, /busy/], [413, /too large/], [415, /\.pdf, \.md and \.txt/], [500, /could not save/]]) {
+    // A gateway that is there but failing (5xx, network) is an error to show, not a reason to go local.
+    const refusals = [
+      [httpError(429), /busy/], [httpError(413), /too large/], [httpError(415), /\.pdf, \.md and \.txt/],
+      [httpError(500), /could not save/], [httpError(503), /could not save/], [new TypeError('network'), /could not save/],
+    ];
+    for (const [error, pattern] of refusals) {
       const ctx = ctxFor(AVA, 'live');
-      const result = await saveContext(ctx, { text: 'Pilots' }, { upload: async () => { throw httpError(status); } });
+      const result = await saveContext(ctx, { text: 'Pilots' }, { upload: async () => { throw error; } });
       assert.equal(result.ok, false);
-      assert.match(result.message, pattern, String(status));
+      assert.match(result.message, pattern, String(error.status || error.name));
       assert.equal(ctx.store.context, undefined);
     }
     for (const [message] of console.warn.mock.calls.map((c) => c.arguments)) assert.doesNotMatch(String(message), /Pilots/);
