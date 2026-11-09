@@ -70,7 +70,7 @@ async def _assemble(b: Briefer, req: BriefRequest, persona: Persona, cp: Persona
         b.search(" ".join(cp.interests), indices=[b.shareable], kinds=["document"], tags=cp.interests, size=3)
         if cp.interests
         else _none(),
-        _suggested_talks(b, shared, lang),
+        _suggested_talks(b, shared, persona.interests, lang),
         _private_goals(b, persona),
     )
     goal_matches = _goal_matches(goals, cp, b.org_name(cp.org_id), lang)
@@ -119,12 +119,15 @@ async def _private_goals(b: Briefer, persona: Persona) -> list[str]:
     return persona.goals
 
 
-async def _suggested_talks(b: Briefer, shared: list[str], lang: str) -> list[TalkHit]:
+async def _suggested_talks(b: Briefer, shared: list[str], mine: list[str], lang: str) -> list[TalkHit]:
     if not shared:
         return []
     records = await b.search(" ".join(shared), indices=[b.conference], kinds=["talk"], tags=shared, size=8)
     records = [r for r in records if r.talk is not None]
-    records.sort(key=lambda r: (-len(set(shared) & set(r.tags)), r.talk.starts_at))  # type: ignore[union-attr]
+    # shared topics first, then the rest of MY interests (it is my brief), then the earliest start
+    records.sort(
+        key=lambda r: (-len(set(shared) & set(r.tags)), -len(set(mine) & set(r.tags)), r.talk.starts_at)  # type: ignore[union-attr]
+    )
     out = []
     for r in records[:2]:
         topics = join_list(sorted(set(shared) & set(r.tags)), lang)
@@ -142,8 +145,16 @@ def _expand(words: set[str]) -> set[str]:
     return out
 
 
+_STOPWORDS = {
+    "find", "meet", "the", "and", "for", "with", "that", "this", "from", "into", "partner", "design", "team",
+    "teams", "new", "get", "have", "need", "needs", "want", "wants", "make", "help", "cut", "lower", "close",
+    "quarter", "this", "all", "are", "our", "your", "their", "who",
+}  # fmt: skip
+
+
 def _tokens(text: str) -> set[str]:
-    return {t for t in "".join(c if c.isalnum() or c == "-" else " " for c in text.lower()).split() if len(t) > 2}
+    words = "".join(c if c.isalnum() or c == "-" else " " for c in text.lower()).split()
+    return {t for t in words if len(t) > 2 and t not in _STOPWORDS}
 
 
 def _goal_matches(goals: list[str], cp: Persona, org_name: str, lang: str) -> list[str]:

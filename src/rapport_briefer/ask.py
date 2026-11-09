@@ -6,12 +6,14 @@ import re
 
 from pydantic import BaseModel
 
-from rapport_common.models import AskAnswer, AskRequest, Citation, MemoryRecord
+from rapport_common.models import AskAnswer, AskRequest, Citation, MemoryKind, MemoryRecord
 
 from .core import Briefer, cite, fit
 from .llm import data_block
 
 MAX_CITATIONS = 5
+# attendee cards are the public directory and profile records are per-person: neither answers a memory question
+ASK_KINDS: list[MemoryKind] = ["talk", "note", "document", "account_note", "encounter_summary", "followup"]
 _KIND_PRIORITY = {"account_note": 0, "encounter_summary": 1, "followup": 2}
 
 SYSTEM = (
@@ -50,10 +52,14 @@ async def answer(b: Briefer, req: AskRequest) -> AskAnswer:
     persona = b.own(req.persona_id)
     orgs, _people = mentioned(b, req.question)
 
-    general = await b.search(req.question, indices=[b.internal, b.shareable, b.conference], size=MAX_CITATIONS)
+    general = await b.search(
+        req.question, indices=[b.internal, b.shareable, b.conference], kinds=ASK_KINDS, size=MAX_CITATIONS
+    )
     about: list[MemoryRecord] = []
     if orgs:
-        about = await b.search(req.question, indices=[b.internal, b.shareable], about_org_ids=orgs, size=8)
+        about = await b.search(
+            req.question, indices=[b.internal, b.shareable], kinds=ASK_KINDS, about_org_ids=orgs, size=8
+        )
         about.sort(key=lambda r: _KIND_PRIORITY.get(r.kind, 3))  # stable: notes, then encounter outcomes
 
     hits: list[MemoryRecord] = []
