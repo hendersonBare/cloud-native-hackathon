@@ -1,5 +1,6 @@
 // Agent identity, role-based memory access, and local CV metadata.
 import { h, svg, topbar, bottomNav, eyebrow, nextId } from '../ui.js';
+import { currentContext } from '../context-model.js';
 
 const CONTENT = {
   'acme.ava': {
@@ -10,8 +11,6 @@ const CONTENT = {
     lookingFor: 'Healthcare design partners',
     openTo: 'Coffee chats',
     represents: 'Your agent represents your work in zero-code eBPF tracing and healthcare observability.',
-    topics: ['eBPF tracing', 'OpenTelemetry', 'Healthcare', 'Observability'],
-    workingOn: 'Working on: a hospital network rollout with 40% faster incidents',
   },
   'bluefin.bo': {
     name: 'Bo',
@@ -21,8 +20,6 @@ const CONTENT = {
     lookingFor: 'Zero-code tracing',
     openTo: 'Coffee chats',
     represents: 'Tu agente representa tu trabajo en la plataforma hospitalaria y el tracing sin cambios de código.',
-    topics: ['eBPF tracing', 'OpenTelemetry', 'HIPAA review', 'Observability cost'],
-    workingOn: 'Trabajando en: la migración de la plataforma hospitalaria',
     lang: 'es',
   },
 };
@@ -35,6 +32,8 @@ const ROLES = [
 
 export function render(ctx) {
   const content = CONTENT[ctx.me.id] || CONTENT['acme.ava'];
+  // Topics and the working-on line are shared with Memory, where the person can change them.
+  const carried = currentContext(ctx);
   const st = ctx.store.profile || (ctx.store.profile = {});
   if (!ROLES.some((role) => role.id === st.role)) st.role = 'engineer';
   let visibility = st.cv?.visibility || st.visibility || 'shareable';
@@ -135,8 +134,8 @@ export function render(ctx) {
         h('p', { class: 'profile-context-title' }, 'CV'),
         h('label', { class: 'profile-file-control', for: fileId }, 'Replace', fileInput)),
       h('ul', { class: 'profile-topics', 'aria-label': 'Context topics' },
-        content.topics.map((topic) => h('li', { class: 'pill' }, topic))),
-      h('p', { class: 'profile-working-on', lang: content.lang }, content.workingOn),
+        carried.topics.map((topic) => h('li', { class: 'pill' }, topic))),
+      carried.workingOn ? h('p', { class: 'profile-working-on', lang: carried.lang }, carried.workingOn) : null,
       visibilityChoices));
 
   return h('div', { class: 'screen profile' },
