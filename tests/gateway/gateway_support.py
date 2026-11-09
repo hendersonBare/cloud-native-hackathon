@@ -155,8 +155,18 @@ async def collect(sub: Subscription, wanted: str, timeout: float = 3.0) -> list[
 
 
 # ----------------------------------------------------------------------------- SSE over raw ASGI
-async def read_sse(app: Any, query: str, *, min_chunks: int = 1, wait: float = 3.0) -> bytes:
-    """Open GET /api/stream?<query> on the ASGI app, read until `min_chunks` bodies arrived, then disconnect."""
+async def read_sse(
+    app: Any,
+    query: str,
+    *,
+    min_chunks: int = 1,
+    wait: float = 3.0,
+    request_headers: dict[str, str] | None = None,
+    until_closed: bool = False,
+) -> bytes:
+    """Open GET /api/stream?<query> on the ASGI app, read until `min_chunks` bodies arrived (or, with
+    `until_closed`, until the server ends the stream), then disconnect. `read_sse.last_closed` says whether
+    the server ended the stream itself."""
     scope = {
         "type": "http",
         "asgi": {"version": "3.0"},
@@ -167,7 +177,7 @@ async def read_sse(app: Any, query: str, *, min_chunks: int = 1, wait: float = 3
         "raw_path": b"/api/stream",
         "query_string": query.encode(),
         "root_path": "",
-        "headers": [],
+        "headers": [(k.lower().encode(), v.encode()) for k, v in (request_headers or {}).items()],
         "client": ("127.0.0.1", 5000),
         "server": ("gateway", 80),
     }
@@ -186,7 +196,9 @@ async def read_sse(app: Any, query: str, *, min_chunks: int = 1, wait: float = 3
     chunks = 0
     try:
         deadline = time.monotonic() + wait
-        while chunks < min_chunks and time.monotonic() < deadline:
+        while (until_closed or chunks < min_chunks) and time.monotonic() < deadline:
+            if task.done() and sent.empty():
+                break
             try:
                 message = await asyncio.wait_for(sent.get(), timeout=0.2)
             except asyncio.TimeoutError:
@@ -198,6 +210,7 @@ async def read_sse(app: Any, query: str, *, min_chunks: int = 1, wait: float = 3
                 body += message["body"]
                 chunks += 1
     finally:
+        read_sse.last_closed = task.done()  # type: ignore[attr-defined]
         gone.set()
         try:
             await asyncio.wait_for(task, timeout=2)
