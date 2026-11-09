@@ -318,6 +318,8 @@ class DelegateAgent:
                                       item_titles=[i.title for i in items], followups=followups,
                                       templated=templated)
         followups = [self._in_language(f, lang, text.translations, templated) for f in followups]
+        seen_text: set[str] = set()  # untranslated lines share one generic text: keep it once
+        followups = [f for f in followups if not (f.text in seen_text or seen_text.add(f.text))]
         suggested = proto.talk_hit(talk, f"Shared interests: {', '.join(mutual)}" if mutual else None) if talk else None
         return proto.build_shared_brief(
             encounter_id=enc, persona=self._persona, items=items, declined=declined, followups=followups,
@@ -336,10 +338,11 @@ class DelegateAgent:
         return f.model_copy(update={"text": text})
 
     def _match_item(self, text: str) -> tuple[OfferItem, str] | None:
-        """The shared item a peer's rule-made follow-up refers to (its title appears in the text), and which org
-        it came from. Longest title wins."""
+        """The shared item a peer's rule-made follow-up refers to (the text has the shape "Review <title> from "
+        that our rules emit), and which org it came from. Longest title wins."""
         sent = {i.item_id for i in self._sent_items()}
-        hits = [i for i in self._sent_items() + self._received_items() if i.title and i.title in text]
+        hits = [i for i in self._sent_items() + self._received_items()
+                if i.title and text.startswith(f"Review {i.title} from ")]  # only the shape our rules emit
         if not hits:
             return None
         item = max(hits, key=lambda i: len(i.title))

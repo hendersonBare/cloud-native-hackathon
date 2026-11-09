@@ -46,3 +46,16 @@ async def test_model_made_followups_are_capped_and_never_left_in_english_for_bo(
     assert bo.followups[0].followup_id == f"fu-{ENC}-talk" and ava.followups[0].followup_id == f"fu-{ENC}-talk"
     for f in bo.followups:
         assert not any(p in f.text for p in ENGLISH_PHRASES + ("Compare notes", "dashboard export")), f.text
+    for brief in (ava, bo):
+        assert len({f.text for f in brief.followups}) == len(brief.followups)  # no identical generic lines
+
+
+async def test_peer_model_written_followup_that_names_an_item_is_not_rewritten_as_a_review():
+    title = "Platform requirements (summary)"
+    plan = FollowupPlan(talk_id=None, followups=[FollowupDraft(text=f"Walk through {title} together", item_id=None,
+                                                                owner="both")])
+    llm = ScriptedLLM(plan=plan, brief=BriefText(summary="Resumen", translations=[]))
+    _, init, _, _, _ = await run_exchange(malicious=False, responder_kw={"llm": llm})
+    ava = SharedBrief.model_validate(events(init, "shared_brief")[0].data)
+    assert len(ava.followups) <= 3
+    assert any(f.text == f"Walk through {title} together" for f in ava.followups)
