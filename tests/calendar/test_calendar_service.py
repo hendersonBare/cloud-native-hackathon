@@ -323,10 +323,34 @@ async def test_shared_brief_adds_a_proposed_talk_once(service):
     assert event.with_persona_ids == ["bluefin.bo"] and event.note == "Suggested by your agents"
     assert event.ends_at - event.starts_at == timedelta(minutes=30) and event.location == "Room B"
     assert await service.record_shared_brief(brief_for("acme.sam", hit(KNOWN)), "bluefin.bo") is None  # idempotent
+    assert [e.talk_id for e in (await service.view("acme.sam")).events] == [KNOWN]  # still one event
+
+
+async def test_shared_brief_marks_a_talk_the_person_already_has(service):
+    """The demo's suggested talk is already on both phones: the event says who they are going with instead."""
+    before = next(e for e in (await service.view("acme.ava")).events if e.talk_id == "talk-otel-regulated")
+    marked = await service.record_shared_brief(brief_for("acme.ava", hit("talk-otel-regulated")), "bluefin.bo")
+    assert marked is not None and marked.event_id == before.event_id
+    assert marked.with_persona_ids == ["bluefin.bo"]
+    assert marked.note == "Going with Bo · suggested by your agents"
+    # nothing else about the person's own event changes
+    assert (marked.status, marked.source, marked.capture, marked.title) == (
+        before.status, before.source, before.capture, before.title
+    )
+    assert await service.record_shared_brief(brief_for("acme.ava", hit("talk-otel-regulated")), "bluefin.bo") is None
+    again = await service.record_shared_brief(brief_for("acme.ava", hit("talk-otel-regulated")), "kestrel.mia")
+    assert again.with_persona_ids == ["bluefin.bo", "kestrel.mia"]
+    assert again.note == "Going with Bo and Mia · suggested by your agents"
+    third = await service.record_shared_brief(brief_for("acme.ava", hit("talk-otel-regulated")), "lumenly.priya")
+    assert third.note == "Going with Bo and 2 others · suggested by your agents"
+    count = sum(e.talk_id == "talk-otel-regulated" for e in (await service.view("acme.ava")).events)
+    assert count == 1
+
+
+async def test_shared_brief_leaves_a_declined_talk_alone(service):
+    first = await service.record_shared_brief(brief_for("acme.sam", hit(KNOWN)), "bluefin.bo")
+    service._events["acme.sam"][first.event_id] = first.model_copy(update={"status": "declined"})  # noqa: SLF001
     assert await service.record_shared_brief(brief_for("acme.sam", hit(KNOWN)), "kestrel.mia") is None
-    assert [e.talk_id for e in (await service.view("acme.sam")).events] == [KNOWN]
-    # someone who already has the talk is left alone
-    assert await service.record_shared_brief(brief_for("acme.ava", hit("talk-otel-regulated")), "acme.sam") is None
 
 
 async def test_shared_brief_uses_the_agenda_not_the_briefs_copy_of_the_talk(service):

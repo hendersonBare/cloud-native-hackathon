@@ -14,9 +14,11 @@ router = APIRouter(prefix="/api/demo", tags=["demo"])
     "/reset",
     response_model=ResetResult,
     dependencies=[Depends(require_admin)],
-    summary="Clear in-memory state (requests, encounters, replay buffer, limits)",
+    summary="Clear in-memory state (requests, encounters, replay buffer, limits, calendar)",
     responses={401: {"description": "admin token required"}, 403: {"description": "wrong admin token"}},
 )
 async def reset(deps: DepsDep) -> ResetResult:
     await deps.backend.reset()
+    if deps.calendar is not None:
+        deps.calendar.reset()
     return ResetResult()

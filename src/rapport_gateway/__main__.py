@@ -12,9 +12,11 @@ from rapport_common.telemetry import init_telemetry
 
 from .app import create_app, create_internal_app
 from .deps import build_deps
+from .logfilters import install_log_filters
 from .settings import Settings
 
 log = logging.getLogger("rapport.gateway")
+
 
 
 async def serve(settings: Settings) -> None:
@@ -33,6 +35,8 @@ async def serve(settings: Settings) -> None:
     internal = uvicorn.Server(
         uvicorn.Config(internal_app, host="0.0.0.0", port=settings.internal_port, server_header=False)
     )
+    # after uvicorn.Config, which (re)configures uvicorn's loggers: request logs keep paths, never query strings
+    install_log_filters()
     # Only the public server installs signal handlers; stopping it stops the internal one too.
     internal.capture_signals = contextlib.nullcontext  # type: ignore[method-assign]
     internal_task = asyncio.create_task(internal.serve())

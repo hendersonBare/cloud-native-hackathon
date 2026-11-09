@@ -74,25 +74,27 @@ to promote them into `rapport_common.models`. They reuse `TalkHit` and `SharedBr
 | `RAPPORT_CALENDAR_NOW` | ISO 8601 time with an offset that pins the server clock for rehearsals. |
 | `RAPPORT_WEB_DIR` | Standalone only: serve this folder at `/` after the API routes. |
 | `RAPPORT_VERSION` | Reported by `/healthz`. |
+| `RAPPORT_CALENDAR_HOST` | Standalone dev server bind address (default `127.0.0.1`). |
 | `BRIEFER_URL_<ORG>` | Local override of a briefer URL (`rapport_common.names.briefer_url`). |
 
-## Mounting in the gateway
+## How the gateway mounts it
 
-```python
-from rapport_calendar.api import get_service, router as calendar_router
+`rapport_gateway` serves the calendar in-process (no separate pod, Service or RBAC):
 
-app.include_router(calendar_router)  # before the StaticFiles mount
-
-# POST /api/demo/reset
-get_service().reset()
-
-# when a delegate pushes a shared_brief for a person
-await get_service().record_shared_brief(brief, counterparty_persona_id)
-```
+- `deps.py` builds one `CalendarService` per gateway (seed agenda in mock mode, which has no briefers) and passes
+  `calendar.record_shared_brief` to `EncounterService(on_shared_brief=...)`.
+- `app.py` includes `rapport_calendar.api.router` before the static `web/` mount and points
+  `app.dependency_overrides[get_service]` at that instance, so every app (and every test) has its own state.
+- `POST /api/demo/reset` also calls `calendar.reset()`.
+- When a delegate reports its first `shared_brief`, the gateway calls `record_shared_brief(brief, counterparty)` in a
+  background task; a failure is logged with IDs only and never affects the encounter.
+- `rapport_gateway/logfilters.py`: the uvicorn access log and httpx's request log (the calendar's briefer call runs in
+  the gateway process) keep the path and drop the query string, so agenda search text never reaches the logs or Dash0.
 
 `record_shared_brief` treats the brief's `suggested_talk` as an id only: it looks the talk up on the agenda and adds
 the agenda's own copy (title, room, time) as a `proposed` talk (source `agent`, note "Suggested by your agents"), and
-only when the talk lies inside the conference week. It returns the event, or `None` when nothing was added (including
+only when the talk lies inside the conference week. If the person already has that talk, the event is marked instead:
+the counterparty joins `with_persona_ids` and the note reads "Going with Bo · suggested by your agents". It returns the event, or `None` when nothing changed (including
 an unknown talk id). A suggestion does not make the person busy. `POST /talks` for the same talk accepts it (it becomes
 `confirmed`, source `conference`); `DELETE` dismisses it. Calling it again for the same person and talk
 changes nothing. Tests and the gateway can replace the service with `app.dependency_overrides[get_service]`.
@@ -103,7 +105,8 @@ changes nothing. Tests and the gateway can replace the service with `app.depende
 RAPPORT_WEB_DIR=web PYTHONPATH=src uv run python -m rapport_calendar
 ```
 
-It listens on `0.0.0.0:8080`. Tests: `make test`, or `PYTHONPATH=src uv run pytest tests/calendar`.
+It listens on `127.0.0.1:8080` (set `RAPPORT_CALENDAR_HOST` to change it); in the cluster the gateway serves the
+calendar instead. Tests: `make test`, or `PYTHONPATH=src uv run pytest tests/calendar`.
 
 ## Privacy and telemetry
 

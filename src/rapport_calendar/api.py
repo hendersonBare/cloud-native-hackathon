@@ -60,6 +60,14 @@ def _scrub_query_from_server_span(request: Request) -> None:
 
 
 _UNKNOWN_PERSONA = {404: {"description": "unknown_persona or event_not_found"}}
+# 409 codes, so the OpenAPI page documents every refusal the phone handles.
+_CONFLICTS = {
+    409: {
+        "description": "calendar_full, not_editable, not_deletable, not_a_meeting, meeting_closed, already_added "
+        "or no_mutual_slot"
+    }
+}
+_ERRORS = {**_UNKNOWN_PERSONA, **_CONFLICTS}
 
 
 @router.get("", response_model=CalendarView, responses=_UNKNOWN_PERSONA)
@@ -72,23 +80,23 @@ async def get_calendar(
     return await service.view(persona_id, start, days)
 
 
-@router.post("/events", status_code=201, response_model=CreateEventResult, responses=_UNKNOWN_PERSONA)
+@router.post("/events", status_code=201, response_model=CreateEventResult, responses=_ERRORS)
 async def create_event(body: CreateEventBody, service: Service) -> CreateEventResult:
     return await service.create_event(body)
 
 
-@router.patch("/events/{event_id}", response_model=CalendarEvent, responses=_UNKNOWN_PERSONA)
+@router.patch("/events/{event_id}", response_model=CalendarEvent, responses=_ERRORS)
 async def update_event(event_id: str, body: UpdateEventBody, service: Service) -> CalendarEvent:
     return await service.update_event(event_id, body)
 
 
-@router.delete("/events/{event_id}", status_code=204, response_class=Response, responses=_UNKNOWN_PERSONA)
+@router.delete("/events/{event_id}", status_code=204, response_class=Response, responses=_ERRORS)
 async def delete_event(event_id: str, persona_id: PersonaId, service: Service) -> Response:
     await service.delete_event(event_id, persona_id)
     return Response(status_code=204)
 
 
-@router.post("/events/{event_id}/respond", response_model=CalendarEvent, responses=_UNKNOWN_PERSONA)
+@router.post("/events/{event_id}/respond", response_model=CalendarEvent, responses=_ERRORS)
 async def respond(event_id: str, body: RespondBody, service: Service) -> CalendarEvent:
     return await service.respond(event_id, body)
 
@@ -98,18 +106,22 @@ async def set_conference_mode(body: ConferenceModeBody, service: Service) -> Con
     return await service.set_conference_mode(body)
 
 
-@router.get("/agenda", response_model=AgendaView, responses=_UNKNOWN_PERSONA)
+# The scrub is a route dependency, not a call in the handler: it must also run when validation fails (422).
+@router.get(
+    "/agenda",
+    response_model=AgendaView,
+    responses=_UNKNOWN_PERSONA,
+    dependencies=[Depends(_scrub_query_from_server_span)],
+)
 async def get_agenda(
-    request: Request,
     service: Service,
     persona_id: PersonaId,
     q: Annotated[str, Query(max_length=MAX_QUERY_LENGTH)] = "",
 ) -> AgendaView:
-    _scrub_query_from_server_span(request)
     return await service.agenda(persona_id, q)
 
 
-@router.post("/talks", status_code=201, response_model=CreateEventResult, responses=_UNKNOWN_PERSONA)
+@router.post("/talks", status_code=201, response_model=CreateEventResult, responses=_ERRORS)
 async def add_talk(body: AddTalkBody, service: Service) -> CreateEventResult:
     return await service.add_talk(body)
 
@@ -118,7 +130,10 @@ async def add_talk(body: AddTalkBody, service: Service) -> CreateEventResult:
     "/propose",
     status_code=201,
     response_model=MeetingProposal,
-    responses={200: {"description": "A meeting with this person already existed"}, **_UNKNOWN_PERSONA},
+    responses={
+        200: {"description": "A meeting with this person already existed", "model": MeetingProposal},
+        **_ERRORS,
+    },
 )
 async def propose(body: ProposeBody, service: Service, response: Response) -> MeetingProposal:
     proposal = await service.propose(body)

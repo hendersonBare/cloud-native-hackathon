@@ -303,14 +303,30 @@ class CalendarService:
             self._events[body.persona_id][event.event_id] = event
             return CreateEventResult(event=_out(event), conflicts=conflicts)
 
+    def _mark_going_together(self, event: CalendarEvent, counterparty_persona_id: str) -> CalendarEvent | None:
+        """Both people's agents agreed on a talk this person already has: say who they are going with."""
+        if event.status == "declined" or counterparty_persona_id in event.with_persona_ids:
+            return None
+        with_ids = [*event.with_persona_ids, counterparty_persona_id]
+        names = [self._names[pid] for pid in with_ids if pid in self._names]
+        who = names[0] if len(names) == 1 else f"{', '.join(names[:-1])} and {names[-1]}"
+        if len(names) > 2:
+            who = f"{names[0]} and {len(names) - 1} others"
+        updated = event.model_copy(
+            update={"with_persona_ids": with_ids, "note": f"Going with {who} · suggested by your agents"}
+        )
+        self._events[event.persona_id][event.event_id] = updated
+        return _out(updated)
+
     async def record_shared_brief(self, brief: SharedBrief, counterparty_persona_id: str) -> CalendarEvent | None:
         """Encounter hook: add the talk the agents suggested as a proposed event.
 
         The suggestion comes from a delegate whose input includes counterparty text, so it is only an id: the event is
         built from this service's own copy of that talk (never the brief's title, room or time), and only for a talk
-        inside the conference week. Returns the new event, or ``None`` when nothing was added (no suggestion, an
-        unknown person or talk, a full calendar, or the person already has an event for that talk, which makes repeat
-        calls harmless).
+        inside the conference week. When the person already has that talk, the event is marked instead: the counterparty
+        joins ``with_persona_ids`` and the note says "Going with <name> · suggested by your agents" (templated; only
+        directory names). Returns the new or marked event, or ``None`` when nothing changed (no suggestion, an unknown
+        person or talk, a full calendar, a declined event, or a repeat call for the same counterparty).
         """
         suggestion = brief.suggested_talk
         persona_id = brief.for_persona_id
@@ -328,8 +344,9 @@ class CalendarService:
             log.warning("shared brief suggested an unknown talk encounter=%s", brief.encounter_id)
             return None
         async with self._lock:
-            if any(e.talk_id == talk.talk_id for e in self._events[persona_id].values()):
-                return None
+            existing = next((e for e in self._events[persona_id].values() if e.talk_id == talk.talk_id), None)
+            if existing is not None:
+                return self._mark_going_together(existing, counterparty_persona_id)
             if self._active_count(persona_id) >= MAX_EVENTS_PER_PERSONA:
                 return None
             event = self._talk_event(

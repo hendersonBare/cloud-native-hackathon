@@ -214,11 +214,19 @@ async def test_the_search_text_reaches_no_span_and_no_url_attribute(seed, monkey
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as http:
                 params = {"persona_id": "acme.ava", "q": "jobhuntingsecret"}
                 res = await http.get("/api/calendar/agenda", params=params)
+                # requests that fail validation (422) must lose their query too: the scrub is a route dependency
+                no_persona = await http.get("/api/calendar/agenda", params={"q": "missingpersonasecret"})
+                too_long = await http.get(
+                    "/api/calendar/agenda", params={"persona_id": "acme.ava", "q": "overlimitsecret" + "x" * 100}
+                )
         assert res.status_code == 200 and res.json()["source"] == "briefer"
+        assert no_persona.status_code == 422 and too_long.status_code == 422
     finally:
         FastAPIInstrumentor.uninstrument_app(app)
         HTTPXClientInstrumentor().uninstrument()
     spans = exporter.get_finished_spans()
     assert any(s.name == "calendar.agenda" for s in spans) and any(s.kind.name == "SERVER" for s in spans)
     assert not [s for s in spans if s.kind.name == "CLIENT"]  # calendar.agenda already covers the briefer call
-    assert "jobhuntingsecret" not in repr([dict(s.attributes) for s in spans])
+    attributes = repr([dict(s.attributes) for s in spans])
+    for secret in ("jobhuntingsecret", "missingpersonasecret", "overlimitsecret"):
+        assert secret not in attributes
