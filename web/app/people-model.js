@@ -83,7 +83,9 @@ export function directoryFromGateway({ orgs, personas, known = {} } = {}) {
 }
 
 // A clock time (2:30 PM, 9am) that is not already followed by a zone label such as MST.
-const BARE_TIME = /\b(\d{1,2}(?::\d{2})?\s?[AaPp]\.?[Mm]\.?)(?!\s?(?:[A-Z]{2,4}|[A-Z][a-z]+ Time)\b)/g;
+// (?!\.) stops the optional trailing period from backtracking: without it, '10:00 a.m. MST'
+// matched as '10:00 a.m' and came out as '10:00 a.m MST. MST'.
+const BARE_TIME = /\b(\d{1,2}(?::\d{2})?\s?[AaPp]\.?[Mm]\.?)(?!\.)(?!\s?(?:[A-Z]{2,4}|[A-Z][a-z]+ Time)\b)/g;
 
 /**
  * Agent-written text sometimes names a talk time without its zone. Append the conference

@@ -905,3 +905,11 @@ describe('person and people screens', () => {
     });
   });
 });
+
+test('withZone leaves a.m./p.m. times that already carry a zone alone', () => {
+  const noon = '2026-11-09T19:00:00Z';
+  assert.equal(withZone('Talk at 10:00 a.m. MST today', noon), 'Talk at 10:00 a.m. MST today');
+  assert.equal(withZone('Free 4:15 p.m. MST, or later', noon), 'Free 4:15 p.m. MST, or later');
+  assert.equal(withZone('Talk at 10:00 a.m. today', noon), 'Talk at 10:00 a.m. MST today');
+  assert.equal(withZone('Coffee at 9 a.m. Mountain Time', noon), 'Coffee at 9 a.m. Mountain Time');
+});
