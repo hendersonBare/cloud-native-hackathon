@@ -11,6 +11,9 @@ A hackathon kit for the Cloud Native Hackathon (theme: make conferences easier).
 | `docs/SETUP.md` | Setting up kind, Elastic Cloud, Dash0, OpenAI, Radar and Gitar (about 45 min) |
 | `docs/FEATURE-DISCOVER.md` | v1.1: filter → research → swipe cards → deep dive → agent decides |
 | `docs/COSTS.md` | What it costs to run (OpenAI, Elastic) |
+| `docs/REVIEW.md` | Spec concerns and the layered fast path to a working demo |
+| `docs/TRACKS.md` | Track evidence: each claim, where it lives and its proof (`docs/evidence/`) |
+| `docs/research/oss-and-light-models.md` | Open-source helpers and light-model importance gating |
 | `AGENTS.md` | House rules every agent follows |
 | `docs/workstreams/*.md` | One brief per parallel workstream |
 

@@ -54,5 +54,6 @@ Read `docs/SPEC.md` and your brief in `docs/workstreams/<name>.md` before writin
 4. What's not done.
 5. Any contract-change requests.
 6. Anything the integrator must do: deploy steps or secrets.
+7. Track evidence: which rows of `docs/TRACKS.md` this PR moves forward and what to screenshot once it's merged. Put the same section in the PR description, and add any bug you hit to `docs/evidence/LOG.md`.
 
 If you're blocked for more than 20 minutes, ship the simplest working version and write down what's missing.
