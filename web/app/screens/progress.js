@@ -5,6 +5,7 @@
 import { h, icon, avatar, bottomNav, eyebrow, nextId } from '../ui.js';
 import { hashFor } from '../route.js';
 import { CONTENT, LIVE_SESSION, dayProgress, learnedIn } from '../progress-model.js';
+import { TIMEZONE, zoneLabel } from '../time.js';
 
 const CHECK_MS = 1800;
 
@@ -22,7 +23,8 @@ export function render(ctx) {
 
   const status = h('p', { class: 'visually-hidden', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
   const main = h('main', { class: 'scroll progress-main' });
-  const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  // Session times are Denver wall-clock time, and the header says so (review rule: never a bare time).
+  const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: TIMEZONE });
   const liveSession = content.sessions.find((s) => s.id === LIVE_SESSION);
 
   const newTag = (session) => (session === fresh ? h('span', { class: 'progress-new' }, 'New') : null);
@@ -178,7 +180,7 @@ export function render(ctx) {
     const day = dayProgress(content, { liveSaved: liveSaved && !checking });
     main.replaceChildren(
       h('header', { class: 'progress-head' },
-        h('p', { class: 'eyebrow' }, `${weekday} · ${view.home?.event || 'KubeCon'}`),
+        h('p', { class: 'eyebrow' }, `${weekday} · ${view.home?.event || 'KubeCon'} · All times ${zoneLabel()}`),
         h('h1', { class: 'serif progress-title' }, 'Your ', h('em', null, 'progress'))),
       banner(day),
       hero(day),
