@@ -385,6 +385,7 @@ A briefer serves only personas of its own company and returns 403 for anyone els
   | `dash0-otlp` | every namespace | `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS` |
   | `es-briefer` | org namespaces | `ES_URL`, `ES_API_KEY` |
   | `es-delegate` | org namespaces | `ES_URL`, `ES_API_KEY` |
+  | `dash0-rum` (optional) | `team-rapport` | `DASH0_RUM_ENDPOINT`, `DASH0_RUM_AUTH_TOKEN`, `DASH0_RUM_DATASET?`: website monitoring, served to the browser by `GET /api/rum-config`, so a separate ingest-only token |
 
 - **Local dev without Kubernetes:** set the `*_URL_*` overrides from `.env.example`. Run `uv run python -m rapport_<component>`.
 

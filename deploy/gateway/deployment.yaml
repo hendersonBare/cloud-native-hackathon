@@ -44,6 +44,9 @@ spec:
             # Created outside git (scripts/create-secrets.sh or Radar's resource editor).
             # optional: the pod still starts before the Secrets exist.
             - secretRef: { name: dash0-otlp, optional: true }
+            # Website monitoring (GET /api/rum-config): DASH0_RUM_ENDPOINT, DASH0_RUM_AUTH_TOKEN and optional
+            # DASH0_RUM_DATASET. The browser receives this token, so it is a separate ingest-only website token.
+            - secretRef: { name: dash0-rum, optional: true }
           resources:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { cpu: 300m, memory: 512Mi }

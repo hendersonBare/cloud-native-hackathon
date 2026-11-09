@@ -20,3 +20,4 @@ import './calendar.test.mjs';
 import './people.test.mjs';
 import './venue.test.mjs';
 import './find.test.mjs';
+import './rum.test.mjs';
