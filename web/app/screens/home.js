@@ -160,13 +160,14 @@ export function render(ctx) {
       ),
       h('p', { class: 'opp-role' }, p.role),
       h('div', { class: 'opp-topics' },
-        h('div', { class: 'topics-head' },
+        h('div', { class: 'topics-text' },
           h('p', { class: 'eyebrow' }, 'Talk about'),
-          h('button', {
-            type: 'button', class: 'decide-btn find-btn', 'aria-label': `Find ${p.name} at the venue`,
-            onClick: () => ctx.go('find', { with: p.id }),
-          }, h('span', { class: 'decide-chip find-chip', 'aria-hidden': 'true' }, icon('navigate', { size: 16, stroke: 2 })))),
-        h('ul', { class: 'stack' }, p.topics.map((t) => h('li', { class: 'topic' }, h('span', { class: 'topic-dot', 'aria-hidden': 'true' }), h('span', null, t)))),
+          h('ul', { class: 'stack' }, p.topics.map((t) => h('li', { class: 'topic' }, h('span', { class: 'topic-dot', 'aria-hidden': 'true' }), h('span', null, t)))),
+        ),
+        h('button', {
+          type: 'button', class: 'decide-btn find-btn', 'aria-label': `Find ${p.name} at the venue`,
+          onClick: () => ctx.go('find', { with: p.id }),
+        }, h('span', { class: 'decide-chip find-chip', 'aria-hidden': 'true' }, icon('navigate', { size: 20, stroke: 2 }))),
       ),
     );
     return art;

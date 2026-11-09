@@ -15,16 +15,18 @@
   display: flex; align-items: center;
 }
 
-.deck { position: relative; height: 222px; flex: none; }
+/* The card sits in flow so a topic that wraps beside the find button grows it instead of clipping;
+   the two cards behind it stretch to peek 6px and 12px below whatever height it takes. */
+.deck { position: relative; padding-bottom: 12px; flex: none; }
 .deck-back {
-  position: absolute; height: 210px; border-radius: 22px;
+  position: absolute; border-radius: 22px;
   background: var(--surface); border: 1px solid var(--line);
   transition: opacity .2s ease;
 }
-.deck-back.back2 { left: 16px; right: 16px; top: 12px; }
-.deck-back.back1 { left: 8px; right: 8px; top: 6px; }
+.deck-back.back2 { left: 16px; right: 16px; top: 12px; bottom: 0; }
+.deck-back.back1 { left: 8px; right: 8px; top: 6px; bottom: 6px; }
 .opp-card {
-  position: absolute; left: 0; right: 0; top: 0; height: 210px;
+  position: relative; min-height: 210px; box-sizing: border-box;
   padding: 14px 14px 14px 16px; border-radius: 22px;
   background: var(--surface); border: 1px solid var(--gold-line); box-shadow: var(--shadow);
   transition: transform .24s ease, border-color .15s ease;
@@ -34,12 +36,12 @@
 .opp-card:active { cursor: grabbing; }
 .opp-name { font-size: 19px; font-weight: 600; line-height: 24px; letter-spacing: -0.01em; margin: 0; }
 .opp-role { font-size: 14px; line-height: 18px; color: var(--text2); }
-.opp-topics { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+/* The find button sits to the right of the topics, vertically centred on them. */
+.opp-topics { display: flex; align-items: center; gap: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.topics-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .topic { display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 22px; }
-/* The find button sits beside "Talk about"; negative margins keep its 44px target from growing the card. */
-.topics-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.find-btn { margin: -14px -8px -14px 0; flex: none; }
-.decide-chip.find-chip { width: 32px; height: 32px; border-radius: 16px; color: var(--gold); background: var(--gold-bg); border-color: var(--gold-line); }
+.decide-btn.find-btn { width: 52px; height: 52px; border-radius: 26px; margin-right: -4px; flex: none; }
+.decide-chip.find-chip { width: 46px; height: 46px; border-radius: 23px; color: var(--gold); }
 .topic-dot { width: 5px; height: 5px; flex: none; border-radius: 3px; background: var(--gold); }
 .decide-btn { width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 22px; }
 .decide-chip {
