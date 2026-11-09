@@ -60,7 +60,7 @@ Two presenters stand side by side and talk, one as Ava (Acme Observability, left
 
 | # | Who | Taps | What the room sees |
 |---|---|---|---|
-| 1 | Both | Home → **Open transcript** | **Capture** with the *Hallway conversation*: one new line every 2.5 s, the other person named automatically with an `Auto` tag |
+| 1 | Both | Home → **Open transcript**, then the 🎙 mic on the phone of whoever is talking | **Capture** transcribes the *Hallway conversation* as it's spoken, on both phones: *You* for your own lines, the other person named automatically with an `Auto` tag |
 | 2 | Ava (optional) | Bo's name in the transcript | *Who's speaking?* Pick or type a name and every line from that voice updates. **Save & brief me** opens the brief |
 | 3 | Ava | **Brief me on Bo** → **Connect our agents** | Ava: *Waiting for Bo to accept…* Bo: a notification, *Ava wants your agents to talk*. Swarm panel: *Ava asked to connect* |
 | 4 | Bo | the notification → **Accept** | Both phones switch to *Agents in conversation*. Swarm panel: an `Encounter` with one delegate pod in `org-acme` and one in `org-bluefin`, *Pending* then *Running* |
@@ -69,9 +69,9 @@ Two presenters stand side by side and talk, one as Ava (Acme Observability, left
 
 To show a blocked prompt injection, tick **Malicious responder** before Bo accepts: Acme's OPA answers `deny · pricing_needs_approval` in red.
 
-**The transcript is scripted.** Capture doesn't record or recognise speech. It plays a fixed conversation (`CONTENT` in [`web/app/screens/live.js`](web/app/screens/live.js)) on a timer, whatever the presenters say, so read the lines in order at about the same pace. Speaker identification from real recordings is the separate [`src/rapport_speakers/`](src/rapport_speakers/) service.
+**The live transcript.** Capture uses the browser's own speech recognition ([`web/app/speech.js`](web/app/speech.js)), so use Chrome or Edge and allow the microphone when asked. Only one mic is on at a time, and **the speaker is whoever's phone has the mic on**: on a one-laptop stage, tap the mic on Ava's phone while Ava talks and on Bo's phone while Bo talks, and the other phone's mic turns off. Each phrase shows on both phones, *You* on the speaker's phone and the speaker's name on the other. Chrome sends the audio to its speech service, so don't use real conversations. Until someone taps a mic, and in browsers without speech recognition, Capture plays a scripted conversation instead (`CONTENT` in [`web/app/screens/live.js`](web/app/screens/live.js)). Speaker identification from recordings, by voice, is the separate [`src/rapport_speakers/`](src/rapport_speakers/) service.
 
-<sub>Checked end to end on 9 Nov 2026 at 3:28 PM MST on the public site in live mode: encounter <code>enc-1ee1a6e0</code> went from Accept to <i>Encounter completed</i> in 19 s, and in mock mode on a local static server, where <b>Reset demo</b> starts the transcript over.</sub>
+<sub>Checked end to end on 9 Nov 2026 at 3:28 PM MST on the public site in live mode: encounter <code>enc-1ee1a6e0</code> went from Accept to <i>Encounter completed</i> in 19 s, and in mock mode on a local static server, where <b>Reset demo</b> starts the transcript over. The live transcript's two-phone sync and its error states were checked in the browser with simulated speech; recognising a real voice needs Chrome with a microphone.</sub>
 
 ## 🔁 The loop
 

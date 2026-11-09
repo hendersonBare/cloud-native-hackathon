@@ -1,6 +1,10 @@
 // Live capture: diarized hallway conversation and saved conference session.
+// The hallway conversation plays CONTENT below until someone taps the mic; from then on it shows
+// what the browser's speech recognition hears (speech.js), the speaker being whose phone's mic is on.
 import { h, icon, svg, topbar, bottomNav } from '../ui.js';
 import { hashFor } from '../route.js';
+import { formatTime } from '../time.js';
+import { emptyCapture } from '../capture-model.js';
 
 export const CONTENT = {
   'acme.ava': {
@@ -57,6 +61,9 @@ export function render(ctx) {
   if (!store.speakers.s2) {
     store.speakers.s2 = { name: peer.name, personaId: peer.id, edited: false };
   }
+  // Real speech (speech.js). Without speech recognition in this browser, the script plays as before.
+  const speech = store.speech?.supported ? store.speech : null;
+  const cap = store.capture || (store.capture = emptyCapture());
 
   const pillText = h('span');
   const pill = h('span', { class: 'capture-pill' },
@@ -95,7 +102,37 @@ export function render(ctx) {
         h('p', { class: 'transcript-text' }, text)));
   }
 
+  function speakerFor(isPeer) {
+    const speaker = store.speakers.s2;
+    const identity = ctx.person(speaker.personaId);
+    return {
+      name: isPeer ? speaker.name : 'You',
+      initials: isPeer ? (identity?.initials || speaker.name.slice(0, 2).toUpperCase()) : 'You',
+      tone: isPeer ? (identity?.tone || 'steel') : 'gold',
+      editable: isPeer, tag: isPeer ? (speaker.edited ? 'Edited' : 'Auto') : null,
+    };
+  }
+
+  // Real speech: every line from cap.lines, plus the phrase being spoken right now.
+  function drawLive() {
+    const rows = cap.lines.map((line) =>
+      transcriptLine({ ...speakerFor(line.from !== ctx.me.id), text: line.text, time: formatTime(line.start) }));
+    if (cap.interim) {
+      const row = transcriptLine({ ...speakerFor(cap.interim.from !== ctx.me.id), text: cap.interim.text, time: '' });
+      row.querySelector('.speaker-row').append(h('span', { class: 'speaking' },
+        h('span', { class: 'capture-dot', 'aria-hidden': 'true' }), 'Speaking'));
+      row.querySelector('.transcript-text').append(h('span', { class: 'transcript-cursor rp-pulse', 'aria-hidden': 'true' }));
+      rows.push(row);
+    }
+    if (!rows.length) {
+      rows.push(h('p', { class: 'transcript-empty' },
+        cap.listening ? 'Listening… start talking.' : 'Tap the microphone, then start talking.'));
+    }
+    log.replaceChildren(...rows);
+  }
+
   function appendLines() {
+    if (cap.live) { drawLive(); return; }
     speaking?.remove();
     cursor?.remove();
     if (activeTime) activeTime.hidden = false;
@@ -127,15 +164,31 @@ export function render(ctx) {
   function tickClock() {
     const saved = st.mode === 'session';
     pill.classList.toggle('is-saved', saved);
-    pillText.textContent = saved ? 'SAVED' : `${st.paused ? 'PAUSED' : 'REC'} ${elapsed(store.liveStart)}`;
+    const recording = cap.live ? !!cap.listening : !st.paused;
+    pillText.textContent = saved ? 'SAVED' : `${recording ? 'REC' : 'PAUSED'} ${elapsed(store.liveStart)}`;
   }
 
+  function micStatus() {
+    if (cap.error === 'blocked') return 'Microphone blocked: allow it in the address bar, then tap the mic';
+    if (cap.error === 'no-mic') return 'No microphone found';
+    if (cap.error) return 'Speech recognition stopped: tap the mic to try again';
+    if (cap.listening === ctx.me.id) return 'Listening to you · live transcript';
+    if (cap.listening) return `Listening to ${ctx.person(cap.listening)?.name || 'the other phone'} on their phone`;
+    return cap.live ? 'Mic off · tap it when you speak' : 'Tap the mic to transcribe what you say';
+  }
+
+  let footerKey = null;
   function drawFooter() {
     const saved = st.mode === 'session';
-    // The design shows no status line while recording; it stays as a screen-reader live region.
-    const status = h('p', { class: saved ? 'capture-status' : 'capture-status visually-hidden', role: 'status', 'aria-live': 'polite' },
-      icon('memory', { size: 14, stroke: 1.8 }),
-      saved ? 'Saved · speakers matched to the program'
+    footerKey = [st.mode, st.paused, cap.live, cap.listening, cap.error].join('|');
+    // The design shows no status line while the script records; it stays as a screen-reader live region.
+    // With a microphone the status is shown, so the speakers can see whose mic is on.
+    const status = h('p', {
+      class: saved || speech ? 'capture-status' : 'capture-status visually-hidden', role: 'status', 'aria-live': 'polite',
+    },
+    icon(speech && !saved ? 'mic' : 'memory', { size: 14, stroke: 1.8 }),
+    saved ? 'Saved · speakers matched to the program'
+      : speech ? micStatus()
         : st.paused ? 'Capture paused · Personal memory' : 'Streaming to your Personal memory');
     if (saved) {
       footer.replaceChildren(status,
@@ -153,20 +206,29 @@ export function render(ctx) {
     }, st.paused
       ? svg([['path', { d: 'm9 5 10 7-10 7z' }]], { size: 18, stroke: 2 })
       : svg([['path', { d: 'M9 5v14M15 5v14' }]], { size: 18, stroke: 2 }));
+    // With speech recognition the round button is the mic: whoever's mic is on is the speaker.
+    const micOn = cap.listening === ctx.me.id;
+    const mic = speech && h('button', {
+      type: 'button', class: `capture-round capture-mic${micOn ? ' is-on' : ''}`,
+      'aria-label': micOn ? 'Stop listening' : 'Listen and transcribe as you talk', 'aria-pressed': String(micOn),
+      onClick: () => { if (speech.isOn()) speech.stop(); else speech.start(); },
+    }, icon('mic', { size: 20, stroke: 1.8 }));
     const mark = h('button', {
       type: 'button', class: 'capture-mark',
       onClick: () => {
         if (!st.moments) st.moments = [];
-        st.moments.push({ elapsed: Date.now() - store.liveStart, line: st.revealed });
+        st.moments.push({ elapsed: Date.now() - store.liveStart, line: cap.live ? cap.lines.length : st.revealed });
         status.replaceChildren(icon('check', { size: 14 }), `Moment marked at ${elapsed(store.liveStart)}`);
       },
     }, svg([['path', { d: 'M6 3h12v18l-6-4-6 4z' }]], { size: 16, stroke: 2 }), 'Mark moment');
     const stop = h('button', {
       type: 'button', class: 'capture-round capture-stop', 'aria-label': 'Stop and save',
       // Stopping saves the session; Progress then checks it against your memory (progress.js).
-      onClick: () => { st.paused = true; st.saved = true; ctx.go('progress'); },
+      onClick: () => { st.paused = true; st.saved = true; speech?.stop(); ctx.go('progress'); },
     }, icon('stop', { size: 16 }));
-    footer.replaceChildren(status, h('div', { class: 'capture-controls' }, pause, mark, stop));
+    const refocusMic = document.activeElement?.classList?.contains('capture-mic') && footer.contains(document.activeElement);
+    footer.replaceChildren(status, h('div', { class: 'capture-controls' }, mic || pause, mark, stop));
+    if (refocusMic) footer.querySelector('.capture-mic')?.focus({ preventScroll: true });
   }
 
   function drawMode() {
@@ -212,13 +274,26 @@ export function render(ctx) {
   const clockTimer = setInterval(tickClock, 1000);
   ctx.onCleanup(() => clearInterval(clockTimer));
   const revealTimer = setInterval(() => {
-    if (st.mode !== 'conversation' || st.paused || st.revealed >= content.lines.length) return;
+    if (cap.live || st.mode !== 'conversation' || st.paused || st.revealed >= content.lines.length) return;
     const nearBottom = main.scrollHeight - main.scrollTop - main.clientHeight < 64;
     st.revealed += 1;
     appendLines();
     if (nearBottom) main.scrollTop = main.scrollHeight;
   }, 2500);
   ctx.onCleanup(() => clearInterval(revealTimer));
+
+  // Either phone's speech or mic changes (speech.js): redraw the transcript, and the footer only when
+  // whose mic is on changed, so the status isn't re-announced for every word.
+  ctx.onCleanup(ctx.bus.on('capture:update', () => {
+    if (st.mode !== 'conversation') return;
+    const nearBottom = main.scrollHeight - main.scrollTop - main.clientHeight < 64;
+    appendLines();
+    tickClock();
+    if (footerKey !== [st.mode, st.paused, cap.live, cap.listening, cap.error].join('|')) drawFooter();
+    if (nearBottom) main.scrollTop = main.scrollHeight;
+  }));
+  // Leaving Capture turns this phone's mic off.
+  ctx.onCleanup(() => { if (speech?.isOn()) speech.stop(); });
 
   return h('div', { class: 'screen live', lang: 'en' },
     topbar({ title: 'Capture', backLabel: 'Back to home', right: pill }),

@@ -7,6 +7,7 @@ import { initFlow } from './flow.js';
 import { parseHash, hashFor } from './route.js';
 import { calendarClient } from './calendar-api.js';
 import { venueClient } from './venue-api.js';
+import { initSpeech } from './speech.js';
 import { detectBackend } from './mode.js';
 
 const params = new URLSearchParams(location.search);
@@ -94,6 +95,8 @@ function showSafely(focus) {
 
 window.addEventListener('hashchange', () => showSafely(true));
 initFlow({ me: person(meId), peer: person(peerOf(meId)), store, mode, go, bus, overlay });
+// Live speech capture for the Capture screen (app-lifetime, so both phones keep one shared transcript).
+store.speech = initSpeech({ me: person(meId), store, bus });
 // Create the calendar client now, not on first visit to Calendar or People: in mock mode it is a
 // replica that must be listening for the other phone's calendar:sync from the start.
 calendarClient(makeCtx(parseHash(location.hash)));
