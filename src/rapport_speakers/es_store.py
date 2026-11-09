@@ -30,6 +30,7 @@ INFERENCE_PLACEHOLDER = "__INFERENCE_ID__"
 # Same preference order as scripts/setup-elastic.sh, so utterances use the memory indices' endpoint.
 INFERENCE_CANDIDATES = (".jina-embeddings-v5-text-small", ".elser-2-elastic", ".elser-2-elasticsearch")
 _MODES = (MODE_RRF, MODE_BOOL, MODE_KEYWORD)
+BY_QUERY_ATTEMPTS = 3
 _UTTERANCE_FIELDS = frozenset(Utterance.model_fields)
 _UNKNOWN_SOURCE = ["unknown_id", "session_id", "duration_s", "status", "best_candidate_id", "best_score",
                    "runner_up_id", "runner_up_score"]
@@ -150,12 +151,29 @@ class EsSpeakerStore:
         return model.model_dump(mode="json", exclude_none=True)
 
     def _by_query(self, op: str, index: str, query: dict[str, Any], script: dict[str, Any] | None = None) -> int:
+        """`_update_by_query` / `_delete_by_query` that never reports success while documents were skipped.
+
+        A concurrent write (identify, relabel) makes Elasticsearch skip a document as a version conflict. Every
+        query here stops matching a document once it is processed, so re-running it touches only what was
+        skipped. After BY_QUERY_ATTEMPTS it raises, so an erasure can't succeed while leaving personal data.
+        """
         self._check(index)
         kwargs: dict[str, Any] = {"index": index, "query": query, "refresh": True, "conflicts": "proceed"}
         if script is not None:
             kwargs["script"] = script
-        resp = getattr(self._es, op)(**kwargs)
-        return int(resp.get("updated" if op == "update_by_query" else "deleted", 0))
+        key = "updated" if op == "update_by_query" else "deleted"
+        done = 0
+        for _ in range(BY_QUERY_ATTEMPTS):
+            resp = getattr(self._es, op)(**kwargs)
+            if resp.get("failures"):
+                log.error("%s on %s failed for %d documents", op, index, len(resp["failures"]))
+                raise RuntimeError(f"{op} on {index} failed for {len(resp['failures'])} documents")
+            done += int(resp.get(key, 0))
+            conflicts = int(resp.get("version_conflicts", 0))
+            if not conflicts:
+                return done
+            log.warning("%s on %s skipped %d documents on version conflicts; retrying", op, index, conflicts)
+        raise RuntimeError(f"{op} on {index} left {conflicts} documents unprocessed after {BY_QUERY_ATTEMPTS} tries")
 
     @staticmethod
     def _conf(conference_id: str, *more: dict[str, Any]) -> dict[str, Any]:

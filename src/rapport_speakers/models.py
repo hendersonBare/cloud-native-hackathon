@@ -195,6 +195,8 @@ class UtteranceHit(Doc):
     text: str
     score: float | None = None
 
+    check_aware = field_validator("spoken_at")(_aware)
+
 
 class SearchResult(Doc):
     query: str

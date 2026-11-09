@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -68,6 +69,17 @@ class Thresholds:
     margin: float = 0.10
     min_speech_s: float = 3.0
 
+    def __post_init__(self) -> None:
+        # A NaN threshold would make every comparison False and silently label everyone unknown.
+        _check_range("SPEAKERS_T_ACCEPT", self.t_accept, -1.0, 1.0)
+        _check_range("SPEAKERS_MARGIN", self.margin, 0.0, 2.0)
+        _check_range("SPEAKERS_MIN_SPEECH_S", self.min_speech_s, 0.0, 3600.0)
+
+
+def _check_range(name: str, value: float, low: float, high: float) -> None:
+    if not (math.isfinite(value) and low <= value <= high):
+        raise ValueError(f"{name} must be a number between {low} and {high}")
+
 
 @dataclass(frozen=True)
 class EnrollGuards:
@@ -95,6 +107,9 @@ class Settings:
     rerank_inference_id: str | None = None
     knn_k: int = 5
     knn_num_candidates: int = 50
+
+    def __post_init__(self) -> None:
+        _check_range("SPEAKERS_POOL_BONUS", self.pool_bonus, 0.0, 0.5)
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:

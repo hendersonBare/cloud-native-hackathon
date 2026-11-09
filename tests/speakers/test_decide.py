@@ -99,3 +99,13 @@ def test_settings_from_env_validates_pool_mode_and_picks_the_store():
     assert (s.store, s.pool_mode, s.thresholds.t_accept) == ("es", "filter", 0.6)
     with pytest.raises(ValueError):
         Settings.from_env({"SPEAKERS_POOL_MODE": "maybe"})
+
+
+@pytest.mark.parametrize("env", [
+    {"SPEAKERS_T_ACCEPT": "nan"}, {"SPEAKERS_T_ACCEPT": "1.5"}, {"SPEAKERS_MARGIN": "-0.1"},
+    {"SPEAKERS_MIN_SPEECH_S": "inf"}, {"SPEAKERS_POOL_BONUS": "0.9"}, {"SPEAKERS_POOL_BONUS": "nan"},
+])
+def test_settings_reject_nan_and_out_of_range_thresholds(env):
+    """A NaN threshold would make every comparison False and silently label every speaker unknown."""
+    with pytest.raises(ValueError):
+        Settings.from_env(env)

@@ -20,6 +20,7 @@ Scenarios the fixtures cover (asserted below, so a regenerated file keeps them):
 from __future__ import annotations
 
 import json
+import logging
 import random
 from pathlib import Path
 
@@ -29,6 +30,8 @@ from .config import CONFERENCE_ID_DEFAULT, EMBEDDING_DIMS, MODEL_ID_DEFAULT
 from .fixtures import FIXTURES_PATH
 from .schedule import person_id_for, recording_uri, scheduled_speakers
 from .vectors import dot, normalize
+
+log = logging.getLogger("rapport.speakers.fixture_build")
 
 SEED = 20261109
 CONSENT_AT = "2026-11-01T17:00:00+00:00"  # speaker agreement / registration checkbox (synthetic)
@@ -298,6 +301,7 @@ def _check_scenarios(recordings: list[dict], centroids: dict[str, list[float]]) 
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     data = build()
     Path(FIXTURES_PATH).parent.mkdir(parents=True, exist_ok=True)
     # One line per embedding instead of one line per float: dump each vector compactly and splice it in.
@@ -310,7 +314,7 @@ def main() -> None:
         text = text.replace(f'"@@embedding-{i}@@"', vector)
     Path(FIXTURES_PATH).write_text(text + "\n")
     n_clusters = sum(len(r["clusters"]) for r in data["recordings"])
-    print(f"wrote {FIXTURES_PATH} ({len(data['recordings'])} recordings, {n_clusters} clusters)")
+    log.info("wrote %s (%d recordings, %d clusters)", FIXTURES_PATH, len(data["recordings"]), n_clusters)
 
 
 if __name__ == "__main__":

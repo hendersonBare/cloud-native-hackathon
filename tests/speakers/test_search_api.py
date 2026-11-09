@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import datetime, timezone
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from rapport_speakers.api import make_admin_router, make_public_router
+from rapport_speakers.models import UtteranceHit
 
 
 def test_who_said_x_about_ebpf_returns_speaker_and_timestamp(search):
@@ -82,3 +85,12 @@ def test_admin_router_erases(search, pipeline):
     assert resp.status_code == 200 and resp.json()["voiceprints_deleted"] == 1
     after = client.get("/api/speakers/search", params={"q": "kernel", "speaker": "Dev"}).json()
     assert after["hits"] == []
+
+
+def test_utterance_hits_refuse_naive_times():
+    base = dict(utterance_id="u", session_id="s", session_title="T", room="Room B", speaker_id="p",
+                speaker_name="P", speaker_status="identified", start_s=0, end_s=1, spoken_at_label="3:30 PM MST",
+                text="t")
+    with pytest.raises(ValidationError):
+        UtteranceHit(**base, spoken_at=datetime(2026, 11, 9, 22, 30))
+    assert UtteranceHit(**base, spoken_at=datetime(2026, 11, 9, 22, 30, tzinfo=timezone.utc)).spoken_at.tzinfo

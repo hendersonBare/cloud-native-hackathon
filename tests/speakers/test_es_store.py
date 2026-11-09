@@ -242,3 +242,22 @@ def test_store_refuses_indices_outside_its_own():
     s, _ = store()
     with pytest.raises(ValueError):
         s._bulk("rapport-acme-internal", [("x", {})])
+
+
+def test_erasure_retries_documents_skipped_on_version_conflicts():
+    s, es = store()
+    replies = iter([{"deleted": 2, "version_conflicts": 1}, {"deleted": 1, "version_conflicts": 0}])
+    es.delete_by_query = lambda **kw: (es.calls.append(("delete_by_query", kw)), next(replies, {"deleted": 0}))[1]
+    out = s.erase_person("cnh-2026", "spk-dev")
+    assert out["voiceprints"] == 3  # 2 on the first pass + the 1 skipped document on the retry
+    assert len(es.of("delete_by_query")) == 4  # voiceprints twice, then samples and unknown voices once each
+
+
+def test_erasure_fails_loudly_when_documents_stay_behind():
+    s, es = store()
+    es.update_by_query = lambda **kw: {"updated": 0, "version_conflicts": 2}
+    with pytest.raises(RuntimeError, match="unprocessed"):
+        s.relabel_voice("cnh-2026", "unk_s_00", Person(person_id="p", name="P"), None)
+    es.delete_by_query = lambda **kw: {"deleted": 0, "failures": [{"cause": {}}]}
+    with pytest.raises(RuntimeError, match="failed"):
+        s.erase_person("cnh-2026", "spk-dev")
