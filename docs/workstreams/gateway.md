@@ -1,11 +1,11 @@
 # Workstream: gateway (the hub)
 
-**Mission.** One FastAPI service in `rapport-system`. It serves the web page and the API, turns "Accept" into an `Encounter`, fans events out to the two phones and the swarm panel over SSE, and routes delegate reports.
+**Mission.** One FastAPI service in `team-rapport`. It **is** the team's public app at https://rapport.cnh.radarhq.io (Deployment and Service `app`). It serves the web page and the API, turns "Accept" into an `Encounter`, fans events out to the two phones and the swarm panel over SSE, and routes delegate reports.
 
 **You own:**
 
-- `src/rapport_gateway/`: `__main__.py` runs uvicorn on `0.0.0.0:8080`.
-- `deploy/gateway/`: ServiceAccount, RBAC, a Deployment and a Service of type NodePort with `nodePort: 30080`.
+- `src/rapport_gateway/`: `__main__.py` runs **two** uvicorn servers in one asyncio loop: the public app on `0.0.0.0:8080` and an internal app on `0.0.0.0:{names.GATEWAY_INTERNAL_PORT}` (8081) that serves **only** `POST /internal/events`. `/internal/*` must return 404 on 8080, because 8080 is on the public internet.
+- `deploy/gateway/`: the Deployment `app`, Services `app` (80 → 8080) and `gateway-internal` (8081), the ServiceAccount and a NetworkPolicy are already scaffolded by the integrator. **Add** `rbac.yaml` and list it in `deploy/gateway/kustomization.yaml`. Add `envFrom` entries if you need more Secrets (mark them `optional: true`). Keep `replicas: 1`: SSE state is in memory.
 - `tests/gateway/`.
 
 **Read first:** `AGENTS.md`, SPEC §2, §4.4, §4.5, §7 and §8, and `rapport_common/models.py` (events).
@@ -26,8 +26,10 @@
    - On `shared_brief`, push it to that person's phone. Then call that company's briefer `POST /v1/remember` with one `encounter_summary` record and one `followup` record per follow-up. All are `share_level=internal`, in the briefer's own company, with `source.encounter_id` set.
    - Emit `encounter_completed` when both shared briefs have arrived, or when either delegate reports `failed`.
 7. **Proxies:** `/api/context` (pass the multipart through unchanged), `/api/profile`, `/api/ask` and `/api/talks` go to `names.briefer_url(org_of(persona_id))`. Emit `profile_updated` after a successful upload.
-8. **Static files:** mount `web/` at `/` with `StaticFiles(html=True)` **after** the API routes.
-9. **Kubernetes config:** `load_incluster_config()`, falling back to `load_kube_config()` for local runs.
+8. **`GET /healthz`** returns `{"ok": true, "version": os.environ.get("RAPPORT_VERSION", "dev")}`; the `ship` skill checks it at the public URL.
+9. **Abuse limits:** the API is public, and research, deep dive and ask spend OpenAI credits. Add a simple per-client-IP limit (for example 30 LLM-backed calls per minute) and make `/api/demo/reset` require `RAPPORT_ADMIN_TOKEN` when that env var is set.
+10. **Static files:** mount `web/` at `/` with `StaticFiles(html=True)` **after** the API routes.
+11. **Kubernetes config:** `load_incluster_config()`, falling back to `load_kube_config()` for local runs.
 
 ## Interfaces
 
@@ -38,7 +40,7 @@
 
 - Pytest covers the routes, with briefers mocked by `respx` and the Kubernetes client faked. Include a routing test proving a `private_brief` never reaches the swarm stream.
 - `RAPPORT_MOCK=1 PYTHONPATH=src uv run python -m rapport_gateway`, then opening `http://localhost:8080/?mock=1`, plays the demo once web lands.
-- In kind: `curl localhost:8080/healthz` works, and connect plus accept creates an Encounter that shows up in `kubectl get enc`.
+- After merge: `curl https://rapport.cnh.radarhq.io/healthz` shows the new version, `curl https://rapport.cnh.radarhq.io/internal/events` returns 404, and connect plus accept creates an Encounter that shows up in Radar (or `kubectl get enc`).
 
 ## Gotchas
 

@@ -1,0 +1,35 @@
+# Public: the platform routes https://rapport.cnh.radarhq.io here. Web page and /api/* only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: team-rapport
+  labels:
+    app: app
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+spec:
+  selector:
+    app: app
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+# Cluster-only: delegates POST /internal/events here (names.gateway_url()).
+# Never route this port publicly: /internal/* must not be reachable from the internet.
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-internal
+  namespace: team-rapport
+  labels:
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: gateway
+spec:
+  selector:
+    app: app
+  ports:
+    - name: internal
+      port: 8081
+      targetPort: internal

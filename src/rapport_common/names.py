@@ -10,7 +10,11 @@ from pathlib import Path
 
 from .models import MemoryRecord, Org, Persona
 
-SYSTEM_NAMESPACE = "rapport-system"
+# The Radar team vcluster: gateway and operator live in the team namespace Argo CD deploys to.
+SYSTEM_NAMESPACE = "team-rapport"
+PUBLIC_URL = "https://rapport.cnh.radarhq.io"  # the platform routes it to Service `app`, port 80
+GATEWAY_SERVICE = "app"  # public: web page and /api/* only (Service port 80 -> pod 8080)
+GATEWAY_INTERNAL_SERVICE = "gateway-internal"  # cluster-only: POST /internal/events (port 8081)
 CONFERENCE_INDEX = "rapport-conference"
 CONFERENCE_ORG = "conference"
 
@@ -21,7 +25,28 @@ CRD_KIND = "Encounter"
 TRACEPARENT_ANNOTATION = "rapport.dev/traceparent"
 
 HTTP_PORT = 8080
+GATEWAY_INTERNAL_PORT = 8081  # /internal/* is served ONLY here, never on the public port
 OPA_PORT = 8181
+
+# The image every pod runs. Manifests in deploy/ say `image: app` and kustomize swaps in the GHCR
+# tag. The operator creates delegate Jobs outside kustomize, so it uses $RAPPORT_IMAGE, or else
+# the image of its own pod (read via POD_NAME/POD_NAMESPACE).
+IMAGE_ENV = "RAPPORT_IMAGE"
+KUSTOMIZE_IMAGE_PLACEHOLDER = "app"
+
+# Team budget across the whole vcluster: 2 CPU / 4 GiB requests, 4 CPU / 8 GiB limits.
+# Every container sets both; unset limits default to 500m, which caps the cluster at 8 pods.
+RESOURCES_SMALL = {"requests": {"cpu": "25m", "memory": "64Mi"}, "limits": {"cpu": "100m", "memory": "128Mi"}}  # opa
+RESOURCES_SERVICE = {"requests": {"cpu": "50m", "memory": "128Mi"}, "limits": {"cpu": "300m", "memory": "512Mi"}}
+RESOURCES_DELEGATE = {"requests": {"cpu": "50m", "memory": "128Mi"}, "limits": {"cpu": "500m", "memory": "512Mi"}}
+RESOURCES_OPERATOR = {"requests": {"cpu": "50m", "memory": "128Mi"}, "limits": {"cpu": "200m", "memory": "256Mi"}}
+# Container securityContext for every Rapport pod (the image runs as UID 10001).
+SECURITY_CONTEXT = {
+    "runAsNonRoot": True,
+    "allowPrivilegeEscalation": False,
+    "seccompProfile": {"type": "RuntimeDefault"},
+    "capabilities": {"drop": ["ALL"]},
+}
 
 LABEL_PART_OF = "app.kubernetes.io/part-of"  # = "rapport"
 LABEL_ROLE = "rapport.dev/role"  # gateway | briefer | delegate | opa | operator
@@ -64,7 +89,11 @@ def _override(var: str, default: str) -> str:
 
 
 def gateway_url() -> str:
-    return _override("GATEWAY_URL", f"http://gateway.{SYSTEM_NAMESPACE}.svc.cluster.local:{HTTP_PORT}")
+    """Where delegates POST /internal/events: the cluster-only Service, never the public one."""
+    return _override(
+        "GATEWAY_URL",
+        f"http://{GATEWAY_INTERNAL_SERVICE}.{SYSTEM_NAMESPACE}.svc.cluster.local:{GATEWAY_INTERNAL_PORT}",
+    )
 
 
 def briefer_url(org_id: str) -> str:

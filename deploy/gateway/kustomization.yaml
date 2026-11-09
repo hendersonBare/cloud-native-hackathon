@@ -1,0 +1,9 @@
+# Gateway workstream: add rbac.yaml here (ClusterRole for encounters; Roles in org-acme and
+# org-bluefin to watch pods) and list it below.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+  - networkpolicy.yaml

@@ -1,14 +1,20 @@
-# Argo CD deploys this folder to your team's namespace. The GitHub Action
-# sets the image below on every push to main; don't edit newName or newTag
-# by hand.
+# Argo CD (Application `app` in team-rapport) builds this folder with kustomize on every push
+# to main. The GitHub Action sets the image below; don't edit newName or newTag by hand.
+#
+# No `namespace:` field on purpose: it would force every resource into team-rapport, and
+# Rapport also deploys to org-acme and org-bluefin. Each manifest names its own namespace.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: team-__TEAM__
 resources:
-  - deployment.yaml
-  - service.yaml
+  - base/namespaces.yaml
+  - base/network-policies.yaml
+  - crds/encounter-crd.yaml
   - httproute.yaml
+  - gateway
+  - operator
+  - briefer
+  - policy
 images:
   - name: app
     newName: ghcr.io/hendersonbare/cloud-native-hackathon
-    newTag: 736458b
+    newTag: f93368a

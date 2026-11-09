@@ -39,7 +39,7 @@ You consume the gateway API (SPEC §7.1) and `GatewayEvent` shapes (`rapport_com
 ## Done when
 
 - `?mock=1` plays the full demo end to end with no console errors.
-- Live mode works against the gateway in kind (`http://localhost:8080`).
+- Live mode works against the deployed gateway (https://rapport.cnh.radarhq.io) and a local one (`http://localhost:8080`). Use relative URLs (`/api/...`) so both work.
 - A keyboard-only run of the demo works.
 - The PR includes two screenshots: mid-exchange and final briefs.
 

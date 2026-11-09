@@ -1,7 +1,7 @@
 # Baseline ingress isolation for each company namespace.
 # Result: nothing from another company can reach a company's pods, except the
 # per-encounter policy the operator adds (initiator delegate -> responder delegate).
-# The gateway (rapport-system) may call briefers. Egress is left open (Elastic Cloud,
+# The gateway (team-rapport, role=gateway) may call briefers. Egress is left open (Elastic Cloud,
 # OpenAI and Dash0 are outside the cluster).
 #
 # ---------------- org-acme ----------------
@@ -32,7 +32,9 @@ spec:
   ingress:
     - from:
         - namespaceSelector:
-            matchLabels: { kubernetes.io/metadata.name: rapport-system }
+            matchLabels: { kubernetes.io/metadata.name: team-rapport }
+          podSelector:
+            matchLabels: { rapport.dev/role: gateway }
       ports:
         - { protocol: TCP, port: 8080 }
 ---
@@ -64,6 +66,8 @@ spec:
   ingress:
     - from:
         - namespaceSelector:
-            matchLabels: { kubernetes.io/metadata.name: rapport-system }
+            matchLabels: { kubernetes.io/metadata.name: team-rapport }
+          podSelector:
+            matchLabels: { rapport.dev/role: gateway }
       ports:
         - { protocol: TCP, port: 8080 }
