@@ -24,6 +24,8 @@ Open http://localhost:5180/. Mock mode is the default (both phones talk to each 
 | `app/main.js` | Hash router (`#/home`, `#/profile`, `#/calendar`, `#/live`, `#/tag`, `#/memory`, `#/person`, `#/exchange`, `#/match`). |
 | `app/bus.js` | Event bus between the two phones; the event contract is in its header. |
 | `app/flow.js`, `app/api.js` | Cross-phone connect flow and the gateway client. |
+| `app/live-events.js`, `app/screens/match-live.js` | Live mode only: briefs, deep dive, agent decision and error events from the gateway. |
+| `swarm/` | The swarm panel between the phones (toggle in the presenter bar). `model.js` is a pure reducer over swarm events, `view.js`/`panel.js` render it, `driver.js` feeds it (live: `/api/stream?view=swarm`; mock: replays `swarm/demo-events.json` when an encounter starts). |
 | `app/data.js` | Demo cast and per-persona content (all fictional). |
 | `app/screens/<name>.js` / `.css` | One module per screen, each exporting `render(ctx)`. |
 
