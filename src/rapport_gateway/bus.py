@@ -4,7 +4,8 @@ Routing rules
 - A phone stream (persona_id=...) receives events whose persona_id is its persona, plus encounter_started
   and encounter_completed for encounters the persona takes part in.
 - The swarm stream receives every event except private_brief, profile_updated, deep_dive_started and
-  deep_dive_ready, so private content never leaves the owner's phone. agent_decision reaches the viewer's
+  deep_dive_ready, so private content never leaves the owner's phone. (An `error` addressed to a
+  persona is phone-only too; an `error` without a persona goes to everyone.) agent_decision reaches the viewer's
   phone and the swarm and carries no reason.
 
 All methods must run on the event loop thread (the pod watch uses loop.call_soon_threadsafe).
@@ -32,7 +33,7 @@ PRIVATE_FROM_SWARM: frozenset[str] = frozenset(
 ENCOUNTER_LEVEL: frozenset[str] = frozenset({"encounter_started", "encounter_completed"})
 
 
-@dataclass
+@dataclass(eq=False)  # identity hashing: subscriptions live in a set
 class Subscription:
     """persona_id=None is the swarm stream."""
 
@@ -57,6 +58,8 @@ class EventBus:
     # ------------------------------------------------------------------ routing
     def routes_to(self, event: GatewayEvent, persona_id: str | None) -> bool:
         if persona_id is None:  # swarm
+            if event.type == "error" and event.persona_id:  # an error for one person's phone stays on that phone
+                return False
             return event.type not in PRIVATE_FROM_SWARM
         if event.persona_id == persona_id:
             return True

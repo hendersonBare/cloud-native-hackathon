@@ -83,7 +83,12 @@ class Fixtures:
 def _talk(talk_id: str, title: str, hour: int, minute: int, room: str, track: str, speaker: str) -> TalkHit:
     starts = utc_at(2026, 11, 9, hour, minute)
     return TalkHit(
-        talk_id=talk_id, title=title, starts_at=starts, room=room, track=track, speakers=[speaker],
+        talk_id=talk_id,
+        title=title,
+        starts_at=starts,
+        room=room,
+        track=track,
+        speakers=[speaker],
         reason=f"{local_label(starts)} in {room}",
     )
 
@@ -188,8 +193,13 @@ class MockBackend:
         if raw.get("persona_id") in swap:
             raw["persona_id"] = swap[raw["persona_id"]]
         data = raw["data"]
-        for key in ("initiator_persona_id", "for_persona_id", "persona_id", "counterparty_persona_id",
-                    "responder_persona_id"):
+        for key in (
+            "initiator_persona_id",
+            "for_persona_id",
+            "persona_id",
+            "counterparty_persona_id",
+            "responder_persona_id",
+        ):
             if data.get(key) in swap:
                 data[key] = swap[data[key]]
         if (from_id, to_id) != (DEMO_VIEWER, DEMO_TARGET):
@@ -219,7 +229,8 @@ class MockBackend:
         require_agent_persona(persona_id)
         wanted = _words(q)
         hits = [
-            t for t in canned_talks()
+            t
+            for t in canned_talks()
             if not wanted or wanted & _words(f"{t.title} {t.track} {' '.join(t.speakers)} {t.talk_id}")
         ]
         return TalkSearchResult(query=q, talks=hits[:10])
@@ -297,26 +308,58 @@ class MockBackend:
             steps.append((at_ms, raw))
         return steps
 
-    def _generic_swipe(
-        self, body: SwipeBody, action: str, request_id: str | None
-    ) -> list[tuple[int, dict[str, Any]]]:
+    def _generic_swipe(self, body: SwipeBody, action: str, request_id: str | None) -> list[tuple[int, dict[str, Any]]]:
         viewer, target = names.persona(body.persona_id), names.persona(body.target_persona_id)
         card = next((c for c in self._fx.research.cards if c.persona_id == target.persona_id), None)
         dive = canned_deep_dive(viewer.persona_id, target.persona_id, action, card)
         base = {"encounter_id": None, "trace_id": None}
         steps: list[tuple[int, dict[str, Any]]] = [
-            (800, {**base, "type": "deep_dive_started", "persona_id": viewer.persona_id,
-                   "data": {"target_persona_id": target.persona_id}}),
-            (2500, {**base, "type": "deep_dive_ready", "persona_id": viewer.persona_id,
-                    "data": dive.model_dump(mode="json")}),
-            (2600, {**base, "type": "agent_decision", "persona_id": viewer.persona_id,
-                    "data": {"target_persona_id": target.persona_id, "action": action, "request_id": request_id}}),
+            (
+                800,
+                {
+                    **base,
+                    "type": "deep_dive_started",
+                    "persona_id": viewer.persona_id,
+                    "data": {"target_persona_id": target.persona_id},
+                },
+            ),
+            (
+                2500,
+                {
+                    **base,
+                    "type": "deep_dive_ready",
+                    "persona_id": viewer.persona_id,
+                    "data": dive.model_dump(mode="json"),
+                },
+            ),
+            (
+                2600,
+                {
+                    **base,
+                    "type": "agent_decision",
+                    "persona_id": viewer.persona_id,
+                    "data": {"target_persona_id": target.persona_id, "action": action, "request_id": request_id},
+                },
+            ),
         ]
         if request_id is not None:
-            steps.append((2700, {**base, "type": "connect_request", "persona_id": target.persona_id,
-                                 "data": {"request_id": request_id, "from_persona_id": viewer.persona_id,
-                                          "to_persona_id": target.persona_id, "malicious": body.malicious,
-                                          "initiated_by": "agent"}}))
+            steps.append(
+                (
+                    2700,
+                    {
+                        **base,
+                        "type": "connect_request",
+                        "persona_id": target.persona_id,
+                        "data": {
+                            "request_id": request_id,
+                            "from_persona_id": viewer.persona_id,
+                            "to_persona_id": target.persona_id,
+                            "malicious": body.malicious,
+                            "initiated_by": "agent",
+                        },
+                    },
+                )
+            )
         return steps
 
     async def reset(self) -> None:
@@ -362,4 +405,3 @@ def canned_deep_dive(viewer_id: str, target_id: str, action: str, card: PersonCa
         ),
         citations=list(card.company_history) if card else [],
     )
-

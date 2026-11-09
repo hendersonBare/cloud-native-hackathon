@@ -38,7 +38,10 @@ async def serve(settings: Settings) -> None:
     internal_task = asyncio.create_task(internal.serve())
     log.info(
         "gateway %s: public :%s, internal :%s, %s mode",
-        settings.version, settings.port, settings.internal_port, "MOCK" if settings.mock else "live",
+        settings.version,
+        settings.port,
+        settings.internal_port,
+        "MOCK" if settings.mock else "live",
     )
     try:
         await public.serve()

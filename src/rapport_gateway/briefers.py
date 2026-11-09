@@ -28,8 +28,13 @@ from .errors import UpstreamError
 log = logging.getLogger("rapport.gateway.briefers")
 
 M = TypeVar("M", bound=BaseModel)
-_PASS_THROUGH = {403: "the briefer refused this persona", 404: "not found", 413: "upload too large",
-                 415: "unsupported file type", 422: "the briefer rejected the request"}
+_PASS_THROUGH = {
+    403: "the briefer refused this persona",
+    404: "not found",
+    413: "upload too large",
+    415: "unsupported file type",
+    422: "the briefer rejected the request",
+}
 
 
 class BrieferClient:
@@ -71,9 +76,7 @@ class BrieferClient:
         return await self._call(org_id, "POST", "/v1/ask", AskAnswer, json=body.model_dump(mode="json"))
 
     async def talks(self, org_id: str, persona_id: str, q: str) -> TalkSearchResult:
-        return await self._call(
-            org_id, "GET", "/v1/talks", TalkSearchResult, params={"persona_id": persona_id, "q": q}
-        )
+        return await self._call(org_id, "GET", "/v1/talks", TalkSearchResult, params={"persona_id": persona_id, "q": q})
 
     async def profile(self, org_id: str, persona_id: str) -> PersonaProfile:
         return await self._call(org_id, "GET", "/v1/profile", PersonaProfile, params={"persona_id": persona_id})
