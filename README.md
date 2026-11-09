@@ -9,9 +9,7 @@
 </p>
 
 <p align="center">
-  <b>Cloud Native Hackathon · Salt Lake City · Nov 9 2026</b> · Theme: make conferences easier<br>
-  Tracks: Sonar (Gitar) · Dash0 · Radar · Elasticsearch · Merge Forward · Team: Henderson Bare &amp; Md Farhan Ishmam<br>
-  Python 3.12 · FastAPI · kopf · OPA · Elasticsearch · OpenTelemetry + OpenLIT → Dash0 · Argo CD on a vcluster · OpenAI <code>gpt-6-luna</code><br>
+  <b>Cloud Native Hackathon · Salt Lake City · Nov 9 2026</b><br>
   Live at <a href="https://rapport.cnh.radarhq.io/?live=1">rapport.cnh.radarhq.io</a><br><br>
   <a href="#-see-it-run">See it run</a> ·
   <a href="#-judging-map">Judging map</a> ·
