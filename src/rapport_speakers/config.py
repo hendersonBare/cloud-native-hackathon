@@ -5,12 +5,12 @@
 | `SPEAKERS_CONFERENCE_ID` | `cnh-2026` | Every document and query is scoped to this conference (§8) |
 | `SPEAKERS_MODEL_ID` | `speechbrain/spkrec-ecapa-voxceleb` | Embedding model; every kNN query filters on it (§3) |
 | `SPEAKERS_INDEX_PREFIX` | `rapport-speakers` | Index names are `<prefix>-sessions`, `<prefix>-voiceprints`, ... |
-| `SPEAKERS_T_ACCEPT`, `SPEAKERS_MARGIN`, `SPEAKERS_MIN_SPEECH_S` | 0.55, 0.10, 3.0 | Decision rule (§5.4), cosine terms |
-| `SPEAKERS_POOL_MODE` | `boost` | Narrowing to the session's scheduled speakers: `boost`, `filter` or `off` (§5.4, §10) |
+| `SPEAKERS_T_ACCEPT`, `SPEAKERS_MARGIN`, `SPEAKERS_MIN_SPEECH_S` | 0.55, 0.10, 3.0 | Decision rule (§5.4) |
+| `SPEAKERS_POOL_MODE` | `boost` | Scheduled-speaker narrowing: `boost`, `filter` or `off` (§5.4, §10) |
 | `SPEAKERS_POOL_BONUS` | 0.05 | Cosine bonus for scheduled speakers in `boost` mode |
 | `SPEAKERS_STORE` | auto | `es` or `memory`; auto picks `es` when `ES_URL` and a key are set |
 | `ES_URL`, `SPEAKERS_ES_API_KEY` (else `ES_API_KEY`) | | Elasticsearch connection |
-| `ES_INFERENCE_ID` | auto-detected | `semantic_text` endpoint, the same one the memory indices use (§10 open question) |
+| `ES_INFERENCE_ID` | auto-detected | `semantic_text` endpoint, as for the memory indices (§10 open question) |
 | `ES_RERANK_INFERENCE_ID` | unset | Optional Jina reranker over the RRF result, as in `rapport_memory` |
 """
 
