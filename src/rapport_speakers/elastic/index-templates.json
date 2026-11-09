@@ -1,0 +1,120 @@
+{
+  "_comment": "Speaker identification indices (speaker_identification_spec.md §4). One composable index template per index, priority 600 so it wins over the rapport-* memory template (priority 500). __INFERENCE_ID__ is replaced with ES_INFERENCE_ID, the same endpoint the memory indices use. Proposed for deploy/elastic/ in the PR's CONTRACT CHANGE REQUEST.",
+  "priority": 600,
+  "templates": {
+    "sessions": {
+      "mappings": {
+        "dynamic": "strict",
+        "properties": {
+          "session_id": { "type": "keyword" },
+          "conference_id": { "type": "keyword" },
+          "title": { "type": "text" },
+          "abstract": { "type": "text" },
+          "room": { "type": "keyword" },
+          "start_time": { "type": "date" },
+          "end_time": { "type": "date" },
+          "scheduled_speaker_ids": { "type": "keyword" },
+          "session_type": { "type": "keyword" },
+          "recording_uri": { "type": "keyword", "index": false }
+        }
+      }
+    },
+    "voiceprint_samples": {
+      "mappings": {
+        "dynamic": "strict",
+        "properties": {
+          "sample_id": { "type": "keyword" },
+          "person_id": { "type": "keyword" },
+          "conference_id": { "type": "keyword" },
+          "model_id": { "type": "keyword" },
+          "source": { "type": "keyword" },
+          "session_id": { "type": "keyword" },
+          "duration_s": { "type": "float" },
+          "audio_uri": { "type": "keyword", "index": false },
+          "embedding": { "type": "float", "index": false, "doc_values": false },
+          "corroborated": { "type": "boolean" },
+          "created_at": { "type": "date" }
+        }
+      }
+    },
+    "voiceprints": {
+      "mappings": {
+        "dynamic": "strict",
+        "properties": {
+          "person_id": { "type": "keyword" },
+          "name": { "type": "text", "fields": { "raw": { "type": "keyword" } } },
+          "affiliation": { "type": "keyword" },
+          "conference_id": { "type": "keyword" },
+          "model_id": { "type": "keyword" },
+          "centroid": {
+            "type": "dense_vector",
+            "dims": 192,
+            "index": true,
+            "similarity": "dot_product",
+            "index_options": { "type": "hnsw" }
+          },
+          "sample_count": { "type": "integer" },
+          "total_speech_s": { "type": "float" },
+          "consent_granted_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      }
+    },
+    "utterances": {
+      "settings": {
+        "analysis": { "normalizer": { "rapport_lowercase": { "type": "custom", "filter": ["lowercase"] } } }
+      },
+      "mappings": {
+        "dynamic": false,
+        "properties": {
+          "utterance_id": { "type": "keyword" },
+          "conference_id": { "type": "keyword" },
+          "session_id": { "type": "keyword" },
+          "session_title": { "type": "text" },
+          "room": { "type": "keyword" },
+          "session_starts_at": { "type": "date" },
+          "recording_uri": { "type": "keyword", "index": false },
+          "start_s": { "type": "float" },
+          "end_s": { "type": "float" },
+          "speaker_id": { "type": "keyword" },
+          "speaker_name": {
+            "type": "keyword",
+            "fields": { "lc": { "type": "keyword", "normalizer": "rapport_lowercase" } }
+          },
+          "speaker_status": { "type": "keyword" },
+          "match_score": { "type": "float" },
+          "voice_id": { "type": "keyword" },
+          "voice_label": { "type": "keyword" },
+          "text": { "type": "text" },
+          "text_semantic": { "type": "semantic_text", "inference_id": "__INFERENCE_ID__" }
+        }
+      }
+    },
+    "unknown_voices": {
+      "mappings": {
+        "dynamic": "strict",
+        "properties": {
+          "unknown_id": { "type": "keyword" },
+          "conference_id": { "type": "keyword" },
+          "session_id": { "type": "keyword" },
+          "model_id": { "type": "keyword" },
+          "embedding": {
+            "type": "dense_vector",
+            "dims": 192,
+            "index": true,
+            "similarity": "dot_product",
+            "index_options": { "type": "hnsw" }
+          },
+          "duration_s": { "type": "float" },
+          "status": { "type": "keyword" },
+          "best_candidate_id": { "type": "keyword" },
+          "best_score": { "type": "float" },
+          "runner_up_id": { "type": "keyword" },
+          "runner_up_score": { "type": "float" },
+          "resolved_person_id": { "type": "keyword" },
+          "created_at": { "type": "date" }
+        }
+      }
+    }
+  }
+}

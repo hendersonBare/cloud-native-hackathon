@@ -17,6 +17,33 @@ from .settings import Settings
 
 log = logging.getLogger("rapport.gateway")
 
+# Open SSE streams never close on their own, so uvicorn's graceful shutdown would wait for them until the pod's
+# 30 s grace period ends in SIGKILL. Give them 5 s, then cancel them, so restarts and rollouts stay quick.
+GRACEFUL_SHUTDOWN_SECONDS = 5
+
+
+def make_servers(public_app, internal_app, settings: Settings) -> tuple[uvicorn.Server, uvicorn.Server]:
+    """The public and internal uvicorn servers, both with a bounded graceful shutdown."""
+    public = uvicorn.Server(
+        uvicorn.Config(
+            public_app,
+            host="0.0.0.0",
+            port=settings.port,
+            server_header=False,
+            timeout_graceful_shutdown=GRACEFUL_SHUTDOWN_SECONDS,
+        )
+    )
+    internal = uvicorn.Server(
+        uvicorn.Config(
+            internal_app,
+            host="0.0.0.0",
+            port=settings.internal_port,
+            server_header=False,
+            timeout_graceful_shutdown=GRACEFUL_SHUTDOWN_SECONDS,
+        )
+    )
+    return public, internal
+
 
 
 async def serve(settings: Settings) -> None:
@@ -31,11 +58,8 @@ async def serve(settings: Settings) -> None:
     except Exception:  # telemetry is a bonus; never block startup
         log.exception("could not instrument the internal app")
 
-    public = uvicorn.Server(uvicorn.Config(public_app, host="0.0.0.0", port=settings.port, server_header=False))
-    internal = uvicorn.Server(
-        uvicorn.Config(internal_app, host="0.0.0.0", port=settings.internal_port, server_header=False)
-    )
-    # after uvicorn.Config, which (re)configures uvicorn's loggers: request logs keep paths, never query strings
+    public, internal = make_servers(public_app, internal_app, settings)
+    # after uvicorn.Config (in make_servers), which (re)configures uvicorn's loggers: request logs keep paths only
     install_log_filters()
     # Only the public server installs signal handlers; stopping it stops the internal one too.
     internal.capture_signals = contextlib.nullcontext  # type: ignore[method-assign]

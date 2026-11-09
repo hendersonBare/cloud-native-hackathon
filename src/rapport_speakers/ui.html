@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who said what</title>
+<style>
+  :root { --bg: #fff; --fg: #1b1b1f; --muted: #5f6368; --line: #dadce0; --accent: #0b57d0; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #131316; --fg: #e8eaed; --muted: #a8abb0; --line: #3c4043; --accent: #8ab4f8; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+  form { display: flex; gap: 8px; flex-wrap: wrap; }
+  input { flex: 1 1 220px; padding: 10px; font: inherit; color: inherit; background: transparent;
+          border: 1px solid var(--line); border-radius: 8px; }
+  button { padding: 10px 16px; font: inherit; border: 0; border-radius: 8px; background: var(--accent); color: var(--bg); }
+  ol { list-style: none; padding: 0; }
+  li { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .who { font-weight: 600; }
+  .meta { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Who said what</h1>
+  <form id="f" role="search">
+    <label class="meta" for="q" hidden>Topic</label>
+    <input id="q" name="q" placeholder="Topic, e.g. eBPF overhead" required>
+    <label class="meta" for="speaker" hidden>Speaker</label>
+    <input id="speaker" name="speaker" placeholder="Speaker (optional)">
+    <button type="submit">Search</button>
+  </form>
+  <p id="status" class="meta" role="status"></p>
+  <ol id="results"></ol>
+</main>
+<script>
+  // Server strings are rendered with textContent only (AGENTS.md §5).
+  const form = document.getElementById("f");
+  const results = document.getElementById("results");
+  const status = document.getElementById("status");
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const params = new URLSearchParams({ q: form.q.value, size: "10" });
+    if (form.speaker.value.trim()) params.set("speaker", form.speaker.value.trim());
+    status.textContent = "Searching…";
+    results.replaceChildren();
+    try {
+      const resp = await fetch(`search?${params}`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      status.textContent = `${data.hits.length} moments (${data.mode})`;
+      for (const h of data.hits) {
+        const li = el("li");
+        li.append(el("div", "who", `${h.speaker_name} · ${h.spoken_at_label}`));
+        li.append(el("div", "meta", `${h.session_title} · ${h.room}`));
+        li.append(el("p", null, h.text));
+        if (h.jump_url) { const a = el("a", null, `Jump to ${Math.floor(h.start_s / 60)}:${String(Math.floor(h.start_s % 60)).padStart(2, "0")}`); a.href = h.jump_url; li.append(a); }
+        results.append(li);
+      }
+    } catch (err) { status.textContent = `Search failed: ${err.message}`; }
+  });
+</script>
+</body>
+</html>

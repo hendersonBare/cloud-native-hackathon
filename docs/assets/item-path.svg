@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 380" width="1240" height="380" role="img" aria-labelledby="t d">
+  <title id="t">The path of every item that leaves a company</title>
+  <desc id="d">Shareable memory, read with a scoped Elasticsearch key, goes to a short-lived delegate pod. The LLM proposes items by known ID only. OPA allows or denies each one; a deny drops the item and reports the rule. Allowed items reach the peer delegate through a per-encounter NetworkPolicy and end up as summaries in the shared brief. Internal memory, private profiles, record text and prompts never leave.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#16181c"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b3261e"/>
+    </marker>
+  </defs>
+  <rect width="1240" height="380" rx="16" fill="#faf8f4"/>
+  <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="35" y="48" font-size="22" font-weight="700" fill="#16181c">Every item that leaves a company crosses three walls</text>
+    <text x="35" y="78" font-size="15" fill="#4a4740">① Elasticsearch API key scope · ② Kubernetes NetworkPolicy per encounter · ③ OPA policy per company. The delegate can't leak what it never saw.</text>
+
+    <g font-size="13" fill="#4a4740">
+      <rect x="30" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <text x="44" y="148" font-size="16" font-weight="700" fill="#16181c">Shareable memory</text>
+      <text x="44" y="172">acme-shareable index</text>
+      <text x="44" y="192">+ the conference index</text>
+      <circle cx="185" cy="120" r="13" fill="#8a5a14"/><text x="185" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">1</text>
+
+      <rect x="233" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <text x="247" y="148" font-size="16" font-weight="700" fill="#16181c">Delegate pod</text>
+      <text x="247" y="172">one Job per encounter</text>
+      <text x="247" y="192">lives about a minute</text>
+
+      <rect x="436" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <text x="450" y="148" font-size="16" font-weight="700" fill="#16181c">LLM proposes</text>
+      <text x="450" y="172">8 s cap, then rules</text>
+      <text x="450" y="192">known item IDs only</text>
+
+      <rect x="639" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <text x="653" y="148" font-size="16" font-weight="700" fill="#16181c">OPA decides</text>
+      <text x="653" y="172">7 rules, first match</text>
+      <text x="653" y="192">fails closed at 2 s</text>
+      <circle cx="794" cy="120" r="13" fill="#8a5a14"/><text x="794" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">3</text>
+
+      <rect x="842" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <text x="856" y="148" font-size="16" font-weight="700" fill="#16181c">Peer delegate</text>
+      <text x="856" y="172">NetworkPolicy admits</text>
+      <text x="856" y="192">only this encounter</text>
+      <circle cx="997" cy="120" r="13" fill="#8a5a14"/><text x="997" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">2</text>
+
+      <rect x="1045" y="120" width="165" height="100" rx="12" fill="#16181c"/>
+      <text x="1059" y="148" font-size="16" font-weight="700" fill="#efebe4">Shared brief</text>
+      <text x="1059" y="172" fill="#d8d3c8">summaries, never text</text>
+      <text x="1059" y="192" fill="#d8d3c8">in your own language</text>
+
+    </g>
+
+    <g stroke="#16181c" stroke-width="2" fill="none" marker-end="url(#a)">
+      <path d="M195 170 H229"/>
+      <path d="M398 170 H432"/>
+      <path d="M601 170 H635"/>
+      <path d="M804 170 H838"/>
+      <path d="M1007 170 H1041"/>
+    </g>
+    <text x="821" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#1e7a45">allow</text>
+
+    <path d="M721 220 V262" stroke="#b3261e" stroke-width="2" fill="none" marker-end="url(#r)"/>
+    <text x="729" y="246" font-size="12" font-weight="700" fill="#b3261e">deny</text>
+    <rect x="560" y="266" width="320" height="76" rx="12" fill="#fbeae8" stroke="#b3261e" stroke-width="1.5"/>
+    <text x="576" y="292" font-size="15" font-weight="700" fill="#b3261e">Dropped, and reported</text>
+    <text x="576" y="314" font-size="13" fill="#4a4740">a policy_decision event with its rule_id,</text>
+    <text x="576" y="332" font-size="13" fill="#4a4740">for example pricing_needs_approval</text>
+
+    <rect x="35" y="266" width="370" height="76" rx="12" fill="#ebe7df" stroke="#8c877c" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="51" y="292" font-size="15" font-weight="700" fill="#16181c">Never leaves the company</text>
+    <text x="51" y="314" font-size="13" fill="#4a4740">rapport-acme-internal (acme-doc-0008, acme-note-0007),</text>
+    <text x="51" y="332" font-size="13" fill="#4a4740">private profiles, record text, prompts</text>
+
+    <text x="1205" y="292" text-anchor="end" font-size="13" fill="#4a4740">Bluefin's side is the mirror image:</text>
+    <text x="1205" y="312" text-anchor="end" font-size="13" fill="#4a4740">its own key, its own OPA, its own namespace.</text>
+  </g>
+</svg>
