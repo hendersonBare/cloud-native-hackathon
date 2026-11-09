@@ -50,11 +50,35 @@ const CONTENT = {
 
 const NOT_FOUND = "I couldn't find that in the memory you can access.";
 const OUTSIDE_SCOPE = 'That memory is outside the selected scope. Include Platform team to search it.';
+// Scope index 3 = Personal only. Citation kinds (rapport_common MemoryKind) that are the viewer's own.
+const PERSONAL_SCOPE = 3;
+const PERSONAL_KINDS = new Set(['profile', 'encounter_summary', 'followup']);
 
 function scopeLabel(scope) {
   const included = ['Personal', 'Team', 'Infrastructure', 'Organization'].slice(0, 4 - scope);
   return included.length === 1 ? 'Personal memory only'
     : `${included.slice(0, -1).join(', ')} + ${included.at(-1)}`;
+}
+
+/**
+ * Turn a gateway AskAnswer into what the card shows for the selected scope.
+ * AskRequest has no scope field, so the gateway can't narrow the search. Fail closed:
+ * keep known team memories out of narrower scopes, and in Personal show an answer only
+ * if every citation is one of the viewer's own memories.
+ */
+export function liveResult(data, scope, content, fallback) {
+  const citations = Array.isArray(data?.citations) ? data.citations.flatMap((cite) => {
+    const id = cite?.memory_id;
+    return typeof id === 'string' && typeof cite?.title === 'string'
+      ? [{ memory_id: id, title: cite.title, kind: cite.kind }] : [];
+  }) : [];
+  const outside = content.questions.some((item) => scope > item.level
+    && item.citations.some((known) => citations.some((cite) => cite.memory_id === known.memory_id)));
+  const provablyPersonal = citations.length > 0 && citations.every((cite) => PERSONAL_KINDS.has(cite.kind));
+  if (fallback.answer === OUTSIDE_SCOPE || outside || (scope === PERSONAL_SCOPE && !provablyPersonal)) {
+    return { answer: OUTSIDE_SCOPE, citations: [] };
+  }
+  return { answer: data.answer, citations: citations.map(({ memory_id, title }) => ({ memory_id, title })) };
 }
 
 function mockAnswer(content, question, scope) {
@@ -178,16 +202,7 @@ export function render(ctx) {
         if (!response.ok) throw new Error('Memory request failed');
         const data = await response.json();
         if (typeof data?.answer !== 'string' || !data.answer.trim()) throw new Error('Missing answer');
-        const citations = Array.isArray(data.citations) ? data.citations.flatMap((cite) => {
-          const id = cite?.memory_id;
-          return typeof id === 'string' && typeof cite?.title === 'string'
-            ? [{ memory_id: id, title: cite.title }] : [];
-        }) : [];
-        // The API has no scope field: keep known team memories out of Personal.
-        const outside = content.questions.some((item) => scope > item.level
-          && item.citations.some((known) => citations.some((cite) => cite.memory_id === known.memory_id)));
-        result = fallback.answer === OUTSIDE_SCOPE || outside
-          ? { answer: OUTSIDE_SCOPE, citations: [] } : { answer: data.answer, citations };
+        result = liveResult(data, scope, content, fallback);
       } catch {
         result = fallback;
       } finally {
