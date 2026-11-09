@@ -36,6 +36,7 @@ class Deps:
     llm_limiter: SlidingWindowLimiter
     http: httpx.AsyncClient | None = None
     pod_watcher: PodWatcher | None = None
+    launcher: EncounterLauncher | None = None
     owns_http: bool = False
     extras: dict[str, object] = field(default_factory=dict)
 
@@ -47,6 +48,9 @@ class Deps:
         if self.pod_watcher is not None:
             self.pod_watcher.stop()
         self.tasks.cancel_all()
+        close = getattr(self.launcher, "close", None)
+        if close is not None:
+            await close()
         if self.owns_http and self.http is not None:
             await self.http.aclose()
 
@@ -70,10 +74,13 @@ def build_deps(
     handshakes = SlidingWindowLimiter(names.MAX_AGENT_HANDSHAKES_PER_HOUR, HANDSHAKE_WINDOW_S)
     book = RequestBook(bus)
 
+    def on_pod(encounter_id: str, data: PodStatusData) -> None:
+        bus.emit("pod_status", data, encounter_id=encounter_id)
+
     if launcher is None and settings.launcher == "local" and not settings.mock:
         from .launcher_local import LocalProcessLauncher
 
-        launcher = LocalProcessLauncher(settings)
+        launcher = LocalProcessLauncher(settings, on_pod)
     local = settings.launcher == "local" and not settings.mock
     # pod IPs are only meaningful with the Kubernetes launcher (check (c)); the local launcher uses (a)+(b)
     if registry is None and not settings.mock and not local:
@@ -127,10 +134,6 @@ def build_deps(
             limiters=[llm_limiter, handshakes],
         )
         if pod_watcher is None and registry is not None:
-
-            def on_pod(encounter_id: str, data: PodStatusData) -> None:
-                bus.emit("pod_status", data, encounter_id=encounter_id)
-
             pod_watcher = PodWatcher(registry, on_pod)
 
     return Deps(
@@ -142,5 +145,6 @@ def build_deps(
         llm_limiter=llm_limiter,
         http=http,
         pod_watcher=pod_watcher,
+        launcher=None if settings.mock else launcher,
         owns_http=owns_http,
     )

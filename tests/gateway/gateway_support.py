@@ -87,8 +87,14 @@ class Stack:
 
 
 async def make_stack(
-    *, launcher: FakeLauncher | None = None, registry: PodRegistry | None = None, **settings: Any
+    *,
+    launcher: Any = None,
+    registry: PodRegistry | None = None,
+    launcher_kind: str | None = None,
+    **settings: Any,
 ) -> Stack:
+    if launcher_kind:
+        settings["launcher"] = launcher_kind
     cfg = settings_for(**settings)
     launcher = launcher or FakeLauncher()
     registry = registry or PodRegistry()
