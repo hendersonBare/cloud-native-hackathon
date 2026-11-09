@@ -66,8 +66,10 @@ async def test_put_location(client, venue):
         "accuracy_m": 9.0,
         "updated_at": "2026-11-09T17:00:00Z",
     }
-    me = (await client.get(VENUE, params={"persona_id": AVA})).json()["me"]
+    me = (await client.get(VENUE, params={"persona_id": AVA}, headers={"X-Venue-Token": token})).json()["me"]
     assert me["source"] == "gps" and "lat" not in me and "lng" not in me
+    others = (await client.get(VENUE, params={"persona_id": AVA})).json()["me"]
+    assert others["source"] == "checkin"  # without Ava's device token: her check-in spot, never her GPS
 
 
 async def test_put_location_rule_errors(client, venue):

@@ -32,12 +32,27 @@ test('detectBackend gives up after its timeout', async () => {
   assert.equal(await detectBackend({ fetchImpl: hang, timeoutMs: 20 }), 'mock');
 });
 
-test('isUnavailable: missing or unreachable APIs, not real errors', () => {
-  for (const status of [404, 405, 501, 502, 503, 504]) assert.ok(isUnavailable(httpError(status)), String(status));
-  assert.ok(isUnavailable(new TypeError('Failed to fetch')));
-  assert.ok(isUnavailable(Object.assign(new Error('x'), { name: 'AbortError' })));
-  for (const status of [400, 401, 403, 409, 422, 500]) assert.ok(!isUnavailable(httpError(status)), String(status));
+test('isUnavailable: only a route that is not mounted, never a transient failure', () => {
+  for (const status of [404, 405, 501]) assert.ok(isUnavailable(httpError(status)), String(status));
+  for (const status of [400, 401, 403, 409, 422, 500, 502, 503, 504]) {
+    assert.ok(!isUnavailable(httpError(status)), String(status));
+  }
+  assert.ok(!isUnavailable(new TypeError('Failed to fetch')), 'a dropped connection is an error, not a missing API');
+  assert.ok(!isUnavailable(Object.assign(new Error('x'), { name: 'AbortError' })), 'a timeout is an error too');
   assert.ok(!isUnavailable(null));
+});
+
+test('withFallback stays live through a gateway blip (503, network error) and surfaces it', async () => {
+  for (const failure of [httpError(503), httpError(504), new TypeError('Failed to fetch')]) {
+    let calls = 0;
+    const live = { create: async () => { calls += 1; if (calls === 1) throw failure; return { from: 'live' }; } };
+    let made = 0;
+    const client = withFallback(live, () => { made += 1; return { create: async () => ({ from: 'local' }) }; });
+    await assert.rejects(client.create({}), (err) => err === failure);
+    assert.equal(client.isLocal(), false);
+    assert.deepEqual(await client.create({}), { from: 'live' }, 'the next call goes to the gateway again');
+    assert.equal(made, 0, 'never switched to the browser');
+  }
 });
 
 function clients() {

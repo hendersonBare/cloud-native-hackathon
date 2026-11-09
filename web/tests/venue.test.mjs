@@ -264,6 +264,23 @@ test('live: sharing on from the seed is claimed once by the first fix, then sent
   assert.equal(srv.calls.length, 4, 'no second claim');
 });
 
+test('live: reads carry the token as a header, never in the URL, once this device holds one', async () => {
+  const srv = tokenServer();
+  const reads = [];
+  const api = liveVenue(async (url, opts) => {
+    if (!opts?.method) reads.push([url, opts?.headers]);
+    return srv.fetchJson(url, opts);
+  });
+  await api.view('acme.ava');
+  await api.setSharing({ persona_id: 'acme.ava', enabled: true });
+  await api.view('acme.ava');
+  await api.directions('acme.ava', 'kestrel.mia');
+  assert.deepEqual(reads[0], ['/api/venue?persona_id=acme.ava', undefined]);
+  assert.deepEqual(reads[1], ['/api/venue?persona_id=acme.ava', { 'X-Venue-Token': srv.token() }]);
+  assert.deepEqual(reads[2], ['/api/venue/directions?persona_id=acme.ava&to=kestrel.mia', { 'X-Venue-Token': srv.token() }]);
+  assert.ok(reads.every(([url]) => !url.includes(srv.token())), 'the token never goes in a URL');
+});
+
 test('live: a device that lost its token to another one does not keep retrying', async () => {
   const srv = tokenServer();
   const mine = liveVenue(srv.fetchJson);

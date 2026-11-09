@@ -95,7 +95,7 @@ def test_update_location_places_the_fix(service, venue):
         "accuracy_m": 12.5,
         "updated_at": NOW,
     }
-    assert service.view(AVA).me == pos
+    assert service.view(AVA, device_token(service, AVA)).me == pos
 
 
 def test_only_the_placed_point_is_stored(service, venue):
@@ -113,7 +113,7 @@ def test_a_fix_just_outside_is_clamped_and_far_outside_is_rejected(service, venu
     assert error_of(lambda: located(service, venue, AVA, -16, 10)) == (422, "outside_venue")
     far = LocationUpdate(persona_id=AVA, sharing_token=device_token(service, AVA), lat=40.0, lng=-105.5)
     assert error_of(lambda: service.update_location(far)) == (422, "outside_venue")
-    assert service.view(AVA).me.x == 0  # the rejected fixes left the last good one alone
+    assert service.view(AVA, device_token(service, AVA)).me.x == 0  # the rejected fixes left the last good one alone
 
 
 def test_too_inaccurate(service, venue):
@@ -141,9 +141,9 @@ def test_unknown_persona(service, venue):
 def test_gps_is_used_while_fresh_then_falls_back_to_the_check_in(service, venue, clock):
     located(service, venue, AVA, 30, 55)
     clock.advance(600)  # gps_ttl_s: still fresh
-    assert service.view(AVA).me.source == "gps"
+    assert service.view(AVA, device_token(service, AVA)).me.source == "gps"
     clock.advance(1)
-    me = service.view(AVA).me
+    me = service.view(AVA, device_token(service, AVA)).me
     assert (me.source, me.x, me.y, me.room_id, me.accuracy_m, me.updated_at) == (
         "checkin", 70, 18, "lobby-cafe", None, None
     )
@@ -186,12 +186,12 @@ def test_directions_between_check_ins_match_the_reference(service):
 def test_directions_use_fresh_gps_on_both_ends(service, venue, clock):
     located(service, venue, AVA, 25, 55)  # main hall
     located(service, venue, MIA, 62, 60)  # room A
-    found = service.directions(AVA, MIA)
+    found = service.directions(AVA, MIA, device_token(service, AVA))
     assert (found.from_.source, found.to.source) == ("gps", "gps")
     assert found.route == [[25, 55], [25, 40], [25, 35], [62, 35], [62, 40], [62, 60]]
     assert found.distance_m == 82
     clock.advance(601)
-    stale = service.directions(AVA, MIA)
+    stale = service.directions(AVA, MIA, device_token(service, AVA))
     assert (stale.from_.source, stale.to.source) == ("checkin", "checkin")
 
 
@@ -374,3 +374,18 @@ def test_sharing_tokens_never_reach_logs_or_spans(service, venue, spans, caplog)
         service.set_sharing(SharingBody(persona_id=LENA, enabled=False))
     exported = " ".join(str(dict(s.attributes)) for s in spans.get_finished_spans())
     assert token not in caplog.text and token not in exported
+
+
+def test_my_gps_position_is_shown_only_to_my_sharing_device(service, venue):
+    located(service, venue, AVA, 42.79, 22.26)
+    assert service.view(AVA).me.source == "checkin"  # anyone asking about Ava: her check-in spot only
+    assert service.view(AVA, "z" * 43).me.source == "checkin"  # a wrong token too
+    assert service.view(AVA, device_token(service, AVA)).me.source == "gps"  # her own device
+    stranger = service.directions(AVA, MIA)
+    assert stranger.from_.source == "checkin"  # directions "from Ava" don't leak her GPS either
+    assert service.directions(AVA, MIA, device_token(service, AVA)).from_.source == "gps"
+
+
+def test_a_sharing_peer_is_still_placed_by_gps(service, venue):
+    located(service, venue, AVA, 42.79, 22.26)
+    assert service.directions(BO, AVA).to.source == "gps"  # Ava consented to be found

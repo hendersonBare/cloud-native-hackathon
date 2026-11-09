@@ -151,7 +151,9 @@ class VenueService:
         return self._clock().astimezone(timezone.utc)
 
     # ------------------------------------------------------------------ endpoints
-    def view(self, persona_id: str) -> VenueView:
+    def view(self, persona_id: str, sharing_token: str | None = None) -> VenueView:
+        """The floor plan, my sharing flag and where I am. My GPS-placed position is returned only to my sharing
+        device (its token); anyone else asking about me gets my check-in spot."""
         self._require(persona_id)
         with _span("venue.view", persona_id):
             with self._lock:
@@ -160,7 +162,7 @@ class VenueService:
                     persona_id=persona_id,
                     venue=self._public.model_copy(deep=True),
                     sharing=self._sharing[persona_id],
-                    me=self._position(persona_id),
+                    me=self._position(persona_id, gps=self._holds(persona_id, sharing_token)),
                 )
 
     def set_sharing(self, body: SharingBody) -> SharingState:
@@ -204,7 +206,9 @@ class VenueService:
                 self._fixes[pid] = _Fix(x=placed[0], y=placed[1], accuracy_m=body.accuracy_m, at=self.now())
                 return self._position(pid)
 
-    def directions(self, persona_id: str, to: str) -> Directions:
+    def directions(self, persona_id: str, to: str, sharing_token: str | None = None) -> Directions:
+        """From me to ``to``. My own GPS fix is the start only for my sharing device (its token); a peer who shares
+        is placed by their GPS, which is what they consented to."""
         self._require(persona_id)
         self._require(to)
         if to == persona_id:
@@ -212,7 +216,7 @@ class VenueService:
         with _span("venue.directions", persona_id) as span:
             with self._lock:
                 self._prune()
-                me = self._position(persona_id)
+                me = self._position(persona_id, gps=self._holds(persona_id, sharing_token))
                 if not self._sharing[to]:
                     span.set_attribute(ATTR_PEER_STATUS, "not_sharing")
                     # Nothing about the peer: no position, no route, no distance, no bearing.
@@ -250,12 +254,13 @@ class VenueService:
         for pid in [p for p, fix in self._fixes.items() if (now - fix.at).total_seconds() > ttl]:
             del self._fixes[pid]
 
-    def _position(self, persona_id: str) -> Position:
+    def _position(self, persona_id: str, *, gps: bool = True) -> Position:
         """My stored GPS fix when I share and it is at most gps_ttl_s old, else my check-in spot (the corridor's
-        centre for someone without one)."""
+        centre for someone without one). ``gps=False`` always gives the check-in spot."""
         fix = self._fixes.get(persona_id)
         if (
-            fix is not None
+            gps
+            and fix is not None
             and self._sharing[persona_id]
             and (self.now() - fix.at).total_seconds() <= self._venue["gps_ttl_s"]
         ):

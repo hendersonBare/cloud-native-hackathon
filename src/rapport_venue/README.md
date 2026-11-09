@@ -15,10 +15,10 @@ All under `/api/venue`. Errors are `{"detail": "<code>"}`; validation errors are
 
 | Method | Path | Body / query | Returns | Errors |
 |---|---|---|---|---|
-| GET | `` | `persona_id` | `VenueView`: the public floor plan, my `sharing` flag, `me` (my `Position`) | 404 `unknown_persona` |
+| GET | `` | `persona_id`; header `X-Venue-Token?` | `VenueView`: the public floor plan, my `sharing` flag, `me` (my `Position`: GPS only with my device's token, else my check-in spot) | 404 `unknown_persona` |
 | PUT | `/location` | `LocationUpdate`: `persona_id`, `lat` (-90..90), `lng` (-180..180), `accuracy_m?` (0..5000), `sharing_token` | `Position` (`source: "gps"`) | 404 `unknown_persona`, 403 `not_this_device`, 409 `sharing_off`, 422 `too_inaccurate`, 422 `outside_venue` |
 | PUT | `/sharing` | `SharingBody`: `persona_id`, `enabled` (a JSON boolean), `sharing_token?` | `SharingState` (with this device's `sharing_token` when turned on) | 404 `unknown_persona`, 403 `shared_from_another_device` |
-| GET | `/directions` | `persona_id`, `to` | `Directions` (the JSON key is `from`) | 404 `unknown_persona`, 422 `same_person` |
+| GET | `/directions` | `persona_id`, `to`; header `X-Venue-Token?` | `Directions` (the JSON key is `from`; my own GPS start only with my device's token) | 404 `unknown_persona`, 422 `same_person` |
 
 The standalone app also serves `GET /healthz` -> `{"ok": true, "version": ...}`.
 
@@ -62,6 +62,9 @@ to promote them into `rapport_common.models`.
   device holds it (403 `shared_from_another_device`), so nobody else can feed or take over someone's location.
   Turning sharing off never needs the token: it only reduces exposure, and it lets a person switch off sharing that
   someone else switched on. Demo reset forgets every token. The token is never logged or put on a span.
+- My own GPS-placed position (`GET /api/venue` `me`, and `from` in directions) is returned only with my device's
+  token in the `X-Venue-Token` header (a header, so it never lands in an access log); anyone else gets my check-in
+  spot. A peer who shares is still placed by GPS in directions: that is what they consented to.
 - What remains: the gateway has no logins, so anyone can still switch sharing on for a person who isn't sharing.
   That reveals only the person's check-in spot (no GPS), and anyone, including that person, can switch it off.
 - `peer_status: "not_sharing"` reveals nothing about the peer: `to` is `null`, `route` and `legs` are empty and

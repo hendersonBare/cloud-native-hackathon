@@ -18,6 +18,8 @@ const query = (params) => new URLSearchParams(params).toString();
  * (never in storage, the URL or the screen), sends it with every GPS fix, and drops it when sharing
  * goes off, so screens never see it. If sharing was already on before this device held a token
  * (the demo seed), the first fix gets 403 and the client claims sharing once, then retries.
+ * Reads send it as an X-Venue-Token header (not in the URL), so only this device gets its own GPS
+ * position back; without it the server answers with the check-in spot.
  */
 export function liveVenue(fetchJson = request) {
   const tokens = new Map(); // persona_id -> this device's sharing token
@@ -31,12 +33,14 @@ export function liveVenue(fetchJson = request) {
     const { sharing_token: _hidden, ...state } = result; // the token stays inside this client
     return state;
   };
+  // Read options: this device's token as a header when it holds one (undefined keeps the plain GET).
+  const mine = (personaId) => (tokens.has(personaId) ? { headers: { 'X-Venue-Token': tokens.get(personaId) } } : undefined);
   const sendFix = (body) => fetchJson(`${BASE}/location`, {
     method: 'PUT', body: { ...body, sharing_token: tokens.get(body.persona_id) ?? null },
   });
   return {
-    view: (personaId) => fetchJson(`${BASE}?${query({ persona_id: personaId })}`),
-    directions: (personaId, to) => fetchJson(`${BASE}/directions?${query({ persona_id: personaId, to })}`),
+    view: (personaId) => fetchJson(`${BASE}?${query({ persona_id: personaId })}`, mine(personaId)),
+    directions: (personaId, to) => fetchJson(`${BASE}/directions?${query({ persona_id: personaId, to })}`, mine(personaId)),
     updateLocation: async (body) => {
       try {
         return await sendFix(body);
