@@ -17,6 +17,7 @@ import './deepdive.test.mjs';
 import './exchange-mock.test.mjs';
 import './time.test.mjs';
 import './calendar.test.mjs';
+import './recap.test.mjs';
 import './people.test.mjs';
 import './venue.test.mjs';
 import './find.test.mjs';

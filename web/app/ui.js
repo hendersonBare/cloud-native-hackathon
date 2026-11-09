@@ -126,7 +126,7 @@ export const TABS = [
   { route: 'home', label: 'Home', icon: 'home' },
   { route: 'live', label: 'Capture', icon: 'mic' },
   { route: 'memory', label: 'Memory', icon: 'memory' },
-  { route: 'calendar', label: 'Calendar', icon: 'calendar' },
+  { route: 'recap', label: 'Recap', icon: 'sparkle' },
   { route: 'people', label: 'People', icon: 'people' },
 ];
 
@@ -135,7 +135,9 @@ export const TAB_FOR = {
   home: 'home', profile: 'home', find: 'home', deepdive: 'home',
   live: 'live', tag: 'live',
   memory: 'memory',
-  calendar: 'calendar',
+  recap: 'recap',
+  // No tab of its own since Recap replaced it; reached from Home's Up next, People and Recap.
+  calendar: 'recap',
   people: 'people', person: 'people', exchange: 'people', match: 'people',
 };
 
