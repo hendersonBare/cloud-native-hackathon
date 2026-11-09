@@ -263,6 +263,12 @@ export function render(ctx) {
   const visibilityName = nextId('memory-context-visibility');
   const edit = { open: false, saving: false, file: null, status: '', error: false };
   const contextBody = h('div', { id: contextBodyId, class: 'memory-context card' });
+  // The context sits behind a button at the top right, so it only takes room when you open it.
+  const contextPanelId = nextId('memory-context-panel');
+  const contextToggle = h('button', {
+    type: 'button', class: 'memory-context-toggle', 'aria-controls': contextPanelId, 'aria-expanded': 'false',
+    onClick: () => setContextOpen(contextPanel.hidden),
+  }, icon('user', { size: 16, stroke: 1.9 }), h('span', null, 'Your context'));
   const editButton = h('button', {
     type: 'button', class: 'memory-context-edit', 'aria-controls': contextBodyId, 'aria-expanded': 'false',
     onClick: () => (edit.open ? closeEditor() : openEditor()),
@@ -393,13 +399,32 @@ export function render(ctx) {
     ].filter(Boolean)));
   }
 
+  const contextPanel = h('section', {
+    id: contextPanelId, class: 'memory-section memory-context-panel', 'aria-labelledby': contextId,
+  },
+  h('div', { class: 'memory-section-head' },
+    h('h2', { id: contextId, class: 'eyebrow' }, 'Your context'),
+    editButton,
+  ),
+  contextBody,
+  );
+  function setContextOpen(open) {
+    contextPanel.hidden = !open;
+    contextToggle.setAttribute('aria-expanded', String(open));
+  }
+  setContextOpen(false);
+
   drawMic();
   drawScope();
   drawAnswer();
   drawContext();
   return h('div', { class: 'screen memory', lang: 'en' },
     h('main', { class: 'scroll memory-main' },
-      h('h1', { class: 'serif memory-title' }, 'Memory'),
+      h('div', { class: 'memory-head' },
+        h('h1', { class: 'serif memory-title' }, 'Memory'),
+        contextToggle,
+      ),
+      contextPanel,
       form,
       h('div', { class: 'memory-suggestions', role: 'group', 'aria-label': 'Suggested questions' },
         content.questions.map((item) => h('button', {
@@ -407,13 +432,6 @@ export function render(ctx) {
         }, icon('sparkle', { size: 14, stroke: 1.9 }), h('span', null, item.question))),
       ),
       answerRegion,
-      h('section', { class: 'memory-section', 'aria-labelledby': contextId },
-        h('div', { class: 'memory-section-head' },
-          h('h2', { id: contextId, class: 'eyebrow' }, 'Your context'),
-          editButton,
-        ),
-        contextBody,
-      ),
       h('section', { class: 'memory-section', 'aria-labelledby': scopeId },
         h('div', { class: 'memory-section-head' },
           h('h2', { id: scopeId, class: 'eyebrow' }, 'Search scope'),

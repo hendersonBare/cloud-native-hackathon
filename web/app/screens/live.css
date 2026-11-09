@@ -19,6 +19,8 @@
 .live .capture-content { display: flex; flex-direction: column; gap: 16px; flex: none; }
 .live .capture-heading { display: flex; flex-direction: column; gap: 4px; }
 .live .capture-heading h2 { font-size: 32px; line-height: 1.05; }
+.live .capture-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.live .capture-cal { margin: -4px -8px 0 0; border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold); }
 .live .capture-heading p { font-size: 14px; color: var(--text2); }
 .live .transcript { display: flex; flex-direction: column; gap: 12px; }
 .live .session-transcript { gap: 14px; }

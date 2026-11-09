@@ -105,6 +105,14 @@ test('bottomNav marks the tab that owns the current route', () => {
   assert.deepEqual(current('person'), ['#/people']);
   assert.deepEqual(current('people'), ['#/people']);
   assert.deepEqual(current('tag'), ['#/live']);
+  assert.deepEqual(current('progress'), ['#/progress']);
+  // Calendar has no tab of its own; it opens from Home's Up next.
+  assert.deepEqual(current('calendar'), ['#/home']);
+});
+
+test('bottomNav has Progress and no Calendar tab', () => {
+  const hrefs = bottomNav('home').findAll((el) => el.tagName === 'A').map((el) => el.getAttribute('href'));
+  assert.deepEqual(hrefs, ['#/home', '#/live', '#/memory', '#/progress', '#/people']);
 });
 
 test('topbar renders a labelled back link and the title as text', () => {

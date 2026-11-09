@@ -96,6 +96,7 @@ export const ICONS = {
   sparkle: [['path', { d: 'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6' }]],
   clock: [['circle', { cx: 12, cy: 12, r: 8.5 }], ['path', { d: 'M12 7.5V12l3 2' }]],
   navigate: [['path', { d: 'M3.5 11 20.5 3.5 13 20.5l-2-7.5z' }]],
+  progress: [['path', { d: 'm3 17 6-6 4 4 8-8' }], ['path', { d: 'M15 7h6v6' }]],
 };
 
 export function icon(name, opts = {}) {
@@ -126,16 +127,16 @@ export const TABS = [
   { route: 'home', label: 'Home', icon: 'home' },
   { route: 'live', label: 'Capture', icon: 'mic' },
   { route: 'memory', label: 'Memory', icon: 'memory' },
-  { route: 'calendar', label: 'Calendar', icon: 'calendar' },
+  { route: 'progress', label: 'Progress', icon: 'progress' },
   { route: 'people', label: 'People', icon: 'people' },
 ];
 
-/** Which tab is highlighted for each route. */
+/** Which tab is highlighted for each route. Calendar has no tab: Home's Up next and Capture open it. */
 export const TAB_FOR = {
-  home: 'home', profile: 'home', find: 'home', deepdive: 'home',
+  home: 'home', profile: 'home', find: 'home', deepdive: 'home', calendar: 'home',
   live: 'live', tag: 'live',
   memory: 'memory',
-  calendar: 'calendar',
+  progress: 'progress',
   people: 'people', person: 'people', exchange: 'people', match: 'people',
 };
 

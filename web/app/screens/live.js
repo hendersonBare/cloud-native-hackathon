@@ -163,7 +163,8 @@ export function render(ctx) {
     }, svg([['path', { d: 'M6 3h12v18l-6-4-6 4z' }]], { size: 16, stroke: 2 }), 'Mark moment');
     const stop = h('button', {
       type: 'button', class: 'capture-round capture-stop', 'aria-label': 'Stop and save',
-      onClick: () => { st.paused = true; st.saved = true; ctx.go('memory'); },
+      // Stopping saves the session; Progress then checks it against your memory (progress.js).
+      onClick: () => { st.paused = true; st.saved = true; ctx.go('progress'); },
     }, icon('stop', { size: 16 }));
     footer.replaceChildren(status, h('div', { class: 'capture-controls' }, pause, mark, stop));
   }
@@ -173,8 +174,12 @@ export function render(ctx) {
     conversationButton.setAttribute('aria-pressed', String(conversation));
     sessionButton.setAttribute('aria-pressed', String(!conversation));
     tickClock();
+    const title = h('h2', { class: 'serif' }, conversation ? 'Hallway conversation' : 'Zero-code tracing with eBPF on Kubernetes');
     const heading = h('div', { class: 'capture-heading' },
-      h('h2', { class: 'serif' }, conversation ? 'Hallway conversation' : 'Zero-code tracing with eBPF on Kubernetes'),
+      conversation ? title : h('div', { class: 'capture-title-row' }, title,
+        h('a', {
+          class: 'icon-btn capture-cal', href: hashFor('calendar', { from: 'live' }), 'aria-label': 'Open this session in your calendar',
+        }, icon('calendar', { size: 20, stroke: 1.8 }))),
       h('p', null, conversation ? 'Expo hall · started 2:41 PM'
         : 'Talk · Room B · Mon 3:30 PM · started from your calendar'));
     if (conversation) {

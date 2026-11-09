@@ -1,6 +1,13 @@
 .home-main { padding: 20px 20px 10px; gap: 12px; }
 .home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .home-greeting { font-size: 30px; }
+/* Wordmark: the stage toolbar's mark and serif name (stage.css .brand), at the greeting's size. */
+.home-brand { display: flex; align-items: center; gap: 9px; font-size: 30px; color: var(--text); }
+.home-brand-mark {
+  width: 16px; height: 16px; flex: none; border-radius: 50%; box-sizing: border-box;
+  border: 2.5px solid var(--gold);
+  background: radial-gradient(circle, var(--gold) 0 3px, transparent 3.5px);
+}
 .home-me { border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold); }
 
 .live-card { padding: 12px 12px 12px 16px; display: flex; align-items: center; gap: 12px; flex: none; }
@@ -81,6 +88,11 @@
 .latest-chips > svg { flex: none; margin-right: 2px; color: var(--text3); }
 .latest-chip { font-size: 13px; font-weight: 500; padding: 5px 10px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); }
 
+.upnext-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.upnext-cal {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -12px -8px -12px 0; padding: 0 8px;
+  font-size: 14px; font-weight: 600; color: var(--gold); text-decoration: none;
+}
 .upnext { padding: 0 16px; display: flex; flex-direction: column; color: var(--text); text-decoration: none; border-radius: 18px; }
 .upnext-row { display: flex; align-items: center; gap: 12px; min-height: 46px; }
 .upnext-row + .upnext-row { border-top: 1px solid var(--line); }

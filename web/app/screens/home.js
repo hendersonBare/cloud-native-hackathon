@@ -33,10 +33,11 @@ export function render(ctx) {
   const people = content.opportunities.map((o) => ({ ...ctx.person(o.id), topics: o.topics, chips: o.chips }));
 
   // Header
-  const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const header = h('header', { class: 'home-head' },
     h('div', { class: 'stack', style: { gap: '4px' } },
-      h('p', { class: 'eyebrow' }, `${weekday} · ${content.event}`),
+      h('p', { class: 'home-brand' },
+        h('span', { class: 'home-brand-mark', 'aria-hidden': 'true' }),
+        h('span', { class: 'serif' }, 'Rapport')),
       h('h1', { class: 'serif home-greeting' }, 'Good ', h('em', null, partOfDay()), me?.name ? `, ${me.name}` : ''),
     ),
     h('a', { class: 'icon-btn home-me', href: '#/profile', 'aria-label': 'Your agent identity' },
@@ -230,9 +231,11 @@ export function render(ctx) {
     latestSlot,
   );
 
-  // Up next
+  // Up next (the way into Calendar, which has no tab of its own)
   const upNext = h('section', { class: 'stack', style: { gap: '8px' }, 'aria-labelledby': 'next-h' },
-    eyebrow('Up next', { id: 'next-h' }),
+    h('div', { class: 'upnext-head' },
+      eyebrow('Up next', { id: 'next-h' }),
+      h('a', { class: 'upnext-cal', href: '#/calendar' }, icon('calendar', { size: 16, stroke: 1.9 }), 'Calendar')),
     h('a', { class: 'card upnext', href: '#/calendar' },
       content.upNext.map((e) => h('span', { class: 'upnext-row' },
         h('span', { class: 'upnext-time tabular' }, e.time),
