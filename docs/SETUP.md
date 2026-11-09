@@ -77,7 +77,7 @@ gh api -X POST 'repos/{owner}/{repo}/rulesets' --input - <<'EOF'
 EOF
 ```
 
-After the next merge, check that `gh run list -w build-and-deploy -L 1` shows success and that a `deploy:` commit landed on `main`. If the deploy push is rejected, edit the ruleset under Settings → Rules → Rulesets.
+Then test the bypass straight away: run `gh workflow run build-and-deploy`, let it finish, and check that `gh run list -w build-and-deploy -L 1` shows success and that a new `deploy:` commit landed on `main`. Don't wait for a merge to test it, because merges that only change `.md` files don't start that workflow. If the deploy push is rejected, edit the ruleset under Settings → Rules → Rulesets.
 
 ## 3. Elastic Cloud (Serverless Elasticsearch)
 
