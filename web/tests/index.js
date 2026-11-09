@@ -8,6 +8,7 @@ import './route.test.mjs';
 import './ui.test.mjs';
 import './memory-scope.test.mjs';
 import './flow.test.mjs';
+import './capture.test.mjs';
 import './swarm-model.test.mjs';
 import './swarm-driver.test.mjs';
 import './swarm-panel.test.mjs';
