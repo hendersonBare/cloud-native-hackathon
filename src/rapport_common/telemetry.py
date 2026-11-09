@@ -23,6 +23,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from opentelemetry import metrics, trace
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import Context
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk.metrics import MeterProvider
@@ -30,6 +31,7 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
+from opentelemetry.sdk.util import BoundedList
 from opentelemetry.trace.status import Status
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
@@ -112,14 +114,25 @@ def scrub_span(span: ReadableSpan) -> ReadableSpan:
         status = Status(status.status_code, _scrub_text(description))
     if attributes is None and not events_changed and status is span.status:
         return span
+    # The span's properties expose plain mappings/tuples; the OTLP encoder reads the dropped counts off the bounded
+    # containers, so rebuild those and carry the counts over.
+    kept = attributes if attributes is not None else span.attributes
+    bounded_attributes = BoundedAttributes(attributes=kept, immutable=True)
+    bounded_attributes.dropped = span.dropped_attributes
+    bounded_events = BoundedList(None)
+    bounded_events.extend(events)
+    bounded_events.dropped = span.dropped_events
+    bounded_links = BoundedList(None)
+    bounded_links.extend(span.links)
+    bounded_links.dropped = span.dropped_links
     return ReadableSpan(
         name=span.name,
         context=span.context,
         parent=span.parent,
         resource=span.resource,
-        attributes=attributes if attributes is not None else span.attributes,
-        events=events if events_changed else span.events,
-        links=span.links,
+        attributes=bounded_attributes,
+        events=bounded_events,
+        links=bounded_links,
         kind=span.kind,
         status=status,
         start_time=span.start_time,

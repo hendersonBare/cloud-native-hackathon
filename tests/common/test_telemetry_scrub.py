@@ -8,7 +8,7 @@ import respx
 from fastapi import FastAPI
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import InMemoryLogRecordExporter, SimpleLogRecordProcessor
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import SpanLimits, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import SpanKind, Status, StatusCode
@@ -66,6 +66,21 @@ def test_client_style_span_loses_its_query_in_attributes_events_and_status(spans
     assert event.name == "exception" and event.attributes["n"] == 1
     assert event.attributes["exception.message"] == "Server error '500' for url 'http://briefer:8080/v1/talks'"
     assert out.status.status_code == StatusCode.ERROR and out.status.description == "500 for http://briefer:8080/v1/talks"
+    assert SECRET not in repr(out.to_json())
+
+
+def test_scrubbed_span_keeps_its_dropped_counts(spans):
+    _, sink = spans
+    # Same pipeline with tight limits: a span that overflowed both limits and still carries a query
+    limited = TracerProvider(span_limits=SpanLimits(max_attributes=2, max_events=1))
+    limited.add_span_processor(SimpleSpanProcessor(_ScrubbingSpanExporter(sink)))
+    with limited.get_tracer("t").start_as_current_span("GET") as span:
+        span.set_attributes({"http.url": f"http://h/p?q={SECRET}", "a": 1, "b": 2, "c": 3})
+        span.add_event("older")
+        span.add_event("newer", {"exception.message": f"http://h/p?q={SECRET}"})
+    (out,) = sink.get_finished_spans()
+    assert [e.name for e in out.events] == ["newer"]
+    assert out.dropped_attributes == 2 and out.dropped_events == 1
     assert SECRET not in repr(out.to_json())
 
 
