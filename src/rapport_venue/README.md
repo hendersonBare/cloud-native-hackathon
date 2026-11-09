@@ -59,14 +59,19 @@ to promote them into `rapport_common.models`.
 - Consent: nobody is placed by GPS unless their `sharing` flag is on, and turning it off deletes their fix.
 - Per-device consent: turning sharing on returns a random `sharing_token` to that device only; the service keeps
   only its SHA-256. GPS fixes need the token (403 `not_this_device`), and so does turning sharing on again while a
-  device holds it (403 `shared_from_another_device`), so nobody else can feed or take over someone's location.
-  Turning sharing off never needs the token: it only reduces exposure, and it lets a person switch off sharing that
-  someone else switched on. Demo reset forgets every token. The token is never logged or put on a span.
+  device holds it (403 `shared_from_another_device`), so another device can't quietly feed fixes into someone's live
+  sharing. Turning sharing off never needs the token: it only reduces exposure, and it lets a person switch off
+  sharing that someone else switched on. Demo reset forgets every token. The token is never logged or put on a span.
 - My own GPS-placed position (`GET /api/venue` `me`, and `from` in directions) is returned only with my device's
   token in the `X-Venue-Token` header (a header, so it never lands in an access log); anyone else gets my check-in
-  spot. A peer who shares is still placed by GPS in directions: that is what they consented to.
-- What remains: the gateway has no logins, so anyone can still switch sharing on for a person who isn't sharing.
-  That reveals only the person's check-in spot (no GPS), and anyone, including that person, can switch it off.
+  spot there.
+- **But directions TO a person who shares place them by GPS for any caller.** Sharing means "anyone may find me";
+  without logins there is no way to limit "anyone" to the people you met.
+- **What this does not stop** (the gateway has no logins, so the token is not identity): anyone can turn a person's
+  sharing off and on again and get a token of their own; the real phone's next fix is then refused (403) and it
+  shows "shared from another device" instead of being overridden silently. Anyone can also switch sharing on for a
+  person who isn't sharing; that reveals their check-in spot, not GPS. Real protection needs logins (or signed
+  persona sessions) across the whole gateway.
 - `peer_status: "not_sharing"` reveals nothing about the peer: `to` is `null`, `route` and `legs` are empty and
   `distance_m`, `bearing_deg` and `compass` are `null`. The answer is the same whether or not they ever shared.
 - `GET /api/venue` returns the public floor plan only: never other people's check-in spots, sharing flags or the GPS

@@ -65,6 +65,23 @@ async def test_cors_allows_exactly_the_configured_origins_with_credentials():
         await s.close()
 
 
+async def test_cors_preflight_allows_the_venue_token_header():
+    s = await make_stack(mock=True, cors_origins=("http://localhost:5180",))
+    try:
+        ok = await s.client.options(
+            "/api/venue",
+            headers={
+                "Origin": "http://localhost:5180",
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "x-venue-token",
+            },
+        )
+        assert ok.status_code == 200
+        assert "x-venue-token" in ok.headers["access-control-allow-headers"].lower()
+    finally:
+        await s.close()
+
+
 async def test_no_cors_headers_when_unset():
     s = await make_stack(mock=True)
     try:

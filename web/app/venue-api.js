@@ -16,8 +16,8 @@ const query = (params) => new URLSearchParams(params).toString();
  *
  * Turning sharing on returns a sharing_token for this device only. The client keeps it in memory
  * (never in storage, the URL or the screen), sends it with every GPS fix, and drops it when sharing
- * goes off, so screens never see it. If sharing was already on before this device held a token
- * (the demo seed), the first fix gets 403 and the client claims sharing once, then retries.
+ * goes off, so screens never see it. If a fix is refused (sharing on from the demo seed, or a token
+ * the demo reset forgot), the client drops its token, claims sharing once and retries.
  * Reads send it as an X-Venue-Token header (not in the URL), so only this device gets its own GPS
  * position back; without it the server answers with the check-in spot.
  */
@@ -45,7 +45,10 @@ export function liveVenue(fetchJson = request) {
       try {
         return await sendFix(body);
       } catch (error) {
-        if (error?.status !== 403 || tokens.has(body.persona_id)) throw error;
+        if (error?.status !== 403) throw error;
+        // No token, or a stale one (the demo reset forgets every token): claim once and retry. If another
+        // device holds sharing now, the claim fails with 403 shared_from_another_device and that surfaces.
+        tokens.delete(body.persona_id);
         await setSharing({ persona_id: body.persona_id, enabled: true });
         return sendFix(body);
       }

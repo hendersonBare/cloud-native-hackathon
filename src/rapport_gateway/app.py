@@ -89,7 +89,7 @@ def create_app(settings: Settings | None = None, deps: Deps | None = None) -> Fa
             allow_origins=list(settings.cors_origins),
             allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # the calendar edits and deletes
-            allow_headers=["Content-Type", "Authorization"],
+            allow_headers=["Content-Type", "Authorization", "X-Venue-Token"],  # X-Venue-Token: venue reads
         )
 
     for module in (health, personas, stream, profile, connect, memory, discover, demo, venue, rum):

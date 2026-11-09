@@ -232,7 +232,7 @@ function tokenServer(seedSharing = false) {
     }
     return null;
   };
-  return { calls, fetchJson, token: () => held };
+  return { calls, fetchJson, token: () => held, reset: () => { held = null; sharing = seedSharing; } };
 }
 
 test('live: turning sharing on keeps the token inside the client and sends it with every fix', async () => {
@@ -281,13 +281,36 @@ test('live: reads carry the token as a header, never in the URL, once this devic
   assert.ok(reads.every(([url]) => !url.includes(srv.token())), 'the token never goes in a URL');
 });
 
-test('live: a device that lost its token to another one does not keep retrying', async () => {
+test('live: another device cannot claim sharing this device holds, and does not keep retrying', async () => {
   const srv = tokenServer();
   const mine = liveVenue(srv.fetchJson);
   await mine.setSharing({ persona_id: 'acme.ava', enabled: true });
   const other = liveVenue(srv.fetchJson);
+  const before = srv.calls.length;
   await assert.rejects(other.updateLocation({ persona_id: 'acme.ava', ...INSIDE }), { status: 403 });
+  assert.equal(srv.calls.length - before, 2, 'one fix, one claim, no loop');
   await assert.rejects(other.setSharing({ persona_id: 'acme.ava', enabled: true }), { status: 403 });
+});
+
+test('live: after the demo reset forgets every token, the next fix claims sharing again and goes through', async () => {
+  const srv = tokenServer(true);
+  const api = liveVenue(srv.fetchJson);
+  await api.updateLocation({ persona_id: 'acme.ava', ...INSIDE });
+  const stale = srv.token();
+  srv.reset();
+  assert.equal((await api.updateLocation({ persona_id: 'acme.ava', ...INSIDE })).source, 'gps');
+  assert.notEqual(srv.token(), stale);
+  assert.equal(srv.calls.at(-1)[2].sharing_token, srv.token());
+});
+
+test('live: if someone else took sharing over, this phone sees the refusal instead of being overridden', async () => {
+  const srv = tokenServer();
+  const mine = liveVenue(srv.fetchJson);
+  await mine.setSharing({ persona_id: 'acme.ava', enabled: true });
+  const intruder = liveVenue(srv.fetchJson);
+  await intruder.setSharing({ persona_id: 'acme.ava', enabled: false });
+  await intruder.setSharing({ persona_id: 'acme.ava', enabled: true });
+  await assert.rejects(mine.updateLocation({ persona_id: 'acme.ava', ...INSIDE }), { status: 403 });
 });
 
 test('steps read naturally and keep numbers next to their unit', () => {

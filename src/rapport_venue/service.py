@@ -8,10 +8,15 @@ its owner shares and for at most ``gps_ttl_s``. Sharing is a per-person consent 
 stored fix at once, and directions to someone who is not sharing reveal nothing about them.
 
 Per-device consent: turning sharing on returns a random ``sharing_token`` to that device only (the service keeps its
-SHA-256). GPS fixes, and turning sharing on again while a device holds it, need that token, so nobody else can feed or
-take over someone's location. Turning sharing off never needs it: that only reduces exposure, and it lets a person
-switch off sharing that someone else switched on. The gateway has no logins, so this is not identity: anyone can still
-switch sharing on for a person who isn't sharing, which reveals only that person's check-in spot. The public venue never
+SHA-256). GPS fixes, and turning sharing on again while a device holds it, need that token, so another device can't
+quietly feed fixes into someone's live sharing. Turning sharing off never needs it: that only reduces exposure, and it
+lets a person switch off sharing that someone else switched on.
+
+The gateway has no logins, so this is NOT identity, and it does not stop a determined caller: anyone can turn a
+person's sharing off and on again and get a token of their own (the real phone then sees 403 and knows), and anyone
+can switch sharing on for a person who isn't sharing. A person's own GPS position is returned only to their device,
+but directions TO a person who shares place them by GPS for any caller: sharing means "anyone may find me". Real
+protection needs logins (or signed persona sessions) across the whole gateway. The public venue never
 includes other people's check-in spots, sharing flags or the GPS anchor. Spans and logs carry persona IDs only.
 """
 
