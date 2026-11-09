@@ -128,3 +128,14 @@ Read `docs/SPEC.md` and your brief in `docs/workstreams/<name>.md` before writin
 7. Track evidence: which rows of `docs/TRACKS.md` this PR moves forward and what to screenshot once it's merged. Put the same section in the PR description, and add any bug you hit to `docs/evidence/LOG.md`.
 
 If you're blocked for more than 20 minutes, ship the simplest working version and write down what's missing.
+
+## 8. How we use the stack
+
+Each page in `docs/stack/` explains how Rapport uses one technology, where it lives in the repo, and what to check in a PR that touches it:
+
+- [`docs/stack/README.md`](docs/stack/README.md): the index
+- [`docs/stack/gitar-sonar.md`](docs/stack/gitar-sonar.md): Gitar AI review and SonarQube Cloud
+- [`docs/stack/dash0.md`](docs/stack/dash0.md): OpenTelemetry, OpenLIT and Dash0
+- [`docs/stack/radar.md`](docs/stack/radar.md): the Encounter CRD and operator, Argo CD GitOps on the vcluster, and Radar Cloud
+- [`docs/stack/elasticsearch.md`](docs/stack/elasticsearch.md): memory indices, hybrid search, scoped API keys and speaker identification
+- [`docs/stack/opa.md`](docs/stack/opa.md): the policy, its tests, fail-closed handling and how decisions surface

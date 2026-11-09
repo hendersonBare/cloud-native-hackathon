@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 530" width="1240" height="530" role="img" aria-labelledby="t d">
+  <title id="t">LLM spend in one demo run</title>
+  <desc id="d">Horizontal bar chart of modelled LLM spend in US dollars for one Rapport demo run with gpt-6-luna. Agent encounter with 2 private briefs and 8 delegate calls: $0.0054. 3 deep dives: $0.0041. 10 swipe cards in 2 batched calls: $0.0015. 2 memory questions: $0.0015. 1 CV upload: $0.0009. Total: about $0.013, about 1.3 cents per demo run, and about 5 cents per attendee at a real conference.</desc>
+  <style>
+    .bar { transform-box: fill-box; transform-origin: 0 50%; animation: 12s linear infinite; }
+    .val, .hl { animation: 12s linear infinite; }
+    .b1 { animation-name: g1; } .v1 { animation-name: o1; } .h1 { animation-name: h1; }
+    .b2 { animation-name: g2; } .v2 { animation-name: o2; } .h2 { animation-name: h2; }
+    .b3 { animation-name: g3; } .v3 { animation-name: o3; } .h3 { animation-name: h3; }
+    .b4 { animation-name: g4; } .v4 { animation-name: o4; } .h4 { animation-name: h4; }
+    .b5 { animation-name: g5; } .v5 { animation-name: o5; } .h5 { animation-name: h5; }
+    .tot { animation: tot 12s linear infinite; }
+    @keyframes g1 { 0%, 3% { transform: scaleX(0) } 11% { transform: scaleX(1) } 92% { transform: scaleX(1) } 97%, 100% { transform: scaleX(0) } }
+    @keyframes g2 { 0%, 13% { transform: scaleX(0) } 21% { transform: scaleX(1) } 92% { transform: scaleX(1) } 97%, 100% { transform: scaleX(0) } }
+    @keyframes g3 { 0%, 23% { transform: scaleX(0) } 31% { transform: scaleX(1) } 92% { transform: scaleX(1) } 97%, 100% { transform: scaleX(0) } }
+    @keyframes g4 { 0%, 33% { transform: scaleX(0) } 41% { transform: scaleX(1) } 92% { transform: scaleX(1) } 97%, 100% { transform: scaleX(0) } }
+    @keyframes g5 { 0%, 43% { transform: scaleX(0) } 51% { transform: scaleX(1) } 92% { transform: scaleX(1) } 97%, 100% { transform: scaleX(0) } }
+    @keyframes o1 { 0%, 10% { opacity: 0 } 12% { opacity: 1 } 92% { opacity: 1 } 95%, 100% { opacity: 0 } }
+    @keyframes o2 { 0%, 20% { opacity: 0 } 22% { opacity: 1 } 92% { opacity: 1 } 95%, 100% { opacity: 0 } }
+    @keyframes o3 { 0%, 30% { opacity: 0 } 32% { opacity: 1 } 92% { opacity: 1 } 95%, 100% { opacity: 0 } }
+    @keyframes o4 { 0%, 40% { opacity: 0 } 42% { opacity: 1 } 92% { opacity: 1 } 95%, 100% { opacity: 0 } }
+    @keyframes o5 { 0%, 50% { opacity: 0 } 52% { opacity: 1 } 92% { opacity: 1 } 95%, 100% { opacity: 0 } }
+    @keyframes h1 { 0%, 3% { opacity: 0 } 5%, 12% { opacity: 1 } 14%, 100% { opacity: 0 } }
+    @keyframes h2 { 0%, 13% { opacity: 0 } 15%, 22% { opacity: 1 } 24%, 100% { opacity: 0 } }
+    @keyframes h3 { 0%, 23% { opacity: 0 } 25%, 32% { opacity: 1 } 34%, 100% { opacity: 0 } }
+    @keyframes h4 { 0%, 33% { opacity: 0 } 35%, 42% { opacity: 1 } 44%, 100% { opacity: 0 } }
+    @keyframes h5 { 0%, 43% { opacity: 0 } 45%, 52% { opacity: 1 } 54%, 100% { opacity: 0 } }
+    @keyframes tot { 0%, 55% { opacity: 0.35 } 62% { opacity: 1 } 92% { opacity: 1 } 97%, 100% { opacity: 0.35 } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important } }
+  </style>
+  <rect width="1240" height="530" rx="16" fill="#faf8f4"/>
+  <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="35" y="50" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700" fill="#16181c">LLM spend in one demo run</text>
+    <text x="35" y="80" font-size="16" fill="#4a4740">Modelled from token counts with gpt-6-luna; about 5 cents per attendee at a real conference.</text>
+
+    <!-- row highlights (shown while each bar grows) -->
+    <g fill="#ffffff" stroke="#d9c7a3" stroke-width="1.5">
+      <rect class="hl h1" x="25" y="110" width="1190" height="58" rx="10" opacity="0"/>
+      <rect class="hl h2" x="25" y="172" width="1190" height="58" rx="10" opacity="0"/>
+      <rect class="hl h3" x="25" y="234" width="1190" height="58" rx="10" opacity="0"/>
+      <rect class="hl h4" x="25" y="296" width="1190" height="58" rx="10" opacity="0"/>
+      <rect class="hl h5" x="25" y="358" width="1190" height="58" rx="10" opacity="0"/>
+    </g>
+
+    <!-- labels -->
+    <g fill="#16181c">
+      <text x="45" y="135" font-size="17" font-weight="700">Agent encounter</text>
+      <text x="45" y="157" font-size="15" fill="#4a4740">2 private briefs + 8 delegate calls</text>
+      <text x="45" y="197" font-size="17" font-weight="700">3 deep dives</text>
+      <text x="45" y="219" font-size="15" fill="#4a4740">one per right swipe</text>
+      <text x="45" y="259" font-size="17" font-weight="700">10 swipe cards</text>
+      <text x="45" y="281" font-size="15" fill="#4a4740">2 batched calls</text>
+      <text x="45" y="321" font-size="17" font-weight="700">2 memory questions</text>
+      <text x="45" y="343" font-size="15" fill="#4a4740">"What did we promise Bluefin?"</text>
+      <text x="45" y="383" font-size="17" font-weight="700">1 CV upload</text>
+      <text x="45" y="405" font-size="15" fill="#4a4740">about 5,000 tokens in, 800 out</text>
+    </g>
+
+    <!-- axis -->
+    <line x1="400" y1="112" x2="400" y2="414" stroke="#d9c7a3" stroke-width="2"/>
+
+    <!-- tracks -->
+    <g fill="#efebe4">
+      <rect x="401" y="126" width="620" height="26" rx="4"/>
+      <rect x="401" y="188" width="620" height="26" rx="4"/>
+      <rect x="401" y="250" width="620" height="26" rx="4"/>
+      <rect x="401" y="312" width="620" height="26" rx="4"/>
+      <rect x="401" y="374" width="620" height="26" rx="4"/>
+    </g>
+
+    <!-- bars: 620 px = $0.0054 (114.8 px per $0.001); values from docs/COSTS.md token counts -->
+    <rect class="bar b1" x="401" y="126" width="620" height="26" rx="4" fill="#16181c"/>
+    <rect class="bar b2" x="401" y="188" width="471" height="26" rx="4" fill="#8a5a14"/>
+    <rect class="bar b3" x="401" y="250" width="172" height="26" rx="4" fill="#8a5a14"/>
+    <rect class="bar b4" x="401" y="312" width="172" height="26" rx="4" fill="#8a5a14"/>
+    <rect class="bar b5" x="401" y="374" width="103" height="26" rx="4" fill="#8a5a14"/>
+
+    <!-- values -->
+    <g font-size="17" font-weight="700" fill="#16181c">
+      <text class="val v1" x="1037" y="145">$0.0054</text>
+      <text class="val v2" x="888" y="207">$0.0041</text>
+      <text class="val v3" x="589" y="269">$0.0015</text>
+      <text class="val v4" x="589" y="331">$0.0015</text>
+      <text class="val v5" x="520" y="393">$0.0009</text>
+    </g>
+
+    <!-- total -->
+    <g class="tot">
+      <rect x="35" y="440" width="1170" height="58" rx="12" fill="#16181c"/>
+      <text x="60" y="476" font-size="20" font-weight="700" fill="#efebe4">Total: about $0.013</text>
+      <text x="1180" y="476" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="21" fill="#efebe4">about 1.3 cents per demo run</text>
+    </g>
+  </g>
+</svg>

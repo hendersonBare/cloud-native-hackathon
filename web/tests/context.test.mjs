@@ -82,11 +82,24 @@ describe('context model', () => {
     assert.equal(now.lang, undefined);
   });
 
-  it("falls back to the phone when the gateway doesn't serve the API", async () => {
-    for (const error of [httpError(404), httpError(503), new TypeError('network')]) {
+  it("falls back to the phone when the gateway doesn't serve the route", async () => {
+    for (const status of [404, 405, 501]) {
+      const ctx = ctxFor(AVA, 'live');
+      const result = await saveContext(ctx, { text: 'Pilots' }, { upload: async () => { throw httpError(status); } });
+      assert.deepEqual(result, { ok: true, savedTo: 'phone' }, String(status));
+    }
+  });
+
+  it('does not save on the phone after a transient failure', async (t) => {
+    // mode.isUnavailable treats 502/503/504 and dropped connections as transient: the server may
+    // have written, so the phone reports the failure instead of keeping its own copy.
+    t.mock.method(console, 'warn', () => {});
+    for (const error of [httpError(502), httpError(503), httpError(504), new TypeError('network')]) {
       const ctx = ctxFor(AVA, 'live');
       const result = await saveContext(ctx, { text: 'Pilots' }, { upload: async () => { throw error; } });
-      assert.deepEqual(result, { ok: true, savedTo: 'phone' }, String(error.status || error.name));
+      assert.equal(result.ok, false, String(error.status || error.name));
+      assert.match(result.message, /could not save/);
+      assert.equal(ctx.store.context, undefined);
     }
   });
 

@@ -2,6 +2,8 @@
 // It loads the same venue.json and applies the same rules: sharing is a per-person consent flag,
 // turning it off forgets that person's GPS position, a GPS fix only counts for gps_ttl_s, and
 // someone who is not sharing reveals nothing. Changes go to the other phone as `venue:sync`.
+// The server's per-device sharing_token is not mirrored: both phones run in one browser here,
+// so there is no other device to keep out.
 //
 // Methods are arrow-function class fields so the client can be spread or passed around unbound.
 

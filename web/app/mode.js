@@ -26,21 +26,21 @@ export async function detectBackend({ fetchImpl = globalThis.fetch, timeoutMs = 
   }
 }
 
-// Statuses that mean "this feature isn't served here", as opposed to a real error to show.
-const UNAVAILABLE = new Set([404, 405, 501, 502, 503, 504]);
+// Statuses that mean "this gateway doesn't serve this feature": the route isn't mounted, so the
+// request changed nothing and can safely be replayed in the browser. Transient trouble (502, 503,
+// 504, a dropped connection, a timeout) is NOT one of them: switching for good on a blip would
+// leave this phone writing only to its own replica, and a 504 may come after the server wrote.
+const UNAVAILABLE = new Set([404, 405, 501]);
 
-/** True when an error from a live client means the feature's API isn't there at all. */
+/** True when an error from a live client means the feature's route isn't there at all. */
 export function isUnavailable(error) {
-  if (error == null) return false;
-  if (UNAVAILABLE.has(error.status)) return true;
-  // fetch rejects with a TypeError when the network fails; AbortError on a timeout.
-  return error.name === 'TypeError' || error.name === 'AbortError';
+  return error != null && UNAVAILABLE.has(error.status);
 }
 
 /**
- * Wrap a live client so the first call that shows its API is unavailable switches this
- * phone to the in-browser client (`makeLocal()`) for the rest of the session and retries
- * that call there. Other errors pass through. Synchronous methods use whichever client
+ * Wrap a live client so the first call that shows its route isn't mounted (404/405/501)
+ * switches this phone to the in-browser client (`makeLocal()`) for the rest of the session
+ * and retries that call there. Every other error, transient ones included, passes through. Synchronous methods use whichever client
  * is active when they're called.
  */
 export function withFallback(live, makeLocal, { onFallback } = {}) {

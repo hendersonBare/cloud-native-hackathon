@@ -2,8 +2,11 @@
   "rapport-briefer-acme": {
     "cluster": ["monitor_inference"],
     "indices": [
-      { "names": ["rapport-acme-internal", "rapport-acme-shareable"], "privileges": ["read", "write"] },
-      { "names": ["rapport-conference"], "privileges": ["read"] }
+      {
+        "names": ["rapport-acme-internal", "rapport-acme-internal-v*", "rapport-acme-shareable", "rapport-acme-shareable-v*"],
+        "privileges": ["read", "write"]
+      },
+      { "names": ["rapport-conference", "rapport-conference-v*"], "privileges": ["read"] }
     ]
   }
 }

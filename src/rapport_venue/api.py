@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 
 from .models import Directions, LocationUpdate, Position, SharingBody, SharingState, VenueView
 from .service import VenueService
@@ -25,14 +25,17 @@ def get_service() -> VenueService:
 
 Service = Annotated[VenueService, Depends(get_service)]
 PersonaId = Annotated[str, Query(description="Who is asking", min_length=1, max_length=64)]
+# The sharing device's token, in a header (never the URL, which access logs keep). Optional: without it, my own
+# position is my check-in spot, never my GPS fix.
+VenueToken = Annotated[str | None, Header(alias="X-Venue-Token", max_length=128)]
 
 _UNKNOWN_PERSONA = {404: {"description": "unknown_persona"}}
 
 
 @router.get("", response_model=VenueView, responses=_UNKNOWN_PERSONA)
-async def get_venue(service: Service, persona_id: PersonaId) -> VenueView:
-    """The floor plan, my sharing flag and where I am (fresh GPS, else my check-in spot)."""
-    return service.view(persona_id)
+async def get_venue(service: Service, persona_id: PersonaId, x_venue_token: VenueToken = None) -> VenueView:
+    """The floor plan, my sharing flag and where I am (fresh GPS for my sharing device, else my check-in spot)."""
+    return service.view(persona_id, x_venue_token)
 
 
 @router.put(
@@ -40,6 +43,7 @@ async def get_venue(service: Service, persona_id: PersonaId) -> VenueView:
     response_model=Position,
     responses={
         **_UNKNOWN_PERSONA,
+        403: {"description": "not_this_device: missing or wrong sharing_token"},
         409: {"description": "sharing_off"},
         422: {"description": "too_inaccurate, outside_venue or a validation error"},
     },
@@ -49,9 +53,14 @@ async def put_location(body: LocationUpdate, service: Service) -> Position:
     return service.update_location(body)
 
 
-@router.put("/sharing", response_model=SharingState, responses=_UNKNOWN_PERSONA)
+@router.put(
+    "/sharing",
+    response_model=SharingState,
+    responses={**_UNKNOWN_PERSONA, 403: {"description": "shared_from_another_device"}},
+)
 async def put_sharing(body: SharingBody, service: Service) -> SharingState:
-    """Consent to be found. Turning it off deletes my stored GPS fix at once."""
+    """Consent to be found. Turning it on returns a sharing_token for this device only; turning it off needs no
+    token and deletes my stored GPS fix at once."""
     return service.set_sharing(body)
 
 
@@ -65,7 +74,8 @@ async def get_directions(
     service: Service,
     persona_id: PersonaId,
     to: Annotated[str, Query(description="Whom to find", min_length=1, max_length=64)],
+    x_venue_token: VenueToken = None,
 ) -> Directions:
     """The walking route from me to ``to``. A peer who is not sharing gets ``peer_status: not_sharing`` and nothing
     else."""
-    return service.directions(persona_id, to)
+    return service.directions(persona_id, to, x_venue_token)

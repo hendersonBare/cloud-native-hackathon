@@ -15,10 +15,10 @@ All under `/api/venue`. Errors are `{"detail": "<code>"}`; validation errors are
 
 | Method | Path | Body / query | Returns | Errors |
 |---|---|---|---|---|
-| GET | `` | `persona_id` | `VenueView`: the public floor plan, my `sharing` flag, `me` (my `Position`) | 404 `unknown_persona` |
-| PUT | `/location` | `LocationUpdate`: `persona_id`, `lat` (-90..90), `lng` (-180..180), `accuracy_m?` (0..5000) | `Position` (`source: "gps"`) | 404 `unknown_persona`, 409 `sharing_off`, 422 `too_inaccurate`, 422 `outside_venue` |
-| PUT | `/sharing` | `SharingBody`: `persona_id`, `enabled` (a JSON boolean) | `SharingState` | 404 `unknown_persona` |
-| GET | `/directions` | `persona_id`, `to` | `Directions` (the JSON key is `from`) | 404 `unknown_persona`, 422 `same_person` |
+| GET | `` | `persona_id`; header `X-Venue-Token?` | `VenueView`: the public floor plan, my `sharing` flag, `me` (my `Position`: GPS only with my device's token, else my check-in spot) | 404 `unknown_persona` |
+| PUT | `/location` | `LocationUpdate`: `persona_id`, `lat` (-90..90), `lng` (-180..180), `accuracy_m?` (0..5000), `sharing_token` | `Position` (`source: "gps"`) | 404 `unknown_persona`, 403 `not_this_device`, 409 `sharing_off`, 422 `too_inaccurate`, 422 `outside_venue` |
+| PUT | `/sharing` | `SharingBody`: `persona_id`, `enabled` (a JSON boolean), `sharing_token?` | `SharingState` (with this device's `sharing_token` when turned on) | 404 `unknown_persona`, 403 `shared_from_another_device` |
+| GET | `/directions` | `persona_id`, `to`; header `X-Venue-Token?` | `Directions` (the JSON key is `from`; my own GPS start only with my device's token) | 404 `unknown_persona`, 422 `same_person` |
 
 The standalone app also serves `GET /healthz` -> `{"ok": true, "version": ...}`.
 
@@ -57,6 +57,21 @@ to promote them into `rapport_common.models`.
   kept, in memory, while the person shares and for at most `gps_ttl_s`. Latitude and longitude never go on a span or
   a log line, and no response contains them.
 - Consent: nobody is placed by GPS unless their `sharing` flag is on, and turning it off deletes their fix.
+- Per-device consent: turning sharing on returns a random `sharing_token` to that device only; the service keeps
+  only its SHA-256. GPS fixes need the token (403 `not_this_device`), and so does turning sharing on again while a
+  device holds it (403 `shared_from_another_device`), so another device can't quietly feed fixes into someone's live
+  sharing. Turning sharing off never needs the token: it only reduces exposure, and it lets a person switch off
+  sharing that someone else switched on. Demo reset forgets every token. The token is never logged or put on a span.
+- My own GPS-placed position (`GET /api/venue` `me`, and `from` in directions) is returned only with my device's
+  token in the `X-Venue-Token` header (a header, so it never lands in an access log); anyone else gets my check-in
+  spot there.
+- **But directions TO a person who shares place them by GPS for any caller.** Sharing means "anyone may find me";
+  without logins there is no way to limit "anyone" to the people you met.
+- **What this does not stop** (the gateway has no logins, so the token is not identity): anyone can turn a person's
+  sharing off and on again and get a token of their own; the real phone's next fix is then refused (403) and it
+  shows "shared from another device" instead of being overridden silently. Anyone can also switch sharing on for a
+  person who isn't sharing; that reveals their check-in spot, not GPS. Real protection needs logins (or signed
+  persona sessions) across the whole gateway.
 - `peer_status: "not_sharing"` reveals nothing about the peer: `to` is `null`, `route` and `legs` are empty and
   `distance_m`, `bearing_deg` and `compass` are `null`. The answer is the same whether or not they ever shared.
 - `GET /api/venue` returns the public floor plan only: never other people's check-in spots, sharing flags or the GPS
