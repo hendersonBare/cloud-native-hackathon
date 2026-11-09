@@ -46,3 +46,21 @@ class ErrorBody(_Local):
     """Shape of every error response: FastAPI's {"detail": ...}."""
 
     detail: str
+
+
+class RumEndpoint(_Local):
+    """Where the browser sends its telemetry. Field names follow the Dash0 Web SDK's `endpoint` option."""
+
+    url: str
+    authToken: str  # a public, ingest-only website token (never the backend OTLP token)
+    dataset: str | None = None
+
+
+class RumConfig(_Local):
+    """Dash0 website monitoring settings for web/app/rum.js. `enabled: false` alone when the gateway has none."""
+
+    enabled: bool
+    serviceName: str | None = None
+    serviceVersion: str | None = None
+    environment: str | None = None
+    endpoint: RumEndpoint | None = None

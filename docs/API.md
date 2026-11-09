@@ -97,6 +97,15 @@ Returns `202 {"accepted": true}` at once; the results arrive on the stream.
 - `right`: `deep_dive_started`, then `deep_dive_ready` (summary, plan, decision), then `agent_decision`. The decision is `agent_handshake` only when the target's company runs agents, `autonomy` is true and the viewer has used fewer than 5 handshakes this hour; the gateway then also creates a connect request with `initiated_by: "agent"` and sends `connect_request` to the target (after `agent_decision`, with the same `request_id`). Otherwise it is `human_intro` or `skip`, and `deep_dive_ready.data.decision` shows the same action and the guardrail lines.
 - If the deep dive fails: an `error` event on the viewer's phone, then `agent_decision` with `human_intro`.
 
+### `GET /api/rum-config`
+Dash0 website monitoring settings for the page (`web/app/rum.js`), from the optional `dash0-rum` Secret. `Cache-Control: no-store`.
+```json
+{"enabled": false}
+{"enabled": true, "serviceName": "rapport-web", "serviceVersion": "89886ea", "environment": "hackathon",
+ "endpoint": {"url": "https://ingress.<region>.aws.dash0.com", "authToken": "<ingest-only website token>"}}
+```
+The token reaches every browser, so it is a separate ingest-only token, never the backend's OTLP token.
+
 ### `POST /api/demo/reset`
 Clears connect requests, encounters, the replay buffer, rate limits and (mock) cached profiles. Returns `{"ok": true}`. Needs `Authorization: Bearer <RAPPORT_ADMIN_TOKEN>` when that variable is set. Open streams stay connected.
 
@@ -186,6 +195,7 @@ Open the page at `http://localhost:8080/` (the gateway serves `web/`). For a sep
 | `RAPPORT_CORS_ORIGINS` | none | comma-separated origins allowed with credentials |
 | `RAPPORT_ADMIN_TOKEN` | none | when set, `/api/demo/reset` needs `Authorization: Bearer <token>` |
 | `RAPPORT_VERSION` | `dev` | reported by `/healthz` (the image sets it to the commit) |
+| `DASH0_RUM_ENDPOINT`, `DASH0_RUM_AUTH_TOKEN`, `DASH0_RUM_DATASET` | none | website monitoring; `/api/rum-config` stays `{"enabled": false}` until the endpoint (https) and token are both set |
 | `RAPPORT_LLM_CALLS_PER_MINUTE` | 30 | per-client limit on LLM-backed calls |
 | `RAPPORT_CHECK_DELEGATE_IP` | on | `/internal/events` also checks the caller's IP is a delegate pod of that encounter |
 | `RAPPORT_LAUNCHER` | `kubernetes` | `local` starts delegate subprocesses instead of creating an Encounter |

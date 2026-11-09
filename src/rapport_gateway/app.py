@@ -18,7 +18,7 @@ from rapport_speakers.api import make_public_router as make_speakers_router
 
 from .deps import Deps, build_deps
 from .errors import GatewayError
-from .routers import connect, demo, discover, health, memory, personas, profile, stream
+from .routers import connect, demo, discover, health, memory, personas, profile, rum, stream
 from .settings import Settings
 
 log = logging.getLogger("rapport.gateway.app")
@@ -38,6 +38,7 @@ TAGS = [
     {"name": "demo", "description": "Reset in-memory demo state."},
     {"name": "calendar", "description": "Conference-week calendar and meeting scheduling (src/rapport_calendar)."},
     {"name": "speakers", "description": "Who said what in conference talks, read-only (src/rapport_speakers)."},
+    {"name": "telemetry", "description": "Dash0 website monitoring settings for the web page."},
 ]
 
 
@@ -89,7 +90,7 @@ def create_app(settings: Settings | None = None, deps: Deps | None = None) -> Fa
             allow_headers=["Content-Type", "Authorization"],
         )
 
-    for module in (health, personas, stream, profile, connect, memory, discover, demo):
+    for module in (health, personas, stream, profile, connect, memory, discover, demo, rum):
         app.include_router(module.router)
     app.include_router(calendar_router)
     if deps.calendar is not None:  # this app's own instance, so tests and reset never share module state
