@@ -123,9 +123,40 @@ def test_falls_back_to_keyword_only_when_semantic_is_also_rejected():
 
 def test_permission_errors_are_not_swallowed_by_the_fallback():
     es = FakeES(fail_when=lambda kw: forbidden())
+    c = client(es)
     with pytest.raises(AuthorizationException):
-        client(es).search("ebpf", indices=[CONFERENCE_INDEX])
-    assert len(es.searches) == 1
+        c.search("ebpf", indices=[CONFERENCE_INDEX])
+    assert len(es.searches) == 2  # rrf, then bool; both denied, so the error surfaces
+    assert c.mode == "rrf"  # a real permission problem does not leave the client downgraded
+    with pytest.raises(AuthorizationException):
+        client(FakeES(fail_when=lambda kw: forbidden())).search("", indices=[CONFERENCE_INDEX])
+
+
+def test_retriever_denied_on_the_concrete_index_falls_back_to_bool_and_is_remembered():
+    # Live Elastic Serverless: retriever sub-searches are authorized against the backing index, not the alias.
+    es = FakeES(hits=[doc(a_record())], fail_when=lambda kw: forbidden() if "retriever" in kw else None)
+    c = client(es)
+    assert c.search("ebpf", indices=[ACME_SHAREABLE]) == [a_record()]
+    assert c.mode == "bool"
+    assert len(es.searches) == 2 and "query" in es.searches[1] and "retriever" not in es.searches[1]
+    c.search("ebpf", indices=[ACME_SHAREABLE])
+    assert len(es.searches) == 3  # remembered: no retriever retry
+
+
+def test_rerank_denied_degrades_instead_of_failing():
+    es = FakeES(hits=[doc(a_record())], fail_when=lambda kw: forbidden() if "retriever" in kw else None)
+    c = client(es, rerank_inference_id=".rerank-test")
+    assert c.search("ebpf", indices=[ACME_SHAREABLE]) == [a_record()]
+    assert "text_similarity_reranker" in str(es.searches[0])
+    assert "retriever" not in es.searches[-1] and c.mode == "bool"
+
+
+def test_bool_denied_after_rrf_denied_restores_rrf_mode_and_raises():
+    es = FakeES(fail_when=lambda kw: forbidden())
+    c = client(es, rerank_inference_id=".rerank-test")
+    with pytest.raises(AuthorizationException):
+        c.search("ebpf", indices=[ACME_SHAREABLE])
+    assert c.mode == "rrf"
 
 
 def test_results_are_validated_and_text_semantic_is_stripped():

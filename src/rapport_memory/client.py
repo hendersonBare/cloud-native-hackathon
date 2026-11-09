@@ -31,6 +31,8 @@ MODE_BOOL = "bool"  # one bool query with the keyword and semantic clauses under
 MODE_KEYWORD = "keyword"  # keyword only (the index has no usable semantic_text field)
 _MODES = (MODE_RRF, MODE_BOOL, MODE_KEYWORD)
 
+_DENIED = (401, 403)  # missing credentials or privileges
+
 _RECORD_FIELDS = frozenset(MemoryRecord.model_fields)
 
 
@@ -187,12 +189,17 @@ class MemoryClient:
             try:
                 return self._run(indices, self.build_body(query, filters=filters, size=size, rerank=True))
             except ApiError as exc:
-                if exc.status_code in (401, 403):
-                    raise  # a permission problem is not a rerank problem
-                if exc.status_code in (400, 404):  # the request or the inference endpoint was rejected: stop trying
+                if exc.status_code in _DENIED:
+                    # Retriever sub-searches are authorized against the concrete backing index, which a key scoped to
+                    # the alias names may not read. Degrade below (plain RRF, then bool); a real denial surfaces there.
+                    log.warning("rerank denied (status=%s); continuing without rerank", exc.status_code)
+                elif exc.status_code in (400, 404):  # the request or the inference endpoint was rejected: stop trying
                     self._rerank_id = None
-                # anything else (429, 5xx) may be transient: skip rerank for this call only
-                log.warning("rerank failed (status=%s); continuing without rerank", exc.status_code)
+                    log.warning("rerank failed (status=%s); continuing without rerank", exc.status_code)
+                else:
+                    # anything else (429, 5xx) may be transient: skip rerank for this call only
+                    log.warning("rerank failed (status=%s); continuing without rerank", exc.status_code)
+        downgraded_from_rrf = False
         while True:
             try:
                 return self._run(indices, self.build_body(query, filters=filters, size=size, rerank=False))
@@ -203,6 +210,19 @@ class MemoryClient:
                 log.warning("query mode %s rejected (status=%s); using %s", self._mode, exc.status_code,
                             _MODES[next_mode])
                 self._mode = _MODES[next_mode]
+            except ApiError as exc:
+                if exc.status_code not in _DENIED:
+                    raise
+                if self._mode == MODE_RRF and query.strip():
+                    # Retrievers need read on the concrete index behind an alias, which a key scoped to the alias
+                    # names lacks. A plain query needs only the alias: remember bool and retry.
+                    log.warning("query mode rrf denied (status=%s); using bool", exc.status_code)
+                    self._mode = MODE_BOOL
+                    downgraded_from_rrf = True
+                    continue
+                if downgraded_from_rrf:  # bool is denied too: a real permission problem, not a mode problem
+                    self._mode = MODE_RRF
+                raise
 
     # ------------------------------------------------------------------ get
     def get(self, memory_id: str, *, indices: list[str]) -> MemoryRecord | None:
