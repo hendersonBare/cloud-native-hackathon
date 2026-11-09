@@ -80,7 +80,9 @@ export function reduce(previous, event) {
 
   switch (event.type) {
     case 'connect_request': {
-      if (state.status === 'running') return previous;
+      // A repeat for the pair already meeting is ignored; a new pair replaces the run.
+      if (state.status === 'running' && state.initiator?.persona === text(data.from_persona_id)
+        && state.responder?.persona === text(data.to_persona_id)) return previous;
       const next = createState();
       next.status = 'requested';
       next.initiator = party(data.from_persona_id);

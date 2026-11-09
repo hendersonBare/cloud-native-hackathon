@@ -31,7 +31,7 @@ export function startLive({ openStream, onEvent }) {
  *   ui:connect         -> a request was sent
  *   encounter:start    -> replay the fixture from `startedAt`
  *   encounter:declined -> request declined
- *   encounter:done     -> stopped (only when the presenter pressed Stop)
+ *   encounter:stopped  -> the presenter pressed Stop on a phone (broadcast by exchange.js)
  * Returns { stop(), cancel() }.
  */
 export function startMock({
@@ -78,12 +78,12 @@ export function startMock({
     } else if (type === 'encounter:start' && data) {
       // Both phones may announce; the responder's broadcast is the only one that crosses the channel.
       const key = data.encounter_id || `${data.initiator}>${data.responder}@${data.startedAt}`;
-      if (key !== started) replay(Number(data.startedAt), key);
+      if (key !== started) replay(Number(data.startedAt), key).catch(() => {});
     } else if (type === 'encounter:declined') {
       cancel();
       started = null;
       emit({ type: 'request_declined', data: {} });
-    } else if (type === 'encounter:done' && data?.stopped) {
+    } else if (type === 'encounter:stopped' || (type === 'encounter:done' && data?.stopped)) {
       cancel();
       emit({ type: 'encounter_stopped', data: {} });
     }

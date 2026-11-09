@@ -141,6 +141,18 @@ test('connect_request marks the request and agent decisions are logged', () => {
   assert.equal(state.status, 'declined');
 });
 
+test('a connect_request for a new pair replaces a running encounter; a repeat for the same pair does not', () => {
+  const started = reduce(createState(), { type: 'encounter_started', encounter_id: 'enc-1', ts: 't', data: {
+    initiator_persona_id: 'acme.ava', responder_persona_id: 'bluefin.bo',
+  } });
+  const request = (from, to) => ({ type: 'connect_request', ts: 't', data: { from_persona_id: from, to_persona_id: to } });
+  assert.equal(reduce(started, request('acme.ava', 'bluefin.bo')), started);
+  const replaced = reduce(started, request('acme.sam', 'bluefin.kai'));
+  assert.equal(replaced.status, 'requested');
+  assert.equal(replaced.encounterId, null);
+  assert.equal(replaced.lanes.length, 0);
+});
+
 test('long server strings are clipped', () => {
   const state = reduce(createState(), { type: 'exchange_message', ts: 't', data: {
     round: 1, type: 'hello', from_org: 'acme', to_org: 'bluefin', display: 'x'.repeat(5000),

@@ -95,6 +95,17 @@ test('declined and stopped become presenter-side events and cancel the replay', 
   assert.deepEqual(t.events.map((e) => e.type), ['request_declined', 'encounter_stopped']);
 });
 
+test('the phone Stop button broadcasts encounter:stopped, which cancels the replay', async () => {
+  const t = harness();
+  t.send('encounter:start', { encounter_id: 'enc-a', startedAt: t.now() });
+  await t.flush();
+  t.advance(2000);
+  const before = t.events.length;
+  t.send('encounter:stopped', { encounter_id: 'enc-a' });
+  t.advance(20_000);
+  assert.deepEqual(t.events.slice(before).map((e) => e.type), ['encounter_stopped']);
+});
+
 test('stop() removes the listener and silences further events', async () => {
   const t = harness();
   t.driver.stop();
