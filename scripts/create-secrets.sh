@@ -30,6 +30,16 @@ for ns in team-rapport org-acme org-bluefin; do
   apply_secret "$ns" openai "${llm_keys[@]}"
   apply_secret "$ns" dash0-otlp "OTEL_EXPORTER_OTLP_ENDPOINT=${DASH0_OTLP_ENDPOINT}" "OTEL_EXPORTER_OTLP_HEADERS=${otlp_headers}"
 done
+# Optional website monitoring for the gateway's page. Its token reaches every browser, so it must be its own
+# ingest-only token: refuse the backend token here.
+if [[ -n "${DASH0_RUM_AUTH_TOKEN:-}" ]]; then
+  if [[ "${DASH0_RUM_AUTH_TOKEN}" == "${DASH0_AUTH_TOKEN}" ]]; then
+    echo "DASH0_RUM_AUTH_TOKEN must be a separate ingest-only token, not DASH0_AUTH_TOKEN"; exit 1
+  fi
+  rum=("DASH0_RUM_ENDPOINT=${DASH0_RUM_ENDPOINT:-${DASH0_OTLP_ENDPOINT}}" "DASH0_RUM_AUTH_TOKEN=${DASH0_RUM_AUTH_TOKEN}")
+  if [[ -n "${DASH0_RUM_DATASET:-}" ]]; then rum+=("DASH0_RUM_DATASET=${DASH0_RUM_DATASET}"); fi
+  apply_secret team-rapport dash0-rum "${rum[@]}"
+fi
 apply_secret org-acme es-briefer "ES_URL=${ES_URL}" "ES_API_KEY=${ES_BRIEFER_KEY_ACME}"
 apply_secret org-acme es-delegate "ES_URL=${ES_URL}" "ES_API_KEY=${ES_DELEGATE_KEY_ACME}"
 apply_secret org-bluefin es-briefer "ES_URL=${ES_URL}" "ES_API_KEY=${ES_BRIEFER_KEY_BLUEFIN}"

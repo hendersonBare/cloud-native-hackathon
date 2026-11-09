@@ -9,6 +9,7 @@
 
 import { request } from './api.js';
 import { MockCalendar } from './calendar-mock.js';
+import { withFallback } from './mode.js';
 
 const BASE = '/api/calendar';
 
@@ -54,9 +55,10 @@ export function announcing(client, bus, personaId) {
 /** The calendar client for this phone (one per phone, kept in ctx.store). */
 export function calendarClient(ctx) {
   if (!ctx.store.calendarClient) {
-    const base = ctx.mode === 'live'
-      ? liveCalendar()
-      : new MockCalendar({ bus: ctx.bus, self: ctx.me.id });
+    // With a gateway the calendar API is used; if the gateway doesn't serve it, this phone
+    // switches to the in-browser calendar (which syncs with the other phone over the bus).
+    const local = () => new MockCalendar({ bus: ctx.bus, self: ctx.me.id });
+    const base = ctx.mode === 'live' ? withFallback(liveCalendar(), local) : local();
     ctx.store.calendarClient = announcing(base, ctx.bus, ctx.me.id);
   }
   return ctx.store.calendarClient;

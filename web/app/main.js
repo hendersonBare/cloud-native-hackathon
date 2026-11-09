@@ -1,5 +1,5 @@
 // Phone app entry: per-phone store and hash router.
-// URL: phone.html?persona=acme.ava&mock=1#/home
+// URL: phone.html?persona=acme.ava#/home (the stage adds &mode=live|mock so both phones agree)
 
 import { person, peerOf, VIEWS } from './data.js';
 import * as bus from './bus.js';
@@ -7,10 +7,13 @@ import { initFlow } from './flow.js';
 import { parseHash, hashFor } from './route.js';
 import { calendarClient } from './calendar-api.js';
 import { venueClient } from './venue-api.js';
+import { detectBackend } from './mode.js';
 
 const params = new URLSearchParams(location.search);
 const meId = person(params.get('persona')) ? params.get('persona') : 'acme.ava';
-const mode = params.get('mock') === '1' ? 'mock' : 'live';
+// One mode: the gateway when it answers, else everything in the browser (see mode.js).
+const passed = params.get('mode');
+const mode = passed === 'live' || passed === 'mock' ? passed : await detectBackend();
 bus.setSelf(meId);
 
 // Per-phone state that survives navigation (screens keep their slice under their name).

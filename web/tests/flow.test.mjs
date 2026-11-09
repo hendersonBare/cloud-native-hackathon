@@ -97,13 +97,13 @@ function makeBus() {
 }
 
 // Bo's phone, receiving from Ava (the demo flow).
-function setup() {
+function setup(mode = 'mock') {
   const bus = makeBus();
   const store = { config: { malicious: false } };
   const overlay = new FakeElement('div');
   const routes = [];
   const cleanup = initFlow({
-    me: person('bluefin.bo'), peer: person('acme.ava'), store, mode: 'mock',
+    me: person('bluefin.bo'), peer: person('acme.ava'), store, mode,
     go: (name, params) => routes.push([name, params]), bus, overlay,
   });
   const notice = () => overlay.find('notice');
@@ -217,5 +217,61 @@ describe('incoming connect requests', () => {
     const title = s.notice().find('notice-title');
     assert.equal(title.children.length, 0);
     assert.equal(title.childNodes[0].nodeType, 3);
+  });
+});
+
+// Live mode: a fake EventSource stands in for the gateway's persona stream, and fetch answers 200.
+class FakeEventSource {
+  static last = null;
+  constructor(url) { this.url = url; this.listeners = {}; FakeEventSource.last = this; }
+  addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
+  removeEventListener(type, fn) { this.listeners[type] = (this.listeners[type] || []).filter((f) => f !== fn); }
+  close() { this.closed = true; }
+  send(event) { for (const fn of this.listeners[event.type] || []) fn({ data: JSON.stringify(event) }); }
+}
+
+describe('live mode', () => {
+  const LIVE_FAKES = {
+    EventSource: FakeEventSource,
+    fetch: async () => ({ ok: true, status: 200, text: async () => '{}' }),
+  };
+  const before_ = {};
+  before(async () => {
+    installFakes();
+    for (const [k, v] of Object.entries(LIVE_FAKES)) {
+      before_[k] = Object.getOwnPropertyDescriptor(globalThis, k);
+      Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
+    }
+    ({ initFlow } = await import('../app/flow.js'));
+    ({ person } = await import('../app/data.js'));
+  });
+  after(() => {
+    for (const [k, desc] of Object.entries(before_)) {
+      if (desc) Object.defineProperty(globalThis, k, desc);
+      else delete globalThis[k];
+    }
+    restoreGlobals();
+  });
+
+  // The demo run twice without Reset: Bo accepts Ava's request, the gateway confirms the encounter,
+  // then the same again. Each accept must take Bo to the exchange exactly once.
+  it('a second accept from the same person opens the exchange again', (t) => {
+    const s = setup('live');
+    t.after(s.cleanup);
+    const stream = FakeEventSource.last;
+    const run = (requestId, encounterId, ts) => {
+      connect(s.bus, { request_id: requestId, initiated_by: 'human' });
+      s.bus.emitLocal('ui:respond', { request_id: requestId, accept: true });
+      stream.send({
+        type: 'encounter_started', ts, encounter_id: encounterId, persona_id: 'bluefin.bo',
+        data: { initiator_persona_id: 'acme.ava', responder_persona_id: 'bluefin.bo' },
+      });
+    };
+    run('req-1', 'enc-1', '2026-11-09T22:28:37Z');
+    assert.equal(s.routes.filter(([name]) => name === 'exchange').length, 1, 'first run');
+    assert.equal(s.store.encounter.encounter_id, 'enc-1');
+    run('req-2', 'enc-2', '2026-11-09T22:40:00Z');
+    assert.equal(s.routes.filter(([name]) => name === 'exchange').length, 2, 'second run');
+    assert.equal(s.store.encounter.encounter_id, 'enc-2');
   });
 });

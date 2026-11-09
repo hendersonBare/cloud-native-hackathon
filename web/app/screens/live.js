@@ -1,7 +1,8 @@
 // Live capture: diarized hallway conversation and saved conference session.
 import { h, icon, svg, topbar, bottomNav } from '../ui.js';
+import { hashFor } from '../route.js';
 
-const CONTENT = {
+export const CONTENT = {
   'acme.ava': {
     lines: [
       ['s2', 'We’re migrating our hospital platform. Tracing has to work without code changes.'],
@@ -18,15 +19,17 @@ const CONTENT = {
       ['bluefin.kai', '', 'Review telemetry data for HIPAA, and measure observability cost before expanding a pilot.'],
     ],
   },
+  // The same conversation as Ava's, seen from Bo's side, so two presenters can read one script
+  // and both phones show the same words.
   'bluefin.bo': {
     lines: [
-      ['s2', 'Our zero-code eBPF tracing works without application changes.'],
-      ['you', 'That fits our hospital migration. Can we keep our OpenTelemetry pipeline?'],
-      ['s2', 'Yes. A hospital rollout using this approach cut incident time by 40%.'],
-      ['you', 'Observability cost is the main concern. We’re evaluating another vendor too.'],
-      ['s2', 'Let’s measure the tracing volume and overhead in a small pilot.'],
-      ['you', 'Kai needs to sign off on HIPAA. We’re waiting for Sam’s security questionnaire.'],
-      ['s2', 'I’ll follow up with Sam so Kai has it before the pilot review.'],
+      ['you', 'We’re migrating our hospital platform. Tracing has to work without code changes.'],
+      ['s2', 'Acme uses zero-code eBPF tracing and exports to OpenTelemetry.'],
+      ['you', 'Observability cost is our biggest concern. We’re comparing another vendor too.'],
+      ['s2', 'A hospital rollout cut incident time by 40%. We can walk through the approach.'],
+      ['you', 'Kai, our Security Architect, needs to review HIPAA before a pilot.'],
+      ['s2', 'Sam promised Kai the security questionnaire. I’ll follow up with him.'],
+      ['you', 'Great. Let’s compare the tracing costs and plan a small pilot.'],
     ],
     session: [
       ['kestrel.mia', 'Moderator', 'How can teams trace a migration without changing every service?'],
@@ -175,9 +178,13 @@ export function render(ctx) {
       h('p', null, conversation ? 'Expo hall · started 2:41 PM'
         : 'Talk · Room B · Mon 3:30 PM · started from your calendar'));
     if (conversation) {
+      // Brief on whoever the speaker is now (the peer, or the person picked on #/tag).
+      // A typed name with no persona has nobody to brief on, so there is no link.
+      const subject = store.speakers.s2.personaId ? ctx.person(store.speakers.s2.personaId) : null;
       main.replaceChildren(h('div', { class: 'capture-content' }, heading, log,
-        h('a', { class: 'capture-brief', href: '#/person' }, icon('sparkle', { size: 18 }),
-          h('span', null, `Brief me on ${peer.name}`), icon('chevron', { size: 18 }))));
+        subject ? h('a', { class: 'capture-brief', href: hashFor('person', { id: subject.id }) },
+          icon('sparkle', { size: 18 }),
+          h('span', null, `Brief me on ${subject.name}`), icon('chevron', { size: 18 })) : null));
     } else {
       const sessionLog = h('section', { class: 'transcript session-transcript', 'aria-label': 'Session transcript', lang: 'en' },
         content.session.map(([id, role, text], i) => {

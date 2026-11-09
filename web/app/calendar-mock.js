@@ -1,5 +1,5 @@
 // In-browser replica of the calendar backend (src/rapport_calendar, see its README for the payloads).
-// Used in mock mode (phone.html?mock=1): it loads the same seed as the backend, applies the same rules,
+// Used when no gateway serves the calendar API (see mode.js): it loads the same seed as the backend, applies the same rules,
 // returns the same response shapes as liveCalendar() in calendar-api.js, and rejects with an Error whose
 // `.status` is the HTTP status the API would answer (404, 409 or 422), so screens never branch on the mode.
 //

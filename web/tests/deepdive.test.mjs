@@ -1,6 +1,7 @@
-// Live Discover: a right swipe calls POST /api/swipe (not /api/connect), and the deep dive,
-// "Researching…" state and agent decision render on the viewer's phone. initFlow wires live-events.js.
-import { after, before, describe, test } from 'node:test';
+// Discover: with a gateway a right swipe calls POST /api/swipe (not /api/connect); without one the
+// same events are replayed from the demo script. The and the deep dive,
+// deep dive, "Researching…" state and agent decision render on the viewer's phone. initFlow wires live-events.js.
+import { after, before, describe, mock, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -30,7 +31,7 @@ function makeBus() {
 
 const text = (node) => node.textContent.replace(/\s+/g, ' ').trim();
 
-describe('live deep dive', () => {
+describe('deep dive', () => {
   let restore;
   let person;
   let api;
@@ -53,7 +54,7 @@ describe('live deep dive', () => {
     restore();
   });
 
-  function phone(meId = 'acme.ava') {
+  function phone(meId = 'acme.ava', mode = 'live') {
     const bus = makeBus();
     const store = { config: { malicious: false } };
     const hashes = [];
@@ -64,7 +65,7 @@ describe('live deep dive', () => {
     api.openStream = () => () => {};
     const me = person(meId);
     const flow = initFlow({
-      me, peer: person('bluefin.bo'), store, mode: 'live', go: (name, params) => hashes.push([name, params]),
+      me, peer: person('bluefin.bo'), store, mode, go: (name, params) => hashes.push([name, params]),
       bus, overlay: new FakeElement('div'),
     });
     const ctx = (route = { name: 'home', params: {} }, mode = 'live') => ({
@@ -97,19 +98,84 @@ describe('live deep dive', () => {
     p.flow();
   });
 
-  test('Home: a live swipe emits ui:swipe (not ui:connect); a mock swipe still emits ui:connect', async () => {
-    for (const [mode, expected, absent] of [['live', 'ui:swipe', 'ui:connect'], ['mock', 'ui:connect', 'ui:swipe']]) {
+  test('Home: a swipe always emits ui:swipe and never connects directly; flow.js decides what follows', async () => {
+    for (const mode of ['live', 'mock']) {
       const p = phone();
-      const ctx = p.ctx(undefined, mode);
-      ctx.view = (await import('../app/data.js')).VIEWS['acme.ava'];
-      const root = home.render(ctx);
-      const [card] = root.byClass('opp-card');
-      card.listeners.keydown[0]({ target: card, key: 'ArrowRight', preventDefault() {} });
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      const types = p.bus.emitted.map(([type]) => type);
-      assert.ok(types.includes(expected), `${mode} emits ${expected}`);
-      assert.ok(!types.includes(absent), `${mode} does not emit ${absent}`);
-      for (const fn of p.cleanups) fn();
+      try {
+        const ctx = p.ctx(undefined, mode);
+        ctx.view = (await import('../app/data.js')).VIEWS['acme.ava'];
+        const root = home.render(ctx);
+        const [card] = root.byClass('opp-card');
+        card.listeners.keydown[0]({ target: card, key: 'ArrowRight', preventDefault() {} });
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const types = p.bus.emitted.map(([type]) => type);
+        assert.ok(types.includes('ui:swipe'), `${mode}: Home emits ui:swipe`);
+        assert.ok(!types.includes('ui:connect'), `${mode}: Home never emits ui:connect itself`);
+      } finally {
+        for (const fn of p.cleanups) fn();
+        p.flow();
+      }
+    }
+  });
+
+  // No gateway answering: the same screens are fed from the demo script (demo-script.js).
+  test('without a gateway, a right swipe on Bo replays the deep dive, the decision and the agent request', () => {
+    mock.timers.enable({ apis: ['setTimeout'] });
+    const p = phone('acme.ava', 'mock');
+    try {
+      p.bus.emitLocal('ui:swipe', { from: 'acme.ava', to: 'bluefin.bo', direction: 'right' });
+      assert.deepEqual(p.hashes, [], 'nothing happens before the script starts');
+      mock.timers.tick(1000);
+      assert.deepEqual(p.hashes, [['deepdive', { id: 'bluefin.bo' }]]);
+      mock.timers.tick(2600);
+      assert.ok(p.store.gateway.deepDives['bluefin.bo'], 'the deep dive is ready');
+      assert.equal(p.store.gateway.decisions['bluefin.bo'].action, 'agent_handshake');
+      mock.timers.tick(200);
+      const connects = p.bus.emitted.filter(([type]) => type === 'ui:connect').map(([, data]) => data);
+      assert.deepEqual(connects, [{ from: 'acme.ava', to: 'bluefin.bo', initiated_by: 'agent' }]);
+      assert.equal(p.store.encounter.status, 'waiting');
+      assert.deepEqual(p.calls.swipe, [], 'no gateway call');
+      assert.deepEqual(p.calls.connect, [], 'no gateway call');
+    } finally {
+      p.flow();
+      mock.timers.reset();
+    }
+  });
+
+  test('without a gateway, a right swipe on someone the script does not cover connects directly', () => {
+    const p = phone('acme.ava', 'mock');
+    try {
+      p.bus.emitLocal('ui:swipe', { from: 'acme.ava', to: 'harborline.lena', direction: 'right' });
+      const connects = p.bus.emitted.filter(([type]) => type === 'ui:connect').map(([, data]) => data);
+      assert.deepEqual(connects, [{ from: 'acme.ava', to: 'harborline.lena', initiated_by: 'human' }]);
+      p.bus.emitLocal('ui:swipe', { from: 'acme.ava', to: 'kestrel.mia', direction: 'left' });
+      assert.equal(p.bus.emitted.filter(([type]) => type === 'ui:connect').length, 1, 'a left swipe connects no one');
+    } finally {
+      p.flow();
+    }
+  });
+
+  test('leaving the phone cancels a scripted swipe that has not finished', () => {
+    mock.timers.enable({ apis: ['setTimeout'] });
+    const p = phone('acme.ava', 'mock');
+    try {
+      p.bus.emitLocal('ui:swipe', { from: 'acme.ava', to: 'bluefin.bo', direction: 'right' });
+      mock.timers.tick(1000);
+      p.flow();
+      mock.timers.tick(5000);
+      assert.equal(p.bus.emitted.filter(([type]) => type === 'ui:connect').length, 0);
+    } finally {
+      mock.timers.reset();
+    }
+  });
+
+  test('without a gateway the Deep dive screen explains how to start one', () => {
+    const p = phone('acme.ava', 'mock');
+    try {
+      const screen = render(p.ctx({ name: 'deepdive', params: { id: 'kestrel.mia' } }, 'mock'));
+      assert.match(text(screen), /Swipe right on Mia on Home/);
+      assert.doesNotMatch(text(screen), /live mode/);
+    } finally {
       p.flow();
     }
   });
@@ -120,6 +186,7 @@ describe('live deep dive', () => {
     assert.deepEqual(p.hashes, [['deepdive', { id: 'bluefin.bo' }]]);
     const screen = render(p.ctx({ name: 'deepdive', params: { id: 'bluefin.bo' } }));
     assert.match(text(screen), /Researching Bo…/);
+    assert.doesNotMatch(text(screen), /null/, 'no stray "null" while researching');
 
     gateway(p, ofType('deep_dive_ready'));
     const body = text(screen);

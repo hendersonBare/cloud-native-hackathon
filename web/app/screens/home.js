@@ -102,13 +102,10 @@ export function render(ctx) {
       apply();
       setTimeout(() => {
         st.idx += 1;
-        if (ctx.mode === 'live') {
-          // The gateway researches the person and decides; the Deep dive screen shows it (flow.js, live-events.js).
-          bus.emitLocal('ui:swipe', { from: me.id, to: p.id, direction: dir });
-        } else if (dir === 'right') {
-          st.talking = p.id;
-          bus.emit('ui:connect', { from: me.id, to: p.id });
-        }
+        // Your agent researches the person and decides; the Deep dive screen shows it
+        // (flow.js: the gateway when there is one, else the demo script).
+        if (dir === 'right' && ctx.mode !== 'live') st.talking = p.id;
+        bus.emitLocal('ui:swipe', { from: me.id, to: p.id, direction: dir });
         if (dir === 'left') bus.emitLocal('ui:pass', { from: me.id, to: p.id });
         drawDeck(true);
         drawLatest();
@@ -160,13 +157,14 @@ export function render(ctx) {
       ),
       h('p', { class: 'opp-role' }, p.role),
       h('div', { class: 'opp-topics' },
-        h('div', { class: 'topics-head' },
+        h('div', { class: 'topics-text' },
           h('p', { class: 'eyebrow' }, 'Talk about'),
-          h('button', {
-            type: 'button', class: 'decide-btn find-btn', 'aria-label': `Find ${p.name} at the venue`,
-            onClick: () => ctx.go('find', { with: p.id }),
-          }, h('span', { class: 'decide-chip find-chip', 'aria-hidden': 'true' }, icon('navigate', { size: 16, stroke: 2 })))),
-        h('ul', { class: 'stack' }, p.topics.map((t) => h('li', { class: 'topic' }, h('span', { class: 'topic-dot', 'aria-hidden': 'true' }), h('span', null, t)))),
+          h('ul', { class: 'stack' }, p.topics.map((t) => h('li', { class: 'topic' }, h('span', { class: 'topic-dot', 'aria-hidden': 'true' }), h('span', null, t)))),
+        ),
+        h('button', {
+          type: 'button', class: 'decide-btn find-btn', 'aria-label': `Find ${p.name} at the venue`,
+          onClick: () => ctx.go('find', { with: p.id }),
+        }, h('span', { class: 'decide-chip find-chip', 'aria-hidden': 'true' }, icon('navigate', { size: 20, stroke: 2 }))),
       ),
     );
     return art;

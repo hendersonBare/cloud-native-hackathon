@@ -2,22 +2,23 @@
 import { h, topbar, nextId } from '../ui.js';
 import { PEOPLE } from '../data.js';
 
-const CONTENT = {
+export const CONTENT = {
   'acme.ava': {
     otherId: 'kestrel.mia',
     detail: 'Platform Engineer · Kestrel Robotics',
     title: 'Hallway conversation',
     clock: '04:12',
-    transcript: 'We want tracing with no code changes. Cost is the main concern for our hospital platform migration.',
+    // The peer's first line in this phone's Capture transcript (live.js CONTENT).
+    transcript: 'We’re migrating our hospital platform. Tracing has to work without code changes.',
     lang: 'en',
   },
   'bluefin.bo': {
     otherId: 'lumenly.priya',
     detail: 'Head of Infrastructure · Lumenly Energy',
-    title: 'Platform track Q&A',
-    clock: '01:38',
-    transcript: 'Con eBPF podemos capturar trazas sin cambiar el código. En una red hospitalaria, redujimos el tiempo de los incidentes un 40%.',
-    lang: 'es',
+    title: 'Hallway conversation',
+    clock: '04:12',
+    transcript: 'Acme uses zero-code eBPF tracing and exports to OpenTelemetry.',
+    lang: 'en',
   },
 };
 
@@ -118,7 +119,9 @@ export function render(ctx) {
     onClick: () => {
       const { name, personaId, edited } = chosen();
       ctx.store.speakers = { ...(ctx.store.speakers || {}), s2: { name, personaId, edited } };
-      ctx.go(research ? 'person' : 'live');
+      // A typed name has no persona to brief on, so it goes back to the transcript.
+      if (research && personaId) ctx.go('person', { id: personaId });
+      else ctx.go('live');
     },
   });
 
@@ -136,7 +139,7 @@ export function render(ctx) {
     });
     input.classList.toggle('tag-custom', selection.personaId === null);
     researchSwitch.setAttribute('aria-checked', String(research));
-    save.textContent = research ? 'Save & brief me' : 'Save name';
+    save.textContent = research && selection.personaId ? 'Save & brief me' : 'Save name';
   }
 
   draw();

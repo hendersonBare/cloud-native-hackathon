@@ -4,8 +4,9 @@ import { person } from './data.js';
 import { api } from './api.js';
 import { showNotification } from './notify.js';
 import { initLiveEvents } from './live-events.js';
+import { swipeScript } from './demo-script.js';
 
-// Mock mode has no server request id, so the phone makes one with this prefix.
+// Without a gateway there is no server request id, so the phone makes one with this prefix.
 const MOCK_REQUEST = 'req-mock-';
 
 const CONTENT = {
@@ -179,6 +180,10 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
       startedAt: Date.now() + 600, status: 'talking',
     };
     store.encounter = enc;
+    // A local accept always starts a new encounter: without this, a second run with the same
+    // person (no Reset) counts as "continuing" the first one and Bo never reaches the exchange.
+    // The server's encounter_started for this accept still continues it (lastStart is set again).
+    lastStart = null;
     bus.emit('encounter:start', enc);
     if (mode !== 'live') return;
     if (req.request_id.startsWith(MOCK_REQUEST)) {
@@ -242,10 +247,34 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     showIncomingNotice();
   }));
 
-  // Live mode: a right swipe on Home. The gateway researches the person, decides, and for
-  // agent_handshake creates the connect request itself, so this never calls api.connect.
+  // A swipe on Home. With a gateway, it researches the person, decides, and for agent_handshake
+  // creates the connect request itself, so this never calls api.connect. Without one, a right
+  // swipe replays the same events from the demo script (deep dive, decision, agent's request),
+  // or connects directly when the script doesn't cover that person.
+  const scriptTimers = new Set();
+  cleanups.push(() => { for (const t of scriptTimers) clearTimeout(t); scriptTimers.clear(); });
+  function playSwipe(from, to) {
+    const steps = swipeScript(from, to);
+    if (!steps.length) {
+      bus.emit('ui:connect', { from, to, initiated_by: 'human' });
+      return;
+    }
+    for (const step of steps) {
+      const timer = setTimeout(() => {
+        scriptTimers.delete(timer);
+        if (disposed) return;
+        if (step.type === 'connect_request') bus.emit('ui:connect', { from, to, initiated_by: 'agent' });
+        else bus.emitLocal(`gateway:${step.type}`, step.event);
+      }, step.at_ms);
+      scriptTimers.add(timer);
+    }
+  }
   cleanups.push(bus.on('ui:swipe', ({ from, to, direction } = {}) => {
-    if (mode !== 'live' || from !== me.id || (direction !== 'left' && direction !== 'right')) return;
+    if (from !== me.id || (direction !== 'left' && direction !== 'right')) return;
+    if (mode !== 'live') {
+      if (direction === 'right') playSwipe(from, to);
+      return;
+    }
     api.swipe({
       persona_id: from, target_persona_id: to, direction, autonomy: true, malicious: !!store.config?.malicious,
     }).catch(() => {
@@ -315,6 +344,9 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     }
   }));
 
+  // Briefs, deep dive and the agent's decision, from the gateway or from the demo script.
+  cleanups.push(initLiveEvents({ me, store, bus, toast, go }));
+
   if (mode === 'live') {
     // The gateway sends exchange_message and policy_decision to the swarm stream only (SPEC 7.1),
     // which the stage relays as 'gateway:swarm'. They are also accepted here, deduplicated, in case
@@ -340,7 +372,6 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     cleanups.push(bus.on('gateway:swarm', (event) => {
       if (event?.type === 'exchange_message' || event?.type === 'policy_decision') applyExchange(event);
     }));
-    cleanups.push(initLiveEvents({ me, store, bus, toast, go }));
     cleanups.push(api.openStream(`persona_id=${encodeURIComponent(me.id)}`, (event) => {
       const data = event.data;
       const encounter_id = event.encounter_id;

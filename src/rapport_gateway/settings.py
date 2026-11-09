@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
 from rapport_common import names
 
@@ -30,6 +31,25 @@ def _float(var: str, default: float) -> float:
     except ValueError:
         log.warning("%s is not a number; using %s", var, default)
         return default
+
+
+def _text(var: str) -> str | None:
+    value = (os.environ.get(var) or "").strip()
+    return value or None
+
+
+def parse_rum_endpoint(raw: str | None) -> str | None:
+    """The browser posts telemetry here, so only https (or http on localhost, for a local collector)."""
+    value = (raw or "").strip().rstrip("/")
+    if not value:
+        return None
+    parsed = urlparse(value)
+    local = parsed.hostname in ("localhost", "127.0.0.1")
+    if parsed.scheme == "https" or (parsed.scheme == "http" and local):
+        if parsed.hostname:
+            return value
+    log.warning("DASH0_RUM_ENDPOINT must be an https URL; website monitoring stays off")
+    return None
 
 
 def parse_origins(raw: str | None) -> tuple[str, ...]:
@@ -78,6 +98,13 @@ class Settings:
     check_delegate_ip: bool = True
     # mock mode: 1.0 replays the fixtures in real time, 100 plays them 100x faster (tests)
     mock_speed: float = 1.0
+    # Dash0 website monitoring for the web page (GET /api/rum-config). These come from the optional `dash0-rum`
+    # Secret and are sent to every browser, so the token must be a separate, ingest-only website token. Never
+    # fall back to the backend's OTEL_EXPORTER_OTLP_HEADERS token.
+    rum_endpoint: str | None = None
+    rum_auth_token: str | None = field(default=None, repr=False)  # kept out of any repr that reaches a log
+    rum_dataset: str | None = None
+    environment: str = "dev"
     extra: dict[str, str] = field(default_factory=dict)
 
     @classmethod
@@ -98,4 +125,8 @@ class Settings:
             check_delegate_ip=_flag("RAPPORT_CHECK_DELEGATE_IP", True),
             sse_max_seconds=max(_float("RAPPORT_SSE_MAX_SECONDS", 12.0), 0.0),
             mock_speed=max(_float("RAPPORT_MOCK_SPEED", 1.0), 0.01),
+            rum_endpoint=parse_rum_endpoint(os.environ.get("DASH0_RUM_ENDPOINT")),
+            rum_auth_token=_text("DASH0_RUM_AUTH_TOKEN"),
+            rum_dataset=_text("DASH0_RUM_DATASET"),
+            environment=_text("RAPPORT_ENV") or "dev",
         )

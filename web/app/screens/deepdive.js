@@ -1,4 +1,5 @@
-// Deep dive (live mode): what the gateway prepared after a right swipe. deep_dive_started shows
+// Deep dive: what your agent prepared after a right swipe (from the gateway, or replayed from the
+// demo script when there is none; see flow.js). deep_dive_started shows
 // "Researching…", deep_dive_ready the summary, plan and the agent's decision, agent_decision the
 // outcome. Events are stored by live-events.js in store.gateway; this screen redraws on
 // 'deepdive:update'. Every server string is rendered as a text node through h().
@@ -56,12 +57,14 @@ export function render(ctx) {
     const dive = state.deepDives?.[subject.id];
     const decided = state.decisions?.[subject.id];
     card.setAttribute('lang', dive?.language || ctx.me.lang || 'en');
-    if (ctx.mode !== 'live') {
-      body.replaceChildren(waiting('Deep dives appear here in live mode.'));
+    if (!dive && !decided && state.researching !== subject.id) {
+      body.replaceChildren(waiting(`Swipe right on ${subject.name} on Home and your agent researches them here.`));
     } else if (!dive) {
-      body.replaceChildren(
+      // replaceChildren() would print a null as the text "null", so drop it.
+      body.replaceChildren(...[
         h('p', { class: 'deepdive-researching rp-pulse' }, `Researching ${subject.name}…`),
-        decided ? decisionBlock(subject, null, decided) : null);
+        decided ? decisionBlock(subject, null, decided) : null,
+      ].filter(Boolean));
     } else {
       body.replaceChildren(...diveBody(subject, dive, decided).filter(Boolean));
     }

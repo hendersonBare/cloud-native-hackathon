@@ -10,18 +10,27 @@ Plain HTML, CSS and ES modules; no build step.
 python3 -m http.server 5180 --directory web
 ```
 
-Open http://localhost:5180/. Mock mode is the default (both phones talk to each other through a
-`BroadcastChannel`, no backend needed). Add `?live=1` to use the gateway (SPEC §7.1).
+Open http://localhost:5180/. There is one mode, and every feature works in it:
+
+- **With a gateway** (the deployed page, or this folder served by `rapport_gateway`): the phones use it
+  (SPEC §7.1). The stage checks `GET /healthz` once on load and tells both phones.
+- **Without one** (a plain static server like the command above): everything runs in the browser and the
+  two phones talk to each other through a `BroadcastChannel`. A right swipe on Bo replays the gateway's
+  deep dive, decision and connect request from `swarm/demo-events.json`.
+- **A gateway without a feature's API** (e.g. no `/api/calendar` or `/api/venue` mounted): that feature
+  switches to its in-browser version on the first call (`app/mode.js`), without an error.
+
+No badge, switch or URL flag. The logic is in `app/mode.js`.
 
 The Calendar tab and People's "Find a time" use the calendar API (`src/rapport_calendar`, mounted by the
-gateway at `/api/calendar`). To try them live without a gateway, serve this folder from the calendar's
-dev server and open one phone in live mode:
+gateway at `/api/calendar`). To try them against the API without a gateway, serve this folder from the
+calendar's dev server:
 
 ```bash
 RAPPORT_WEB_DIR=web PYTHONPATH=src uv run python -m rapport_calendar
 ```
 
-Then open http://localhost:8080/phone.html?persona=acme.ava#/calendar. In mock mode the same screens use
+Then open http://localhost:8080/phone.html?persona=acme.ava#/calendar. Without the API the same screens use
 `app/calendar-mock.js`, an in-browser replica that loads the same seed (`mock/calendar-seed.json`, a
 byte-identical copy of `src/rapport_calendar/data/seed.json`) and syncs the two phones over the bus.
 
@@ -29,14 +38,16 @@ byte-identical copy of `src/rapport_calendar/data/seed.json`) and syncs the two 
 
 | Path | What |
 |---|---|
-| `index.html`, `stage.css`, `stage.js` | The stage: two iPhone frames (Ava left, Bo right) scaled to fit the window, plus the presenter bar (mock badge, Malicious responder, Reset demo, full screen). Light theme only, as in the design. The arrow at the right of the bar hides it; the tab at the top brings it back. |
-| `phone.html` | The phone app. Each frame loads `phone.html?persona=<id>&mock=1`. Open it on its own to see one phone. |
+| `index.html`, `stage.css`, `stage.js` | The stage: two iPhone frames (Ava left, Bo right) scaled to fit the window, plus the presenter bar (Malicious responder, swarm panel, Reset demo, full screen). Light theme only, as in the design. The arrow at the right of the bar hides it; the tab at the top brings it back. |
+| `phone.html` | The phone app. Each frame loads `phone.html?persona=<id>&mode=live\|mock` (the stage's one gateway check). Opened on its own it checks for itself. |
+| `app/mode.js` | The single mode: `detectBackend()` (is there a gateway?) and `withFallback()` (a feature whose API is missing switches to its in-browser client). |
+| `app/demo-script.js` | Without a gateway, the swipe steps (deep dive, decision, agent request) from the demo script. |
 | `app/app.css` | Design tokens (light) and shared components. |
 | `app/ui.js` | `h()` and SVG/icon helpers. Text always goes in as text nodes. |
 | `app/main.js` | Hash router (`#/home`, `#/profile`, `#/calendar`, `#/live`, `#/tag`, `#/memory`, `#/people`, `#/person`, `#/exchange`, `#/match`). |
 | `app/bus.js` | Event bus between the two phones; the event contract is in its header. |
 | `app/flow.js`, `app/api.js` | Cross-phone connect flow and the gateway client. |
-| `app/live-events.js`, `app/screens/match-live.js` | Live mode only: briefs, deep dive, agent decision and error events from the gateway. |
+| `app/live-events.js`, `app/screens/match-live.js` | Briefs, deep dive, agent decision and error events, from the gateway or the demo script. |
 | `swarm/` | The swarm panel between the phones (toggle in the presenter bar). `model.js` is a pure reducer over swarm events, `view.js`/`panel.js` render it, `driver.js` feeds it (live: `/api/stream?view=swarm`; mock: replays `swarm/demo-events.json` when an encounter starts). |
 | `app/data.js` | Demo cast and per-persona content (all fictional). |
 | `app/calendar-api.js`, `app/calendar-mock.js` | Calendar client: live calls `/api/calendar/*`; mock is an in-browser replica with the same rules. Screens call `calendarClient(ctx)` and never branch on the mode. |
