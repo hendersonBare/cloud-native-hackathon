@@ -226,6 +226,30 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     request.label = content.parentElement.querySelector('.visually-hidden');
   }));
 
+  // Live mode: a right swipe on Home. The gateway researches the person, decides, and for
+  // agent_handshake creates the connect request itself, so this never calls api.connect.
+  cleanups.push(bus.on('ui:swipe', ({ from, to, direction } = {}) => {
+    if (mode !== 'live' || from !== me.id || (direction !== 'left' && direction !== 'right')) return;
+    api.swipe({
+      persona_id: from, target_persona_id: to, direction, autonomy: true, malicious: !!store.config?.malicious,
+    }).catch(() => {
+      if (disposed) return;
+      console.warn('Swipe request failed');
+      toast('Your agent could not act on that swipe. Try again.', { tone: 'error' });
+    });
+  }));
+
+  // The agent decided to start a handshake: wait for the target to accept (their phone got connect_request).
+  cleanups.push(bus.on('gateway:agent_decision', (event) => {
+    const data = event?.data;
+    if (event?.persona_id !== me.id || data?.action !== 'agent_handshake' || !person(data.target_persona_id)) return;
+    if (store.encounter?.status === 'talking') return;
+    store.encounter = {
+      encounter_id: null, initiator: me.id, responder: data.target_persona_id, startedAt: null,
+      status: 'waiting', request_id: data.request_id,
+    };
+  }));
+
   cleanups.push(bus.on('encounter:start', (enc) => {
     if (enc.initiator !== me.id && enc.responder !== me.id) return;
     const key = enc.encounter_id || JSON.stringify([enc.initiator, enc.responder, enc.startedAt]);
@@ -290,7 +314,7 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
     cleanups.push(bus.on('gateway:swarm', (event) => {
       if (event?.type === 'exchange_message' || event?.type === 'policy_decision') applyExchange(event);
     }));
-    cleanups.push(initLiveEvents({ me, store, bus, toast }));
+    cleanups.push(initLiveEvents({ me, store, bus, toast, go }));
     cleanups.push(api.openStream(`persona_id=${encodeURIComponent(me.id)}`, (event) => {
       const data = event.data;
       const encounter_id = event.encounter_id;

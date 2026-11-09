@@ -25,8 +25,9 @@ export function decisionMessage(action, target) {
 }
 
 /** Returns a cleanup function. `store.gateway` is created here. */
-export function initLiveEvents({ me, store, bus, toast }) {
+export function initLiveEvents({ me, store, bus, toast, go }) {
   const gateway = store.gateway || (store.gateway = { deepDives: {} });
+  gateway.decisions ||= {};
   const mine = (event) => !event?.persona_id || event.persona_id === me.id;
   const cleanups = [];
   const on = (type, fn) => cleanups.push(bus.on(`gateway:${type}`, (event) => {
@@ -49,15 +50,31 @@ export function initLiveEvents({ me, store, bus, toast }) {
     gateway.profile = data;
     toast('Your agent updated your profile');
   });
+  // A right swipe: show the "Researching…" state, then the deep dive and the agent's decision (deepdive.js).
   on('deep_dive_started', (data) => {
-    toast(`Researching ${nameOf(data.target_persona_id)}…`);
+    const target = data.target_persona_id;
+    if (typeof target !== 'string') return;
+    gateway.researching = target;
+    delete gateway.deepDives[target];
+    delete gateway.decisions[target];
+    go?.('deepdive', { id: target });
+    bus.emitLocal('deepdive:update', { target });
   });
   on('deep_dive_ready', (data) => {
-    if (typeof data.target_persona_id === 'string') gateway.deepDives[data.target_persona_id] = data;
-    toast(`Research on ${nameOf(data.target_persona_id)} is ready`);
+    const target = data.target_persona_id;
+    if (typeof target !== 'string') return;
+    gateway.deepDives[target] = data;
+    if (gateway.researching === target) gateway.researching = null;
+    bus.emitLocal('deepdive:update', { target });
+    toast(`Research on ${nameOf(target)} is ready`);
   });
   on('agent_decision', (data) => {
-    const message = decisionMessage(data.action, data.target_persona_id);
+    const target = data.target_persona_id;
+    if (typeof target === 'string') {
+      gateway.decisions[target] = data;
+      bus.emitLocal('deepdive:update', { target });
+    }
+    const message = decisionMessage(data.action, target);
     if (message) toast(message);
   });
   on('error', (data) => {

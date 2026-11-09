@@ -101,12 +101,14 @@ export function render(ctx) {
       apply();
       setTimeout(() => {
         st.idx += 1;
-        if (dir === 'right') {
+        if (ctx.mode === 'live') {
+          // The gateway researches the person and decides; the Deep dive screen shows it (flow.js, live-events.js).
+          bus.emitLocal('ui:swipe', { from: me.id, to: p.id, direction: dir });
+        } else if (dir === 'right') {
           st.talking = p.id;
           bus.emit('ui:connect', { from: me.id, to: p.id });
-        } else {
-          bus.emitLocal('ui:pass', { from: me.id, to: p.id });
         }
+        if (dir === 'left') bus.emitLocal('ui:pass', { from: me.id, to: p.id });
         drawDeck(true);
         drawLatest();
       }, 240);

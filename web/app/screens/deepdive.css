@@ -1,0 +1,13 @@
+/* Deep dive (live mode) */
+.deepdive .deepdive-main { padding: 4px 20px 14px; gap: 16px; }
+.deepdive .deepdive-main > * { flex: none; }
+.deepdive .deepdive-name { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.deepdive .deepdive-card, .deepdive .deepdive-body { display: flex; flex-direction: column; gap: 8px; }
+.deepdive .deepdive-summary { font-size: 15px; line-height: 1.45; font-weight: 600; }
+.deepdive .deepdive-researching { font-size: 15px; color: var(--text2); }
+.deepdive .deepdive-decision { padding: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.45; }
+.deepdive .deepdive-outcome { font-size: 16px; font-weight: 600; }
+.deepdive .deepdive-confidence { font-size: 13px; color: var(--text2); }
+.deepdive .deepdive-opener { font-size: 14px; line-height: 1.45; font-style: italic; }
+.deepdive .match-live-list { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
+.deepdive .match-live-waiting { font-size: 14px; color: var(--text2); }
