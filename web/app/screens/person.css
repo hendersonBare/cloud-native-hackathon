@@ -1,5 +1,5 @@
 /* Agent research brief. Fixed chrome surrounds the scrolling research. */
-.person .person-main { padding: 6px 20px 12px; gap: 14px; }
+.person .person-main { padding: 6px 20px 12px; gap: 12px; }
 .person .person-main > * { flex-shrink: 0; }
 .person .person-identity { display: flex; align-items: center; gap: 14px; }
 .person .person-heading { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -25,9 +25,12 @@
 .person .person-fact dd { flex: 1; min-width: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
 .person .person-sources { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 
-.person .person-why { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
-.person .person-reason { font-size: 16px; font-weight: 600; line-height: 1.4; }
-.person .person-privacy { font-size: 13px; color: var(--text2); }
+.person .person-why { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.person .person-reasons { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.person .person-reason { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 21px; }
+.person .person-reason-dot {
+  width: 5px; height: 5px; flex: none; margin-top: 8px; border-radius: 3px; background: var(--gold);
+}
 .person .person-connect { padding: 0 8px; }
 .person .person-connect svg { flex: none; }
 .person .person-connect:disabled { cursor: default; opacity: .65; }

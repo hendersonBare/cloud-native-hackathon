@@ -64,7 +64,7 @@
 .live .capture-brief span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .live .capture-brief svg { flex: none; }
 .live .capture-footer {
-  flex: none; min-height: 96px; padding: 8px 20px 0; display: flex; flex-direction: column;
+  flex: none; padding: 12px 20px 4px; display: flex; flex-direction: column;
   gap: 8px; border-top: 1px solid var(--line2);
 }
 .live .capture-status {

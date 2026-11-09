@@ -107,7 +107,7 @@ export function render(ctx) {
     onClick: () => { research = !research; draw(); },
   },
   h('span', { class: 'tag-option-copy' },
-    h('span', { id: researchId, class: 'tag-option-name' }, 'Research this person'),
+    h('span', { id: researchId, class: 'tag-option-name' }, 'Have my agent brief me on them'),
     h('span', { id: researchDetailId, class: 'tag-option-detail' }, 'Public professional sources only')),
   h('span', { class: 'tag-switch-track', 'aria-hidden': 'true' }, h('span', { class: 'tag-switch-knob' })),
   );

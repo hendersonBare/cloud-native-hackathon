@@ -1,5 +1,5 @@
-// Phone app entry: theme, per-phone store, hash router.
-// URL: phone.html?persona=acme.ava&theme=dark&mock=1#/home
+// Phone app entry: per-phone store and hash router.
+// URL: phone.html?persona=acme.ava&mock=1#/home
 
 import { person, peerOf, VIEWS } from './data.js';
 import * as bus from './bus.js';
@@ -17,21 +17,11 @@ const store = { config: { malicious: false } };
 const app = document.getElementById('app');
 const overlay = document.getElementById('overlay');
 const root = document.documentElement;
-let theme = params.get('theme') === 'dark' ? 'dark' : 'light';
-
-function setTheme(t) {
-  theme = t === 'light' ? 'light' : 'dark';
-  root.className = theme === 'light' ? 'rp rp-light' : 'rp';
-  root.style.colorScheme = theme;
-  bus.emitLocal('theme', theme);
-}
-setTheme(theme);
 root.lang = person(meId).lang || 'en';
 
 // Messages from the stage (index.html).
 window.addEventListener('message', (e) => {
   if (e.origin !== location.origin || !e.data) return;
-  if (e.data.type === 'theme') setTheme(e.data.theme);
   if (e.data.type === 'config') {
     store.config.malicious = !!e.data.malicious;
     bus.emitLocal('config', store.config);
@@ -60,7 +50,6 @@ function makeCtx(route) {
     view: VIEWS[meId] || {},
     store,
     mode,
-    get theme() { return theme; },
     route,
     go,
     bus,

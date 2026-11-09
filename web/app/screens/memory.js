@@ -269,7 +269,6 @@ export function render(ctx) {
       h('section', { class: 'memory-section', 'aria-labelledby': scopeId },
         h('div', { class: 'memory-section-head' },
           h('h2', { id: scopeId, class: 'eyebrow' }, 'Search scope'),
-          h('p', { class: 'memory-role-note' }, icon('lock', { size: 13, stroke: 1.9 }), 'Other teams are outside your role'),
         ),
         h('div', { class: 'memory-levels', role: 'group', 'aria-label': 'Search scope' }, scopeButtons),
       ),

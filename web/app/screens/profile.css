@@ -21,20 +21,18 @@
   padding-top: 12px; border-top: 1px solid var(--line);
 }
 .profile .profile-access-detail { display: flex; flex-direction: column; gap: 3px; }
-.profile .profile-access-value { font-size: 15px; font-weight: 600; }
+.profile .profile-access-value { font-size: 15px; font-weight: 600; line-height: 1.3; }
 .profile .profile-section { display: flex; flex-direction: column; gap: 8px; }
 .profile .profile-context-card {
   background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
-  padding: 10px 14px 14px 16px; display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 14px 14px 16px; display: flex; flex-direction: column; gap: 10px;
 }
 .profile .profile-context-heading { display: flex; align-items: center; gap: 12px; }
 .profile .profile-file-icon {
   width: 38px; height: 38px; flex: none; border-radius: 11px; background: var(--raised);
   border: 1px solid var(--line); color: var(--gold); display: flex; align-items: center; justify-content: center;
 }
-.profile .profile-context-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.profile .profile-context-title { font-size: 15px; font-weight: 600; }
-.profile .profile-context-subtitle { font-size: 13px; color: var(--text2); }
+.profile .profile-context-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
 .profile .profile-file-control {
   position: relative; min-width: 44px; min-height: 44px; padding: 0 4px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
@@ -42,10 +40,6 @@
 }
 .profile .profile-file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .profile .profile-file-control:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
-.profile .profile-file-status { display: flex; flex-direction: column; gap: 4px; }
-.profile .profile-file-status[hidden] { display: none; }
-.profile .profile-filename { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.profile .profile-read-state { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gold); }
 .profile .profile-topics { display: flex; gap: 6px; flex-wrap: wrap; }
 .profile .profile-working-on { font-size: 14px; line-height: 20px; color: var(--text2); }
 .profile .profile-visibility { min-width: 0; margin: 0; padding: 4px 0 0; border: 0; border-top: 1px solid var(--line); }
@@ -63,8 +57,7 @@
   background: transparent; color: var(--text2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .profile .profile-role-picker button[aria-pressed="true"] { background: var(--fill); color: var(--on-fill); }
-.profile .profile-access-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.profile .profile-access-heading p { font-size: 13px; color: var(--text3); }
+.profile .profile-access-heading { display: flex; align-items: baseline; }
 .profile .profile-access-table { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 0 16px; }
 .profile .profile-access-table table { width: 100%; border-collapse: collapse; }
 .profile .profile-level th, .profile .profile-level td { height: 44px; padding: 8px 0; border-top: 1px solid var(--line); }

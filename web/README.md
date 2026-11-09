@@ -17,9 +17,9 @@ Open http://localhost:5180/. Mock mode is the default (both phones talk to each 
 
 | Path | What |
 |---|---|
-| `index.html`, `stage.css`, `stage.js` | The stage: two iPhone frames (Ava left, Bo right) scaled to fit the window, plus the presenter bar (mock badge, Malicious responder, theme, Reset demo, full screen). The arrow at the right of the bar hides it; the tab at the top brings it back. |
-| `phone.html` | The phone app. Each frame loads `phone.html?persona=<id>&theme=light&mock=1`. Open it on its own to see one phone. |
-| `app/app.css` | Design tokens (light and dark) and shared components. |
+| `index.html`, `stage.css`, `stage.js` | The stage: two iPhone frames (Ava left, Bo right) scaled to fit the window, plus the presenter bar (mock badge, Malicious responder, Reset demo, full screen). Light theme only, as in the design. The arrow at the right of the bar hides it; the tab at the top brings it back. |
+| `phone.html` | The phone app. Each frame loads `phone.html?persona=<id>&mock=1`. Open it on its own to see one phone. |
+| `app/app.css` | Design tokens (light) and shared components. |
 | `app/ui.js` | `h()` and SVG/icon helpers. Text always goes in as text nodes. |
 | `app/main.js` | Hash router (`#/home`, `#/profile`, `#/calendar`, `#/live`, `#/tag`, `#/memory`, `#/person`, `#/exchange`, `#/match`). |
 | `app/bus.js` | Event bus between the two phones; the event contract is in its header. |
