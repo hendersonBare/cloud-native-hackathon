@@ -31,7 +31,9 @@ spec:
           image: openpolicyagent/opa:1.22.2 # pinned release (not `app`: this is not the Rapport image)
           imagePullPolicy: IfNotPresent
           # OPA 1.x binds to localhost by default; 0.0.0.0 lets the Service reach it.
-          args: ["run", "--server", "--addr=0.0.0.0:8181", "/policy"]
+          # --ignore=.* skips the hidden ..data and ..<timestamp> entries kubelet creates in a
+          # ConfigMap mount; without it rapport.rego loads three times and compilation fails.
+          args: ["run", "--server", "--addr=0.0.0.0:8181", "--ignore=.*", "/policy"]
           ports:
             - name: http
               containerPort: 8181

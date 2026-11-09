@@ -29,13 +29,13 @@ jobs:
           version: 1.22.2 # keep in step with the image in deploy/policy/*/opa.yaml
 
       - name: "1 Install Python dependencies (uv sync)"
-        run: uv sync --frozen
+        run: uv sync --frozen --no-build
 
       - name: "2 Lint (ruff check src tests)"
-        run: uv run ruff check --output-format=concise src tests
+        run: uv run --frozen --no-build ruff check --output-format=concise src tests
 
       - name: "3 Python tests (pytest)"
-        run: uv run pytest -q --tb=short
+        run: uv run --frozen --no-build pytest -q --tb=short
 
       - name: "4 Policy format and syntax (opa fmt, opa check)"
         run: |
