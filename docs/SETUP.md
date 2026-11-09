@@ -44,11 +44,40 @@ uv sync && make test                                    # should print: 9 passed
 git add -A && git commit -m "Rapport kit: contracts, spec, setup" && git push -u origin main
 ```
 
-**Gitar.** Connect Gitar (Sonar's code review agent) to the `rapport` repo using the account you set up for the hackathon.
+**Gitar.** Do this before any feature code is pushed. Gitar (Sonar's code review agent) reviews pull requests, so anything pushed straight to `main` never gets a review.
 
-- The repository rules are already in `.gitar/rules/*.md`: Markdown files with `title`, `description`, `when` and `actions` frontmatter, the format used by [gitarcode/rules](https://github.com/gitarcode/rules).
-- If Gitar's settings have a place for review instructions, paste AGENTS.md §5 there.
-- Check that Gitar comments on the first subagent PR. The Sonar track wants features landing through Gitar-reviewed PRs, not one PR at the end.
+1. The repo owner signs in at [app.gitar.ai](https://app.gitar.ai) with GitHub, clicks **Connect GitHub** and picks this repo. Installing a GitHub App needs admin rights, so a collaborator with write access can't do it.
+2. Nothing to paste into Gitar's settings. On every PR Gitar reads `AGENTS.md` and `CLAUDE.md`, the review instructions in `.gitar/review/*.md` (ownership, contracts, tests) and the rules in `.gitar/rules/*.md` (`title`, `description`, `when` and `actions` frontmatter, the [gitarcode/rules](https://github.com/gitarcode/rules) format).
+3. Custom rules and auto-apply are Pro features. A new Gitar organization gets a 14-day Pro trial.
+4. Gitar reads GitHub Actions results with no extra setup. On a PR, comment `gitar auto-apply:on` to let it push fixes, or ask in plain words (`Gitar fix CI`). `.gitar/config/apply.md` limits what it may commit; Gitar reads that file from `main`.
+5. Check that Gitar comments on the first PR. The Sonar track wants features landing through Gitar-reviewed PRs, not one PR at the end.
+
+**Lock `main`.** The repo owner runs this once from the repo folder. It requires a pull request to change `main` and blocks force-pushes and deleting it. Required approvals stay at 0 so the integrator can merge PRs opened from their own account. GitHub Actions (app ID 15368) is on the bypass list because `build-and-deploy` pushes its `deploy: <sha> [skip ci]` commit straight to `main`.
+
+```bash
+gh api -X POST 'repos/{owner}/{repo}/rulesets' --input - <<'EOF'
+{
+  "name": "protect-main",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+  "rules": [
+    {"type": "deletion"},
+    {"type": "non_fast_forward"},
+    {"type": "pull_request", "parameters": {
+      "required_approving_review_count": 0,
+      "dismiss_stale_reviews_on_push": false,
+      "require_code_owner_review": false,
+      "require_last_push_approval": false,
+      "required_review_thread_resolution": false
+    }}
+  ],
+  "bypass_actors": [{"actor_id": 15368, "actor_type": "Integration", "bypass_mode": "always"}]
+}
+EOF
+```
+
+After the next merge, check that `gh run list -w build-and-deploy -L 1` shows success and that a `deploy:` commit landed on `main`. If the deploy push is rejected, edit the ruleset under Settings → Rules → Rulesets.
 
 ## 3. Elastic Cloud (Serverless Elasticsearch)
 
