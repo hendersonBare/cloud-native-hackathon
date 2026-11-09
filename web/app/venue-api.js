@@ -11,13 +11,49 @@ const BASE = '/api/venue';
 
 const query = (params) => new URLSearchParams(params).toString();
 
-/** The live client. `fetchJson(url, {method, body})` is injectable for tests. */
+/**
+ * The live client. `fetchJson(url, {method, body})` is injectable for tests.
+ *
+ * Turning sharing on returns a sharing_token for this device only. The client keeps it in memory
+ * (never in storage, the URL or the screen), sends it with every GPS fix, and drops it when sharing
+ * goes off, so screens never see it. If a fix is refused (sharing on from the demo seed, or a token
+ * the demo reset forgot), the client drops its token, claims sharing once and retries.
+ * Reads send it as an X-Venue-Token header (not in the URL), so only this device gets its own GPS
+ * position back; without it the server answers with the check-in spot.
+ */
 export function liveVenue(fetchJson = request) {
+  const tokens = new Map(); // persona_id -> this device's sharing token
+  const setSharing = async (body) => {
+    const held = tokens.get(body.persona_id);
+    const send = body.enabled && held ? { ...body, sharing_token: held } : { ...body };
+    const result = await fetchJson(`${BASE}/sharing`, { method: 'PUT', body: send });
+    if (!body.enabled) tokens.delete(body.persona_id);
+    else if (typeof result?.sharing_token === 'string') tokens.set(body.persona_id, result.sharing_token);
+    if (!result || typeof result !== 'object') return result;
+    const { sharing_token: _hidden, ...state } = result; // the token stays inside this client
+    return state;
+  };
+  // Read options: this device's token as a header when it holds one (undefined keeps the plain GET).
+  const mine = (personaId) => (tokens.has(personaId) ? { headers: { 'X-Venue-Token': tokens.get(personaId) } } : undefined);
+  const sendFix = (body) => fetchJson(`${BASE}/location`, {
+    method: 'PUT', body: { ...body, sharing_token: tokens.get(body.persona_id) ?? null },
+  });
   return {
-    view: (personaId) => fetchJson(`${BASE}?${query({ persona_id: personaId })}`),
-    directions: (personaId, to) => fetchJson(`${BASE}/directions?${query({ persona_id: personaId, to })}`),
-    updateLocation: (body) => fetchJson(`${BASE}/location`, { method: 'PUT', body }),
-    setSharing: (body) => fetchJson(`${BASE}/sharing`, { method: 'PUT', body }),
+    view: (personaId) => fetchJson(`${BASE}?${query({ persona_id: personaId })}`, mine(personaId)),
+    directions: (personaId, to) => fetchJson(`${BASE}/directions?${query({ persona_id: personaId, to })}`, mine(personaId)),
+    updateLocation: async (body) => {
+      try {
+        return await sendFix(body);
+      } catch (error) {
+        if (error?.status !== 403) throw error;
+        // No token, or a stale one (the demo reset forgets every token): claim once and retry. If another
+        // device holds sharing now, the claim fails with 403 shared_from_another_device and that surfaces.
+        tokens.delete(body.persona_id);
+        await setSharing({ persona_id: body.persona_id, enabled: true });
+        return sendFix(body);
+      }
+    },
+    setSharing,
   };
 }
 

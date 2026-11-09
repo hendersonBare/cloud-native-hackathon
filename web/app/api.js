@@ -7,9 +7,9 @@ const EVENT_TYPES = [
 ];
 
 /** Fetch JSON from the gateway. Errors carry only the HTTP status (bodies are never read on failure). */
-export async function request(url, { method = 'GET', body } = {}) {
+export async function request(url, { method = 'GET', body, headers: extra } = {}) {
   const multipart = body instanceof FormData;
-  const headers = { Accept: 'application/json' };
+  const headers = { ...extra, Accept: 'application/json' };
   if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
   const response = await fetch(url, {
     method,
