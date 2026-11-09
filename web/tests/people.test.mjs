@@ -666,6 +666,29 @@ describe('person and people screens', () => {
     });
   });
 
+  describe("Bo's research-backed briefs", () => {
+    it("briefs Bo on Priya from Bo's own mock deck, in Spanish", () => {
+      const s = mountPerson({ me: 'bluefin.bo', params: { id: 'lumenly.priya' } });
+      const text = s.el.textContent;
+      assert.equal(s.el.byClass('person-name')[0].textContent, 'Priya');
+      assert.match(text, /Head of Infrastructure, Lumenly Energy/);
+      assert.match(text, /Runs a lean platform team; wants cheaper visibility/);
+      assert.match(text, /Speaking: Cutting the cloud bill with eBPF · .*2:30 PM MST/);
+      const reasons = s.el.byClass('person-reasons')[0];
+      assert.equal(reasons.getAttribute('lang'), 'es');
+      const items = reasons.byClass('person-reason').map((e) => e.textContent);
+      assert.match(items[0], /^Priya habla sobre ahorro de costos con eBPF a las 2:30 PM MST/);
+      assert.equal(items[1], 'Intereses en común: kubernetes, ebpf, cost');
+      assert.doesNotMatch(text, /Compare notes with|Conoce la perspectiva/, 'not the generic fallback brief');
+    });
+
+    it("uses neither viewer's deck for the other", () => {
+      const s = mountPerson({ me: 'acme.ava', params: { id: 'tidewater.sofia' } });
+      assert.doesNotMatch(s.el.textContent, /Sofia dirige un programa de FinOps/);
+      assert.match(s.el.textContent, /Compare notes with Sofia/);
+    });
+  });
+
   describe('Find a time', () => {
     it('keeps the same focused button while pending, then focuses the result', async () => {
       const pending = deferred();
