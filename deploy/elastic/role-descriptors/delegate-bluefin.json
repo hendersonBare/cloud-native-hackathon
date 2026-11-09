@@ -2,7 +2,10 @@
   "rapport-delegate-bluefin": {
     "cluster": ["monitor_inference"],
     "indices": [
-      { "names": ["rapport-bluefin-shareable", "rapport-conference"], "privileges": ["read"] }
+      {
+        "names": ["rapport-bluefin-shareable", "rapport-bluefin-shareable-v*", "rapport-conference", "rapport-conference-v*"],
+        "privileges": ["read"]
+      }
     ]
   }
 }
