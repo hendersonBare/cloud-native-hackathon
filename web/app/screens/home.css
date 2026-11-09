@@ -1,6 +1,6 @@
 .home-main { padding: 20px 20px 10px; gap: 12px; }
 .home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.home-greeting { font-size: 36px; }
+.home-greeting { font-size: 30px; }
 .home-me { border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold); }
 
 .live-card { padding: 12px 12px 12px 16px; display: flex; align-items: center; gap: 12px; flex: none; }

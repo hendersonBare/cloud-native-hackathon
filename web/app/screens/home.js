@@ -37,7 +37,7 @@ export function render(ctx) {
   const header = h('header', { class: 'home-head' },
     h('div', { class: 'stack', style: { gap: '4px' } },
       h('p', { class: 'eyebrow' }, `${weekday} · ${content.event}`),
-      h('h1', { class: 'serif home-greeting' }, 'Good ', h('em', null, partOfDay())),
+      h('h1', { class: 'serif home-greeting' }, 'Good ', h('em', null, partOfDay()), me?.name ? `, ${me.name}` : ''),
     ),
     h('a', { class: 'icon-btn home-me', href: '#/profile', 'aria-label': 'Your agent identity' },
       icon('user', { size: 21 })),
