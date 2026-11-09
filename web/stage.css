@@ -50,12 +50,6 @@ body {
   .toolbar { padding: 8px 16px; }
 }
 .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-.mode-badge {
-  font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  padding: 6px 10px; border-radius: 999px;
-  border: 1px solid var(--gold); color: var(--gold);
-}
-.mode-badge[data-mode="live"] { border-color: #1A8F4E; color: #3CC37A; }
 .check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; min-height: 40px; padding: 0 6px; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: #D2382C; margin: 0; }
 .tb-btn {

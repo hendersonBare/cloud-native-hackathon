@@ -5,6 +5,7 @@
 
 import { request } from './api.js';
 import { MockVenue } from './venue-mock.js';
+import { withFallback } from './mode.js';
 
 const BASE = '/api/venue';
 
@@ -23,7 +24,10 @@ export function liveVenue(fetchJson = request) {
 /** The venue client for this phone (one per phone, kept in ctx.store). */
 export function venueClient(ctx) {
   if (!ctx.store.venueClient) {
-    ctx.store.venueClient = ctx.mode === 'live' ? liveVenue() : new MockVenue({ bus: ctx.bus, self: ctx.me.id });
+    // With a gateway the venue API is used; if the gateway doesn't serve it, this phone
+    // switches to the in-browser venue (synced with the other phone over the bus).
+    const local = () => new MockVenue({ bus: ctx.bus, self: ctx.me.id });
+    ctx.store.venueClient = ctx.mode === 'live' ? withFallback(liveVenue(), local) : local();
   }
   return ctx.store.venueClient;
 }

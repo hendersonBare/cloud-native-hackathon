@@ -3,6 +3,7 @@
 
 import { initSwarm } from './swarm/index.js';
 import { openStream } from './app/api.js';
+import { detectBackend } from './app/mode.js';
 
 const FRAME_W = 414;
 const FRAME_H = 868;
@@ -11,8 +12,9 @@ const MIN_GAP = 96;
 const SWARM_W = 380; // keep in sync with --swarm-w in swarm/swarm.css
 const SWARM_GAP = 24;
 
-const params = new URLSearchParams(location.search);
-const mode = params.get('live') === '1' ? 'live' : 'mock';
+// One mode for the whole demo: the gateway when it answers, else everything in the browser.
+// Checked once here and handed to both phones so they always agree.
+const mode = await detectBackend();
 const root = document.documentElement;
 const toolbar = document.querySelector('.toolbar');
 
@@ -41,8 +43,7 @@ function writePref(key, value) {
 }
 
 function phoneUrl(persona) {
-  const q = new URLSearchParams({ persona });
-  if (mode === 'mock') q.set('mock', '1');
+  const q = new URLSearchParams({ persona, mode });
   return `phone.html?${q}`;
 }
 
@@ -68,10 +69,6 @@ function tickClock() {
   const t = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')}`;
   for (const el of document.querySelectorAll('.sb-time')) el.textContent = t;
 }
-
-const badge = document.getElementById('mode-badge');
-badge.textContent = mode === 'mock' ? 'Mock mode' : 'Live';
-badge.dataset.mode = mode;
 
 for (const f of frames) {
   f.src = phoneUrl(f.dataset.persona);
@@ -116,7 +113,7 @@ hideBtn.addEventListener('click', () => setControls(false, true));
 showBtn.addEventListener('click', () => setControls(true, true));
 setControls(readPref('rapport.controls', 'shown') !== 'hidden', false);
 
-// Swarm panel (web/swarm/): live mode reads the swarm SSE stream once here and relays the
+// Swarm panel (web/swarm/): with a gateway it reads the swarm SSE stream once here and relays the
 // exchange events to the phones, which only receive their own persona stream from the gateway.
 const swarm = initSwarm({
   root: document.getElementById('swarm'),
