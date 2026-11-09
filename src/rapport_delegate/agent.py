@@ -313,21 +313,46 @@ class DelegateAgent:
                 declined.append(DeclinedAsk(from_org=self.cfg.peer_org, topic=my_asks[answer.ask_id].topic,
                                             reason_code=answer.reason_code, rule_id=answer.rule_id))
 
-        followups, talk = await self._brief_followups(lang)
+        followups, talk, templated = await self._brief_followups(lang)
         text = await self._brief_text(lang, items_count=len(items), declined_count=len(declined), mutual=mutual,
-                                      item_titles=[i.title for i in items], followups=followups)
-        followups = [f.model_copy(update={"text": text.translations.get(f.followup_id, f.text)}) for f in followups]
+                                      item_titles=[i.title for i in items], followups=followups,
+                                      templated=templated)
+        followups = [self._in_language(f, lang, text.translations, templated) for f in followups]
         suggested = proto.talk_hit(talk, f"Shared interests: {', '.join(mutual)}" if mutual else None) if talk else None
         return proto.build_shared_brief(
             encounter_id=enc, persona=self._persona, items=items, declined=declined, followups=followups,
             mutual=mutual, suggested_talk=suggested, summary=text.summary,
         )
 
-    async def _brief_followups(self, lang: Language) -> tuple[list[SharedFollowup], MemoryRecord | None]:
-        """Own and peer follow-ups, deduplicated. Talk follow-ups are rebuilt from our own agenda record."""
+    def _in_language(self, f: SharedFollowup, lang: Language, translations: dict[str, str],
+                     templated: set[str]) -> SharedFollowup:
+        """Every follow-up text in the brief is in the brief's language: template, model translation, or a
+        generic line in that language. Only the text changes, never the IDs."""
+        if f.followup_id in templated:
+            return f
+        text = translations.get(f.followup_id)
+        if text is None:
+            text = f.text if lang == "en" else proto.generic_followup_text(lang, self._peer_org_name)
+        return f.model_copy(update={"text": text})
+
+    def _match_item(self, text: str) -> tuple[OfferItem, str] | None:
+        """The shared item a peer's rule-made follow-up refers to (its title appears in the text), and which org
+        it came from. Longest title wins."""
+        sent = {i.item_id for i in self._sent_items()}
+        hits = [i for i in self._sent_items() + self._received_items() if i.title and i.title in text]
+        if not hits:
+            return None
+        item = max(hits, key=lambda i: len(i.title))
+        return item, (self._org_name if item.item_id in sent else self._peer_org_name)
+
+    async def _brief_followups(self, lang: Language) -> tuple[list[SharedFollowup], MemoryRecord | None, set[str]]:
+        """Own and peer follow-ups, deduplicated by talk and by the item they refer to, talk first, then own and
+        peer alternating, at most MAX_FOLLOWUPS. Talk follow-ups are rebuilt from our own agenda record.
+        Returns the follow-ups, the talk, and the IDs whose text is already a template in `lang`."""
         st, cfg = self.state, self.cfg
         talk = st.chosen_talk
-        out: dict[str, SharedFollowup] = {}
+        talk_fid = proto.talk_followup_id(cfg.encounter_id)
+        templated: set[str] = set()
         peer_side = "responder" if cfg.role == "initiator" else "initiator"
 
         def owner_org(side: str) -> str:
@@ -337,40 +362,73 @@ class DelegateAgent:
                 return cfg.responder_org
             return cfg.self_org
 
+        talk_followup: SharedFollowup | None = None
+        own: list[tuple[SharedFollowup, str | None]] = []  # (follow-up, item it refers to)
+        peer: list[tuple[SharedFollowup, str | None]] = []
+
         for proposal in st.my_followups:
+            item_id = None
             if proposal.talk_id and talk is not None:
                 text = proto.talk_text(talk, lang)
             elif proposal.followup_id in st.review_items:
-                text = proto.review_text(lang, st.review_items[proposal.followup_id].title,
-                                         self._peer_org_name)
+                item = st.review_items[proposal.followup_id]
+                item_id = item.item_id
+                text = proto.review_text(lang, item.title, self._peer_org_name)
+                templated.add(proposal.followup_id)
             else:
                 text = proposal.text
-            out[proposal.followup_id] = SharedFollowup(
-                followup_id=proposal.followup_id, text=text, owner_org_id=owner_org(proposal.owner_side))
+            fu = SharedFollowup(followup_id=proposal.followup_id, text=text,
+                                owner_org_id=owner_org(proposal.owner_side))
+            if proposal.talk_id and talk is not None:
+                talk_followup = fu
+                templated.add(proposal.followup_id)
+            else:
+                own.append((fu, item_id))
 
         for n, proposal in enumerate(st.peer_followups[: proto.MAX_FOLLOWUPS], start=1):
             if proposal.talk_id:  # the ID must exist in OUR agenda; otherwise the proposal is dropped
                 record = await self.memory.get_talk(proposal.talk_id)
                 if record is None:
                     continue
-                fid = proto.talk_followup_id(cfg.encounter_id)
-                if fid not in out:
+                if talk_followup is None:
                     talk = talk or record
                     st.chosen_talk = talk
-                    out[fid] = SharedFollowup(followup_id=fid, text=proto.talk_text(talk, lang),
-                                              owner_org_id=cfg.self_org)
+                    talk_followup = SharedFollowup(followup_id=talk_fid, text=proto.talk_text(talk, lang),
+                                                   owner_org_id=cfg.self_org)
+                    templated.add(talk_fid)
                 continue
             fid = proto.followup_id(cfg.encounter_id, peer_side, n)
-            out.setdefault(fid, SharedFollowup(followup_id=fid, text=proto.truncate(proposal.text, 200),
-                                               owner_org_id=owner_org(proposal.owner_side)))
-        return list(out.values()), talk
+            text, item_id = proto.truncate(proposal.text, 200), None
+            match = self._match_item(proposal.text)
+            if match is not None:  # a "review <item>" follow-up: render it from the template in our language
+                item, org_name = match
+                item_id = item.item_id
+                text = proto.review_text(lang, item.title, org_name)
+                templated.add(fid)
+            peer.append((SharedFollowup(followup_id=fid, text=text, owner_org_id=owner_org(proposal.owner_side)),
+                         item_id))
+
+        out: list[SharedFollowup] = [talk_followup] if talk_followup else []
+        seen_items: set[str] = set()
+        queues = [own, peer]
+        while any(queues) and len(out) < proto.MAX_FOLLOWUPS:
+            for queue in queues:
+                if not queue or len(out) >= proto.MAX_FOLLOWUPS:
+                    continue
+                fu, item_id = queue.pop(0)
+                if item_id is not None:
+                    if item_id in seen_items:
+                        continue
+                    seen_items.add(item_id)
+                out.append(fu)
+        return out, talk, templated
 
     async def _brief_text(self, lang: Language, *, items_count: int, declined_count: int, mutual: list[str],
-                          item_titles: list[str], followups: list[SharedFollowup]) -> _BriefParts:
+                          item_titles: list[str], followups: list[SharedFollowup],
+                          templated: set[str]) -> _BriefParts:
         fallback = proto.fallback_summary(lang, self._peer_org_name, items_count, declined_count,
                                           len(followups), mutual)
-        translatable = [f for f in followups if f.followup_id != proto.talk_followup_id(self.cfg.encounter_id)
-                        and f.followup_id not in self.state.review_items]
+        translatable = [f for f in followups if f.followup_id not in templated]
         data = {
             "language": lang, "counts": {"items": items_count, "declined": declined_count,
                                          "followups": len(followups)},
