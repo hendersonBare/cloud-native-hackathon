@@ -15,12 +15,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from rapport_common.models import GatewayEvent, GatewayEventType
 from rapport_common.telemetry import current_trace_id
@@ -31,6 +32,16 @@ PRIVATE_FROM_SWARM: frozenset[str] = frozenset(
     {"private_brief", "profile_updated", "deep_dive_started", "deep_dive_ready"}
 )
 ENCOUNTER_LEVEL: frozenset[str] = frozenset({"encounter_started", "encounter_completed"})
+
+
+class SequencedEvent(GatewayEvent):
+    """A published GatewayEvent plus its SSE id. The id is a private attribute, so it never appears in the JSON."""
+
+    _seq: int = PrivateAttr(default=0)
+
+    @property
+    def seq(self) -> int:
+        return self._seq
 
 
 @dataclass(eq=False)  # identity hashing: subscriptions live in a set
@@ -54,6 +65,10 @@ class EventBus:
     _buffer: deque[GatewayEvent] = field(default_factory=deque)
     _participants: dict[str, frozenset[str]] = field(default_factory=dict)  # encounter_id -> persona ids
     _seen_keys: set[tuple[str, str, str | None]] = field(default_factory=set)
+    # SSE ids: one increasing counter per process, never reset by clear(). It starts at the wall clock in
+    # microseconds so ids keep increasing across a restart (a client's Last-Event-ID from the old process
+    # is then older than every new event instead of newer).
+    _last_id: int = field(default_factory=lambda: time.time_ns() // 1000)
 
     # ------------------------------------------------------------------ routing
     def routes_to(self, event: GatewayEvent, persona_id: str | None) -> bool:
@@ -71,7 +86,7 @@ class EventBus:
     def publish(self, event: GatewayEvent) -> GatewayEvent:
         """Route an event to every matching subscriber. Returns the event actually sent (the ts is nudged
         by microseconds when the web client's dedupe key (type, ts, encounter_id) would collide)."""
-        event = self._unique(event)
+        event = self._sequence(self._unique(event))
         if event.type == "encounter_started" and event.encounter_id:
             self._participants[event.encounter_id] = frozenset(
                 {str(event.data.get("initiator_persona_id")), str(event.data.get("responder_persona_id"))}
@@ -99,10 +114,13 @@ class EventBus:
         )
         return self.publish(event)
 
-    def subscribe(self, persona_id: str | None, *, replay: bool = True) -> Subscription:
+    def subscribe(self, persona_id: str | None, *, replay: bool = True, after_id: int | None = None) -> Subscription:
+        """Replay buffered matching events, only those with an id above `after_id` when it is given (a reconnect)."""
         sub = Subscription(persona_id=persona_id, queue=asyncio.Queue(maxsize=self.queue_size))
         if replay:
             for event in self._buffer:
+                if after_id is not None and getattr(event, "seq", 0) <= after_id:
+                    continue
                 if self.routes_to(event, persona_id):
                     self._offer(sub, event)
         self._subs.add(sub)
@@ -130,6 +148,12 @@ class EventBus:
             except asyncio.QueueEmpty:  # pragma: no cover - cannot happen on a single thread
                 pass
         sub.queue.put_nowait(event)
+
+    def _sequence(self, event: GatewayEvent) -> SequencedEvent:
+        self._last_id += 1
+        sequenced = SequencedEvent(**event.model_dump())
+        sequenced._seq = self._last_id  # noqa: SLF001
+        return sequenced
 
     def _unique(self, event: GatewayEvent) -> GatewayEvent:
         key = (event.type, event.ts.isoformat(), event.encounter_id)

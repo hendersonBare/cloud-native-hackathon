@@ -1,15 +1,55 @@
-/* App infrastructure: modal content uses the shared theme and sheet primitives. */
+/* App infrastructure: sheets, toasts and the push-style notification banner. */
 .flow-sheet { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
-.flow-connect { display: flex; flex-direction: column; gap: 18px; padding-top: 8px; }
-.flow-connect-avatars { align-self: flex-start; }
-.flow-connect-avatars > .avatar { border: 3px solid var(--surface); box-sizing: content-box; }
-.flow-connect-title { font-size: 32px; line-height: 1.08; }
-.flow-connect-why { font-size: 15px; line-height: 1.5; color: var(--text2); }
-.flow-connect-sharing { display: flex; flex-direction: column; gap: 10px; }
-.flow-connect-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.flow-connect-lock { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 13px; line-height: 1.5; }
-.flow-connect-lock svg { flex: none; }
-.flow-connect-actions { padding: 4px 0 0; }
-.flow-connect-actions .btn { min-height: 48px; }
 .flow-toast { overflow-wrap: anywhere; pointer-events: none; }
 .flow-toast[data-tone="error"] { border-color: var(--no); }
+
+/* Notification banner (web/app/notify.js), drops in under the status bar. */
+.notice {
+  position: fixed; top: 6px; left: 10px; right: 10px; z-index: 70;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .9);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 36px rgba(20, 22, 27, .18), 0 2px 6px rgba(20, 22, 27, .08);
+  animation: rp-drop .36s cubic-bezier(.2, .9, .25, 1.15);
+  touch-action: pan-x;
+}
+.notice-main {
+  width: 100%; padding: 10px 40px 12px 12px;
+  border: 0; border-radius: 22px; background: transparent; color: var(--text);
+  font: inherit; text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.notice-app {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text3);
+}
+.notice-app-icon {
+  width: 18px; height: 18px; border-radius: 5px; flex: none;
+  background: var(--fill); color: var(--gold-line);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.notice-time { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.notice-row { display: flex; align-items: flex-start; gap: 10px; }
+.notice-row > .avatar { margin-top: 1px; }
+.notice-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.notice-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.notice-body { font-size: 14px; line-height: 1.35; color: var(--text2); overflow-wrap: anywhere; }
+.notice-cta {
+  margin-top: 4px; display: inline-flex; align-items: center; gap: 2px;
+  font-size: 13.5px; font-weight: 600; color: var(--gold);
+}
+.notice-dismiss {
+  position: absolute; top: 0; right: 0;
+  width: 44px; height: 44px; border: 0; border-radius: 22px; padding: 0;
+  background: transparent; color: var(--text3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.notice-dismiss:hover { color: var(--text); background: var(--raised); }
+.notice-main:focus-visible, .notice-dismiss:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+@keyframes rp-drop {
+  from { transform: translateY(-130%); opacity: .4; }
+  to { transform: none; opacity: 1; }
+}

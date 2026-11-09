@@ -3,16 +3,35 @@
 .calendar .calendar-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .calendar .calendar-heading { display: flex; flex-direction: column; gap: 4px; }
 .calendar .calendar-title { font-size: 38px; }
+.calendar [hidden], .cal-sheet [hidden] { display: none !important; }
+.calendar .calendar-head-actions { display: flex; align-items: center; gap: 8px; }
+.calendar .calendar-export { border: 1px solid var(--line); color: var(--text); }
+/* Agenda tile and conference mode share one row. */
+.calendar .calendar-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.calendar .calendar-browse {
+  width: auto; min-height: 66px; padding: 8px 16px; border-radius: 18px;
+  flex-direction: column; gap: 4px; font-size: 14px;
+}
+.calendar .calendar-conference-slot { display: flex; min-width: 0; }
+.calendar .calendar-conference-slot > .conference-mode { flex: 1; min-width: 0; }
+.calendar .calendar-data { display: flex; flex-direction: column; gap: 14px; }
+.calendar .calendar-state-slot:empty { display: none; }
+.calendar .calendar-state {
+  padding: 30px 20px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.calendar .calendar-pulse { width: 10px; height: 10px; border-radius: 5px; background: var(--gold); }
+.calendar .calendar-error .calendar-retry { margin-top: 6px; width: auto; padding: 0 22px; }
 .calendar .calendar-add { border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold); }
 
 .calendar .conference-mode {
-  min-height: 66px; padding: 11px 16px; border-radius: 18px;
+  min-height: 66px; padding: 11px 14px; border-radius: 18px;
   border: 1px solid var(--line); background: var(--surface); color: var(--text);
   text-align: left; display: flex; align-items: center; gap: 12px;
   cursor: pointer; box-shadow: var(--shadow);
 }
 .calendar .event-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.calendar .event-title { font-size: 15px; font-weight: 600; }
+.calendar .event-title { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 .calendar .event-note { font-size: 13px; color: var(--text2); }
 .calendar .capture-track {
   width: 44px; height: 26px; flex: none; border-radius: 13px; background: var(--off);
@@ -42,7 +61,8 @@
 .calendar .agenda-heading { margin-top: 4px; }
 .calendar .event-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; display: flex; flex-direction: column; }
 .calendar .earlier-card { padding: 0 16px; }
-.calendar .later-card { padding: 0 8px 0 16px; }
+.calendar .later-card { padding: 0 4px 0 16px; }
+.calendar .now-card { background: var(--gold-bg); border-color: var(--gold-line); }
 .calendar .event-row { display: flex; align-items: center; gap: 12px; }
 .calendar .event-row + .event-row { border-top: 1px solid var(--line); }
 .calendar .earlier-row { padding: 10px 0; }
@@ -50,18 +70,70 @@
 .calendar .event-time { width: 62px; flex: none; font-size: 14px; font-weight: 600; color: var(--gold); }
 .calendar .earlier-time { color: var(--text3); }
 .calendar .capture-toggle {
-  width: 56px; height: 44px; flex: none; padding: 0; border: 0; border-radius: 13px;
+  width: 48px; height: 44px; flex: none; padding: 0; border: 0; border-radius: 13px;
   background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.calendar .earlier-row > svg, .calendar .proposed-event > svg { flex: none; color: var(--gold); }
-.calendar .live-event, .calendar .proposed-event {
+.calendar .earlier-row > svg { flex: none; color: var(--gold); }
+.calendar .event-remove {
+  width: 44px; height: 44px; flex: none; padding: 0; border: 0; border-radius: 22px;
+  background: transparent; color: var(--text2); display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.calendar .live-event {
   display: flex; align-items: center; gap: 12px; border-radius: 18px; color: var(--text); text-decoration: none;
 }
 .calendar .live-event { padding: 11px 16px; background: var(--gold-bg); border: 1px solid var(--gold-line); }
 .calendar .calendar-live-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--live); }
 .calendar .calendar-live-dot { width: 8px; height: 8px; flex: none; border-radius: 4px; background: var(--live); }
-.calendar .proposed-event { padding: 13px 16px; background: var(--gold-bg); border: 1px dashed var(--gold-mid); }
-.calendar .proposed-event .event-time { width: 66px; }
+.calendar .proposed-list { display: flex; flex-direction: column; gap: 8px; }
+.calendar .proposed-card {
+  display: flex; flex-direction: column; gap: 10px; padding: 13px 16px; border-radius: 18px;
+  background: var(--gold-bg); border: 1px dashed var(--gold-mid); color: var(--text);
+}
+.calendar .proposed-top { display: flex; align-items: flex-start; gap: 12px; }
+.calendar .proposed-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.calendar .proposed-state {
+  min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--gold);
+}
+.calendar .proposed-link {
+  min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 14px; font-weight: 600; color: var(--gold); text-decoration: none;
+}
 .calendar .calendar-empty { padding: 34px 20px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
 .calendar .empty-title { font-size: 17px; font-weight: 600; }
 .calendar .empty-note { margin-top: 6px; font-size: 14px; color: var(--text2); }
+
+/* Sheets live in #overlay, outside .calendar, so they carry their own scope. */
+.cal-sheet { display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
+.cal-form { display: flex; flex-direction: column; gap: 14px; }
+.cal-sheet-title { font-size: 32px; }
+.cal-sheet-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+.cal-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cal-field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.cal-label { font-size: 13px; font-weight: 600; color: var(--text2); }
+.cal-hint { font-weight: 400; color: var(--text3); }
+.cal-input {
+  width: 100%; min-width: 0; min-height: 48px; padding: 0 14px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 16px;
+}
+.cal-input[aria-invalid="true"] { border: 2px solid var(--no); }
+.cal-form-error { font-size: 14px; font-weight: 600; color: var(--no); }
+.cal-form-error:empty { display: none; }
+.cal-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 10px; padding-top: 4px; }
+.cal-actions-single { grid-template-columns: minmax(0, 1fr); }
+.cal-sheet .event-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cal-sheet .event-title { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.cal-sheet .event-note { font-size: 13px; color: var(--text2); }
+.cal-sheet .empty-note { font-size: 14px; color: var(--text2); }
+.cal-sheet .agenda-results { max-height: 46dvh; overflow-y: auto; overscroll-behavior: contain; }
+.cal-sheet .agenda-state { padding: 18px 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.cal-sheet .agenda-list { display: flex; flex-direction: column; }
+.cal-sheet .agenda-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.cal-sheet .agenda-item + .agenda-item { border-top: 1px solid var(--line); }
+.cal-sheet .agenda-time { font-size: 12px; font-weight: 600; color: var(--gold); }
+.cal-sheet .agenda-add { flex: none; width: auto; min-width: 80px; padding: 0 14px; }
+.cal-sheet .agenda-add.is-added { color: var(--text2); cursor: default; }
+.cal-sheet .agenda-offline { color: var(--text2); border-color: var(--line); }
+
+.btn[aria-disabled="true"] { opacity: 0.55; cursor: default; }
+.cal-sheet .agenda-add.is-added { opacity: 1; }

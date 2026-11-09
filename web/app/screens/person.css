@@ -34,3 +34,36 @@
 .person .person-connect { padding: 0 8px; }
 .person .person-connect svg { flex: none; }
 .person .person-connect:disabled { cursor: default; opacity: .65; }
+
+/* Meet in person */
+.person .person-meet { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.person .person-meet-body { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.person .person-meet-text { font-size: 14px; line-height: 20px; }
+.person .person-meet-title { font-size: 16px; font-weight: 600; line-height: 22px; overflow-wrap: anywhere; }
+.person .person-meet-time { font-size: 15px; color: var(--text2); }
+.person .person-meet-status,
+.person .person-meet-notice {
+  display: flex; align-items: flex-start; gap: 7px; font-size: 14px; line-height: 20px; color: var(--text2);
+  overflow-wrap: anywhere;
+}
+.person .person-meet-status svg,
+.person .person-meet-notice svg { flex: none; margin-top: 2px; }
+.person .person-meet-status.confirmed,
+.person .person-meet-notice { color: var(--yes-text); font-weight: 600; }
+.person .person-meet-btn,
+.person .person-meet-link { align-self: flex-start; padding: 0 18px; }
+.person .person-meet-btn:disabled { cursor: default; opacity: .65; }
+.person .person-meet-error { font-size: 14px; line-height: 20px; color: var(--no); }
+.person .person-meet-btn[aria-disabled="true"] { cursor: default; opacity: .65; }
+.person .person-meet-main { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.person .person-meet-notice:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
+.person .person-request {
+  display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 14px;
+  background: var(--gold-bg); border: 1px solid var(--gold-line); color: var(--text);
+  font-size: 15px; line-height: 21px; overflow-wrap: anywhere;
+}
+.person .person-request svg { flex: none; margin-top: 3px; color: var(--gold); }
+.person .person-no-agent { flex: 1; min-width: 0; align-self: center; font-size: 14px; line-height: 20px; color: var(--text2); }
+.person .person-accept { padding: 0 8px; }
+.person .person-accept svg { flex: none; }
+.person .person-missing { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding-top: 12px; }

@@ -95,6 +95,7 @@ export const ICONS = {
   shield: [['path', { d: 'M12 3 5 6v6c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6z' }]],
   sparkle: [['path', { d: 'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6' }]],
   clock: [['circle', { cx: 12, cy: 12, r: 8.5 }], ['path', { d: 'M12 7.5V12l3 2' }]],
+  navigate: [['path', { d: 'M3.5 11 20.5 3.5 13 20.5l-2-7.5z' }]],
 };
 
 export function icon(name, opts = {}) {
@@ -126,16 +127,16 @@ export const TABS = [
   { route: 'live', label: 'Capture', icon: 'mic' },
   { route: 'memory', label: 'Memory', icon: 'memory' },
   { route: 'calendar', label: 'Calendar', icon: 'calendar' },
-  { route: 'person', label: 'People', icon: 'people' },
+  { route: 'people', label: 'People', icon: 'people' },
 ];
 
 /** Which tab is highlighted for each route. */
 export const TAB_FOR = {
-  home: 'home', profile: 'home', deepdive: 'home',
+  home: 'home', profile: 'home', find: 'home', deepdive: 'home',
   live: 'live', tag: 'live',
   memory: 'memory',
   calendar: 'calendar',
-  person: 'person', exchange: 'person', match: 'person',
+  people: 'people', person: 'people', exchange: 'people', match: 'people',
 };
 
 export function bottomNav(active) {

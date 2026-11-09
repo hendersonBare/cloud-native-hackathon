@@ -69,6 +69,9 @@ class Settings:
     max_upload_bytes: int = 2 * 1024 * 1024
     # event bus / SSE
     keepalive_s: float = 15.0
+    # Close each SSE stream from the server after this long (0 = never) so clients reconnect (with Last-Event-ID)
+    # before the platform's edge proxy cuts the stream at its ~15 s route timeout.
+    sse_max_seconds: float = 12.0
     subscriber_queue_size: int = 256
     replay_buffer_size: int = 200
     # delegate source check (c): the reporting client IP must be a delegate pod of the encounter
@@ -93,5 +96,6 @@ class Settings:
             launcher=launcher,  # type: ignore[arg-type]
             llm_calls_per_minute=int(_float("RAPPORT_LLM_CALLS_PER_MINUTE", 30)),
             check_delegate_ip=_flag("RAPPORT_CHECK_DELEGATE_IP", True),
+            sse_max_seconds=max(_float("RAPPORT_SSE_MAX_SECONDS", 12.0), 0.0),
             mock_speed=max(_float("RAPPORT_MOCK_SPEED", 1.0), 0.01),
         )

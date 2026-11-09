@@ -21,9 +21,13 @@ apply_secret() { # namespace name key=value...
   echo "secret ${ns}/${name}"
 }
 
+# The `openai` Secret holds every LLM key: pods load it with envFrom, so an optional Claude key needs no manifest change.
+llm_keys=("OPENAI_API_KEY=${OPENAI_API_KEY}")
+if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then llm_keys+=("ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"); fi
+
 otlp_headers="Authorization=Bearer ${DASH0_AUTH_TOKEN}"
 for ns in team-rapport org-acme org-bluefin; do
-  apply_secret "$ns" openai "OPENAI_API_KEY=${OPENAI_API_KEY}"
+  apply_secret "$ns" openai "${llm_keys[@]}"
   apply_secret "$ns" dash0-otlp "OTEL_EXPORTER_OTLP_ENDPOINT=${DASH0_OTLP_ENDPOINT}" "OTEL_EXPORTER_OTLP_HEADERS=${otlp_headers}"
 done
 apply_secret org-acme es-briefer "ES_URL=${ES_URL}" "ES_API_KEY=${ES_BRIEFER_KEY_ACME}"

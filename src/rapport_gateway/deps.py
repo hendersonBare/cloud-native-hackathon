@@ -8,6 +8,9 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from rapport_calendar.agenda import SeedTalkSource
+from rapport_calendar.seed import load_seed
+from rapport_calendar.service import CalendarService
 from rapport_common import names
 from rapport_common.models import PodStatusData
 
@@ -38,6 +41,7 @@ class Deps:
     pod_watcher: PodWatcher | None = None
     launcher: EncounterLauncher | None = None
     owns_http: bool = False
+    calendar: CalendarService | None = None  # /api/calendar/* (rapport_calendar), in memory like connect requests
     extras: dict[str, object] = field(default_factory=dict)
 
     async def start(self) -> None:
@@ -85,6 +89,10 @@ def build_deps(
     # pod IPs are only meaningful with the Kubernetes launcher (check (c)); the local launcher uses (a)+(b)
     if registry is None and not settings.mock and not local:
         registry = PodRegistry()
+    # Mock mode has no briefers, so the calendar's agenda comes straight from its seed.
+    calendar = (
+        CalendarService(talk_source=SeedTalkSource(load_seed().agenda)) if settings.mock else CalendarService()
+    )
     encounters = EncounterService(
         bus=bus,
         briefers=briefers,
@@ -93,6 +101,7 @@ def build_deps(
         check_ip=settings.check_delegate_ip and not settings.mock and not local,
         timeout_s=settings.encounter_timeout_s,
         remember_timeout_s=settings.remember_timeout_s,
+        on_shared_brief=calendar.record_shared_brief,
     )
 
     if settings.mock:
@@ -147,4 +156,5 @@ def build_deps(
         pod_watcher=pod_watcher,
         launcher=None if settings.mock else launcher,
         owns_http=owns_http,
+        calendar=calendar,
     )

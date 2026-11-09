@@ -1,6 +1,6 @@
 // Route table and hash parsing for the phone app. Pure, so it is unit-tested.
 
-export const ROUTES = ['home', 'profile', 'calendar', 'live', 'tag', 'memory', 'person', 'exchange', 'match', 'deepdive'];
+export const ROUTES = ['home', 'profile', 'calendar', 'live', 'tag', 'memory', 'person', 'people', 'exchange', 'match', 'find', 'deepdive'];
 
 /** '#/person?id=bluefin.bo' -> { name: 'person', params: { id: 'bluefin.bo' } }; unknown routes fall back to home. */
 export function parseHash(hash) {

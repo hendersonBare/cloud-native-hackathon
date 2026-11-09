@@ -12,6 +12,9 @@ from fastapi.responses import JSONResponse
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
+from rapport_calendar.api import get_service as calendar_service
+from rapport_calendar.api import router as calendar_router
+
 from .deps import Deps, build_deps
 from .errors import GatewayError
 from .routers import connect, demo, discover, health, memory, personas, profile, stream
@@ -32,6 +35,7 @@ TAGS = [
     {"name": "memory", "description": "Ask your agent; search the agenda."},
     {"name": "discover", "description": "Research cards, swipe, deep dive, the agent's decision."},
     {"name": "demo", "description": "Reset in-memory demo state."},
+    {"name": "calendar", "description": "Conference-week calendar and meeting scheduling (src/rapport_calendar)."},
 ]
 
 
@@ -79,12 +83,16 @@ def create_app(settings: Settings | None = None, deps: Deps | None = None) -> Fa
             CORSMiddleware,
             allow_origins=list(settings.cors_origins),
             allow_credentials=True,
-            allow_methods=["GET", "POST", "OPTIONS"],
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # the calendar edits and deletes
             allow_headers=["Content-Type", "Authorization"],
         )
 
     for module in (health, personas, stream, profile, connect, memory, discover, demo):
         app.include_router(module.router)
+    app.include_router(calendar_router)
+    if deps.calendar is not None:  # this app's own instance, so tests and reset never share module state
+        calendar = deps.calendar
+        app.dependency_overrides[calendar_service] = lambda: calendar
 
     @app.api_route("/internal/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
     async def no_internal(path: str) -> JSONResponse:

@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -81,8 +82,13 @@ class EncounterService:
         timeout_s: float = 150.0,
         remember_timeout_s: float = 10.0,
         ip_grace_s: float = 1.0,
+        on_shared_brief: Callable[[SharedBrief, str], Awaitable[object]] | None = None,
     ) -> None:
         self._bus = bus
+        # Called with (brief, counterparty_persona_id) for every first shared_brief, e.g. to put the
+        # delegates' suggested talk on the person's calendar. Runs in the background; it never blocks
+        # or fails the encounter.
+        self._on_shared_brief_hook = on_shared_brief
         self._briefers = briefers
         self._tasks = tasks
         self._registry = registry
@@ -194,8 +200,20 @@ class EncounterService:
         state.briefs[party.persona_id] = brief
         self._bus.emit("shared_brief", brief, persona_id=party.persona_id, encounter_id=state.encounter_id)
         self._tasks.spawn(self._remember(brief, state, party), name=f"remember-{state.encounter_id}-{party.side}")
+        if self._on_shared_brief_hook is not None:
+            hook = self._notify_shared_brief(brief, state, party)
+            self._tasks.spawn(hook, name=f"brief-hook-{state.encounter_id}-{party.side}")
         if len(state.briefs) == 2:
             self.finish(state, "completed")
+
+    async def _notify_shared_brief(self, brief: SharedBrief, state: EncounterState, party: Party) -> None:
+        assert self._on_shared_brief_hook is not None
+        try:
+            await self._on_shared_brief_hook(brief, state.other(party).persona_id)
+        except Exception as exc:  # a calendar problem must never affect the encounter
+            log.warning(
+                "shared brief hook failed for %s in %s: %s", party.persona_id, state.encounter_id, type(exc).__name__
+            )
 
     async def _remember(self, brief: SharedBrief, state: EncounterState, party: Party) -> None:
         other = state.other(party)

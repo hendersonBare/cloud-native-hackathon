@@ -1,0 +1,79 @@
+/* People directory. Fixed bottom nav; search, filters and results scroll. */
+.people .people-main { padding: 20px 20px 12px; gap: 12px; }
+.people .people-main > * { flex-shrink: 0; }
+.people .people-head { display: flex; flex-direction: column; gap: 4px; }
+.people .people-title { font-size: 36px; }
+.people .people-count { font-size: 14px; }
+
+.people .people-search { position: relative; display: block; }
+.people .people-search-icon {
+  position: absolute; left: 14px; top: 0; bottom: 0; display: flex; align-items: center;
+  color: var(--text3); pointer-events: none;
+}
+.people .people-input {
+  width: 100%; min-height: 48px; padding: 0 14px 0 42px;
+  border-radius: 16px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--text); font: inherit; font-size: 16px;
+  -webkit-appearance: none; appearance: none;
+}
+.people .people-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.people .people-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.people .people-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.people .people-meta:not(:has(.people-refresh:not([hidden]))):not(:has(.people-note:not(:empty))) { display: none; }
+.people .people-note { flex: 1; min-width: 0; font-size: 13px; line-height: 18px; }
+.people .people-note:empty { display: none; }
+.people .people-refresh { flex: none; margin-left: auto; padding: 0 8px; display: inline-flex; align-items: center; gap: 6px; }
+.people .people-refresh:disabled { cursor: default; opacity: .65; }
+
+.people .people-results { display: flex; flex-direction: column; gap: 18px; }
+.people .people-section { display: flex; flex-direction: column; gap: 8px; }
+.people .people-list { display: flex; flex-direction: column; gap: 10px; }
+.people .people-loading { font-size: 14px; padding: 12px 0; }
+
+.people .people-card {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;
+  color: var(--text); text-decoration: none;
+}
+.people .people-card-top { display: flex; align-items: center; gap: 12px; }
+.people .people-id { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.people .people-name { font-size: 17px; font-weight: 600; line-height: 22px; overflow-wrap: anywhere; }
+.people .people-role { font-size: 14px; line-height: 18px; color: var(--text2); overflow-wrap: anywhere; }
+.people .people-score {
+  flex: none; align-self: flex-start; padding: 4px 9px; border-radius: 999px;
+  border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold);
+  font-size: 12px; font-weight: 700;
+}
+.people .people-why { font-size: 15px; line-height: 21px; color: var(--text); overflow-wrap: anywhere; }
+.people .people-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.people .people-agent {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--sage-line); background: var(--sage-bg); color: var(--sage);
+  font-size: 12px; font-weight: 600;
+}
+.people .people-agent svg { flex: none; }
+
+.people .people-row {
+  display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  color: var(--text); text-decoration: none;
+}
+.people .people-row > svg { flex: none; color: var(--text3); }
+.people .people-row .people-agent { margin-top: 3px; }
+
+.people .people-empty {
+  padding: 28px 20px; border-radius: 22px; border: 1px dashed var(--line);
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+}
+.people .people-empty-title { font-size: 18px; font-weight: 600; }
+.people .people-clear { margin-top: 10px; padding: 0 20px; }
+
+/* Pending connect request */
+.people .people-request {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px;
+  color: var(--text); text-decoration: none;
+}
+.people .people-request-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.people .people-request svg { flex: none; }
+.people .people-request-slot:empty { display: none; }

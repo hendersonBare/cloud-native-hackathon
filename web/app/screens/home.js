@@ -3,6 +3,7 @@
 // Main.dc.html (v2 design).
 
 import { h, svg, icon, avatar, bottomNav, eyebrow } from '../ui.js';
+import { hashFor } from '../route.js';
 
 const SWIPE_AT = 80;
 
@@ -36,7 +37,7 @@ export function render(ctx) {
   const header = h('header', { class: 'home-head' },
     h('div', { class: 'stack', style: { gap: '4px' } },
       h('p', { class: 'eyebrow' }, `${weekday} · ${content.event}`),
-      h('h1', { class: 'serif home-greeting' }, 'Good ', h('em', null, partOfDay())),
+      h('h1', { class: 'serif home-greeting' }, 'Good ', h('em', null, partOfDay()), me?.name ? `, ${me.name}` : ''),
     ),
     h('a', { class: 'icon-btn home-me', href: '#/profile', 'aria-label': 'Your agent identity' },
       icon('user', { size: 21 })),
@@ -159,7 +160,12 @@ export function render(ctx) {
       ),
       h('p', { class: 'opp-role' }, p.role),
       h('div', { class: 'opp-topics' },
-        h('p', { class: 'eyebrow' }, 'Talk about'),
+        h('div', { class: 'topics-head' },
+          h('p', { class: 'eyebrow' }, 'Talk about'),
+          h('button', {
+            type: 'button', class: 'decide-btn find-btn', 'aria-label': `Find ${p.name} at the venue`,
+            onClick: () => ctx.go('find', { with: p.id }),
+          }, h('span', { class: 'decide-chip find-chip', 'aria-hidden': 'true' }, icon('navigate', { size: 16, stroke: 2 })))),
         h('ul', { class: 'stack' }, p.topics.map((t) => h('li', { class: 'topic' }, h('span', { class: 'topic-dot', 'aria-hidden': 'true' }), h('span', null, t)))),
       ),
     );
@@ -200,7 +206,8 @@ export function render(ctx) {
       }
     } else {
       badge = h('span', { class: 'latest-badge agreed' }, icon('check', { size: 13, stroke: 3 }), 'Agents agreed');
-      action = h('a', { class: 'latest-action', href: '#/calendar', 'aria-label': `Create an event with ${who.name}` },
+      // Calendar opens its Add event sheet prefilled with this person (calendar.js reads ?add=1&with=).
+      action = h('a', { class: 'latest-action', href: hashFor('calendar', { add: '1', with: who.id }), 'aria-label': `Create an event with ${who.name}` },
         h('span', { class: 'decide-chip add', 'aria-hidden': 'true' }, icon('plus', { size: 18, stroke: 2.2 })));
     }
 
