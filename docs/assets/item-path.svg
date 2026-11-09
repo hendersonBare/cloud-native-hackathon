@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 380" width="1240" height="380" role="img" aria-labelledby="t d">
   <title id="t">The path of every item that leaves a company</title>
-  <desc id="d">Shareable memory, read with a scoped Elasticsearch key, goes to a short-lived delegate pod. The LLM proposes items by known ID only. OPA allows or denies each one; a deny drops the item and reports the rule. Allowed items reach the peer delegate through a per-encounter NetworkPolicy and end up as summaries in the shared brief. Internal memory, private profiles, record text and prompts never leave.</desc>
+  <desc id="d">Shareable memory, read with a scoped Elasticsearch key, goes to a short-lived delegate pod. The LLM proposes items by known ID only. OPA allows or denies each one; a deny drops the item and reports the rule. Allowed items reach the peer delegate through a per-encounter NetworkPolicy and end up as summaries in the shared brief. Internal memory, private profiles, record text and prompts never leave. Animated: three items travel the path; two are allowed into the shared brief and the third, a pricing document, is denied by OPA and dropped with the rule pricing_needs_approval.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M0 0 L10 5 L0 10 z" fill="#16181c"/>
@@ -8,7 +8,79 @@
     <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M0 0 L10 5 L0 10 z" fill="#b3261e"/>
     </marker>
+
+    <g id="chipW">
+      <path d="M-8 -10.5 H2 L8 -4.5 V10.5 H-8 Z" fill="#ffffff" stroke="#16181c" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M2 -10.5 V-4.5 H8" fill="none" stroke="#16181c" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M-4.5 -1 H4.5 M-4.5 3 H4.5 M-4.5 7 H1.5" stroke="#8a5a14" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="chipG">
+      <path d="M-8 -10.5 H2 L8 -4.5 V10.5 H-8 Z" fill="#1e7a45" stroke="#1e7a45" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M2 -10.5 V-4.5 H8" fill="none" stroke="#9fcfb3" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M-4.5 2 L-1.5 5.5 L4.5 -1.5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="chipR">
+      <path d="M-8 -10.5 H2 L8 -4.5 V10.5 H-8 Z" fill="#b3261e" stroke="#b3261e" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M2 -10.5 V-4.5 H8" fill="none" stroke="#f0b8b2" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M-3.5 -1 L3.5 6 M3.5 -1 L-3.5 6" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <filter id="blur" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
   </defs>
+  <style>
+  .fx{opacity:0}
+  .ring,.bar{transform-box:fill-box}
+  .ring{transform-origin:center}
+  .bar{transform-origin:0 50%}
+  .h-sm{animation:ksm 15s linear infinite}
+  .h-dp{animation:kdp 15s linear infinite}
+  .h-llm{animation:kllm 15s linear infinite}
+  .h-opa{animation:kopa 15s linear infinite}
+  .h-opaG{animation:kopaG 15s linear infinite}
+  .h-peer{animation:kpeer 15s linear infinite}
+  .h-opaR{animation:kopaR 15s linear infinite}
+  .h-drop{animation:kdrop 15s linear infinite}
+  .h-rule{animation:krule 15s linear infinite}
+  .h-bar0{animation:kbar0 15s linear infinite}
+  .h-bar1{animation:kbar1 15s linear infinite}
+  .h-track{animation:ktrack 15s linear infinite}
+  .h-glow{animation:kglow 15s linear infinite}
+  .h-r1{animation:kr1 15s linear infinite}
+  .h-r3{animation:kr3 15s linear infinite}
+  .h-r2{animation:kr2 15s linear infinite}
+  .h-r3r{animation:kr3r 15s linear infinite}
+  .h-c0a{animation:kc0a 15s linear infinite}
+  .h-c0b{animation:kc0b 15s linear infinite}
+  .h-c1a{animation:kc1a 15s linear infinite}
+  .h-c1b{animation:kc1b 15s linear infinite}
+  .h-c2a{animation:kc2a 15s linear infinite}
+  .h-c2b{animation:kc2b 15s linear infinite}
+  .lock{animation:klock 7.5s ease-in-out infinite}
+  @keyframes ksm{0.00%{opacity:0} 1.87%{opacity:0} 2.67%{opacity:1} 6.67%{opacity:1} 8.33%{opacity:0} 16.53%{opacity:0} 17.33%{opacity:1} 21.33%{opacity:1} 23.00%{opacity:0} 31.20%{opacity:0} 32.00%{opacity:1} 36.00%{opacity:1} 37.67%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kdp{0.00%{opacity:0} 9.20%{opacity:0} 10.00%{opacity:1} 14.00%{opacity:1} 15.67%{opacity:0} 23.87%{opacity:0} 24.67%{opacity:1} 28.67%{opacity:1} 30.33%{opacity:0} 38.53%{opacity:0} 39.33%{opacity:1} 43.33%{opacity:1} 45.00%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kllm{0.00%{opacity:0} 16.53%{opacity:0} 17.33%{opacity:1} 21.33%{opacity:1} 23.00%{opacity:0} 31.20%{opacity:0} 32.00%{opacity:1} 36.00%{opacity:1} 37.67%{opacity:0} 45.87%{opacity:0} 46.67%{opacity:1} 50.67%{opacity:1} 52.33%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kopa{0.00%{opacity:0} 23.87%{opacity:0} 24.67%{opacity:1} 28.33%{opacity:1} 30.00%{opacity:0} 38.53%{opacity:0} 39.33%{opacity:1} 43.00%{opacity:1} 44.67%{opacity:0} 53.20%{opacity:0} 54.00%{opacity:1} 57.67%{opacity:1} 59.33%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kopaG{0.00%{opacity:0} 26.87%{opacity:0} 27.67%{opacity:1} 32.33%{opacity:1} 34.00%{opacity:0} 41.53%{opacity:0} 42.33%{opacity:1} 47.00%{opacity:1} 48.67%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kpeer{0.00%{opacity:0} 33.87%{opacity:0} 34.67%{opacity:1} 38.67%{opacity:1} 40.33%{opacity:0} 48.53%{opacity:0} 49.33%{opacity:1} 53.33%{opacity:1} 55.00%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kopaR{0.00%{opacity:0} 56.20%{opacity:0} 57.00%{opacity:1} 61.67%{opacity:1} 63.33%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kdrop{0.00%{opacity:0} 63.87%{opacity:0} 64.67%{opacity:1} 76.67%{opacity:1} 78.33%{opacity:0} 100.00%{opacity:0}}
+  @keyframes krule{0.00%{opacity:0} 64.87%{opacity:0} 65.67%{opacity:1} 78.00%{opacity:1} 79.67%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kbar0{0%{opacity:0;transform:scaleX(0)} 41.67%{opacity:0;transform:scaleX(0)} 42.00%{opacity:1;transform:scaleX(0)} 45.00%{opacity:1;transform:scaleX(1)} 89.33%{opacity:1;transform:scaleX(1)} 94.67%{opacity:0;transform:scaleX(1)} 100%{opacity:0;transform:scaleX(0)}}
+  @keyframes kbar1{0%{opacity:0;transform:scaleX(0)} 56.33%{opacity:0;transform:scaleX(0)} 56.67%{opacity:1;transform:scaleX(0)} 59.67%{opacity:1;transform:scaleX(1)} 89.33%{opacity:1;transform:scaleX(1)} 94.67%{opacity:0;transform:scaleX(1)} 100%{opacity:0;transform:scaleX(0)}}
+  @keyframes ktrack{0%{opacity:0} 40.00%{opacity:0} 42.00%{opacity:1} 89.33%{opacity:1} 94.67%{opacity:0} 100%{opacity:0}}
+  @keyframes kglow{0.00%{opacity:0} 41.33%{opacity:0} 43.67%{opacity:0.75} 46.67%{opacity:0.4} 56.00%{opacity:0.4} 58.33%{opacity:1} 61.33%{opacity:0.8} 89.33%{opacity:0.8} 94.67%{opacity:0} 100.00%{opacity:0}}
+  @keyframes kr1{0%{opacity:0;transform:scale(1)} 7.33%{opacity:0;transform:scale(1)} 7.47%{opacity:1;transform:scale(1)} 12.13%{opacity:0;transform:scale(1.5)} 12.27%{opacity:0;transform:scale(1)} 22.00%{opacity:0;transform:scale(1)} 22.13%{opacity:1;transform:scale(1)} 26.80%{opacity:0;transform:scale(1.5)} 26.93%{opacity:0;transform:scale(1)} 36.67%{opacity:0;transform:scale(1)} 36.80%{opacity:1;transform:scale(1)} 41.47%{opacity:0;transform:scale(1.5)} 41.60%{opacity:0;transform:scale(1)} 100%{opacity:0;transform:scale(1)}}
+  @keyframes kr3{0%{opacity:0;transform:scale(1)} 28.20%{opacity:0;transform:scale(1)} 28.33%{opacity:1;transform:scale(1)} 33.00%{opacity:0;transform:scale(1.5)} 33.13%{opacity:0;transform:scale(1)} 42.87%{opacity:0;transform:scale(1)} 43.00%{opacity:1;transform:scale(1)} 47.67%{opacity:0;transform:scale(1.5)} 47.80%{opacity:0;transform:scale(1)} 100%{opacity:0;transform:scale(1)}}
+  @keyframes kr2{0%{opacity:0;transform:scale(1)} 39.20%{opacity:0;transform:scale(1)} 39.33%{opacity:1;transform:scale(1)} 44.00%{opacity:0;transform:scale(1.5)} 44.13%{opacity:0;transform:scale(1)} 53.87%{opacity:0;transform:scale(1)} 54.00%{opacity:1;transform:scale(1)} 58.67%{opacity:0;transform:scale(1.5)} 58.80%{opacity:0;transform:scale(1)} 100%{opacity:0;transform:scale(1)}}
+  @keyframes kr3r{0%{opacity:0;transform:scale(1)} 57.53%{opacity:0;transform:scale(1)} 57.67%{opacity:1;transform:scale(1)} 62.33%{opacity:0;transform:scale(1.5)} 62.47%{opacity:0;transform:scale(1)} 100%{opacity:0;transform:scale(1)}}
+  @keyframes kc0a{0%{opacity:0;transform:translate(197px,176px)} 6.60%{opacity:0;transform:translate(197px,176px)} 7.20%{opacity:1;transform:translate(202px,176px)} 9.47%{opacity:1;transform:translate(226px,176px)} 10.00%{opacity:0;transform:translate(231px,176px)} 13.93%{opacity:0;transform:translate(400px,176px)} 14.53%{opacity:1;transform:translate(405px,176px)} 16.80%{opacity:1;transform:translate(429px,176px)} 17.33%{opacity:0;transform:translate(434px,176px)} 21.27%{opacity:0;transform:translate(603px,176px)} 21.87%{opacity:1;transform:translate(608px,176px)} 24.13%{opacity:1;transform:translate(632px,176px)} 24.67%{opacity:0;transform:translate(637px,176px)} 100%{opacity:0;transform:translate(637px,176px)}}
+  @keyframes kc0b{0%{opacity:0;transform:translate(806px,176px)} 31.27%{opacity:0;transform:translate(806px,176px)} 31.87%{opacity:1;transform:translate(811px,176px)} 34.13%{opacity:1;transform:translate(835px,176px)} 34.67%{opacity:0;transform:translate(840px,176px)} 38.60%{opacity:0;transform:translate(1009px,176px)} 39.20%{opacity:1;transform:translate(1014px,176px)} 41.47%{opacity:1;transform:translate(1038px,176px)} 42.00%{opacity:0;transform:translate(1043px,176px)} 100%{opacity:0;transform:translate(1043px,176px)}}
+  @keyframes kc1a{0%{opacity:0;transform:translate(197px,176px)} 21.27%{opacity:0;transform:translate(197px,176px)} 21.87%{opacity:1;transform:translate(202px,176px)} 24.13%{opacity:1;transform:translate(226px,176px)} 24.67%{opacity:0;transform:translate(231px,176px)} 28.60%{opacity:0;transform:translate(400px,176px)} 29.20%{opacity:1;transform:translate(405px,176px)} 31.47%{opacity:1;transform:translate(429px,176px)} 32.00%{opacity:0;transform:translate(434px,176px)} 35.93%{opacity:0;transform:translate(603px,176px)} 36.53%{opacity:1;transform:translate(608px,176px)} 38.80%{opacity:1;transform:translate(632px,176px)} 39.33%{opacity:0;transform:translate(637px,176px)} 100%{opacity:0;transform:translate(637px,176px)}}
+  @keyframes kc1b{0%{opacity:0;transform:translate(806px,176px)} 45.93%{opacity:0;transform:translate(806px,176px)} 46.53%{opacity:1;transform:translate(811px,176px)} 48.80%{opacity:1;transform:translate(835px,176px)} 49.33%{opacity:0;transform:translate(840px,176px)} 53.27%{opacity:0;transform:translate(1009px,176px)} 53.87%{opacity:1;transform:translate(1014px,176px)} 56.13%{opacity:1;transform:translate(1038px,176px)} 56.67%{opacity:0;transform:translate(1043px,176px)} 100%{opacity:0;transform:translate(1043px,176px)}}
+  @keyframes kc2a{0%{opacity:0;transform:translate(197px,176px)} 35.93%{opacity:0;transform:translate(197px,176px)} 36.53%{opacity:1;transform:translate(202px,176px)} 38.80%{opacity:1;transform:translate(226px,176px)} 39.33%{opacity:0;transform:translate(231px,176px)} 43.27%{opacity:0;transform:translate(400px,176px)} 43.87%{opacity:1;transform:translate(405px,176px)} 46.13%{opacity:1;transform:translate(429px,176px)} 46.67%{opacity:0;transform:translate(434px,176px)} 50.60%{opacity:0;transform:translate(603px,176px)} 51.20%{opacity:1;transform:translate(608px,176px)} 53.47%{opacity:1;transform:translate(632px,176px)} 54.00%{opacity:0;transform:translate(637px,176px)} 100%{opacity:0;transform:translate(637px,176px)}}
+  @keyframes kc2b{0%{opacity:0;transform:translate(713px,226px)} 60.60%{opacity:0;transform:translate(713px,226px)} 61.33%{opacity:1;transform:translate(713px,230px)} 64.67%{opacity:1;transform:translate(713px,256px)} 65.67%{opacity:0;transform:translate(713px,264px)} 100%{opacity:0;transform:translate(713px,264px)}}
+  @keyframes klock{0%{opacity:.55} 50%{opacity:1} 100%{opacity:.55}}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important}}
+  </style>
   <rect width="1240" height="380" rx="16" fill="#faf8f4"/>
   <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
     <text x="35" y="48" font-size="22" font-weight="700" fill="#16181c">Every item that leaves a company crosses three walls</text>
@@ -16,34 +88,45 @@
 
     <g font-size="13" fill="#4a4740">
       <rect x="30" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <rect class="fx h-sm" x="30" y="120" width="165" height="100" rx="12" fill="#f8f0e0" stroke="#8a5a14" stroke-width="2.5"/>
       <text x="44" y="148" font-size="16" font-weight="700" fill="#16181c">Shareable memory</text>
       <text x="44" y="172">acme-shareable index</text>
       <text x="44" y="192">+ the conference index</text>
-      <circle cx="185" cy="120" r="13" fill="#8a5a14"/><text x="185" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">1</text>
+      <circle class="fx ring h-r1" cx="185" cy="120" r="13" fill="#d9c7a3" stroke="#8a5a14" stroke-width="2.5"/><circle cx="185" cy="120" r="13" fill="#8a5a14"/><text x="185" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">1</text>
 
       <rect x="233" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <rect class="fx h-dp" x="233" y="120" width="165" height="100" rx="12" fill="#f8f0e0" stroke="#8a5a14" stroke-width="2.5"/>
       <text x="247" y="148" font-size="16" font-weight="700" fill="#16181c">Delegate pod</text>
       <text x="247" y="172">one Job per encounter</text>
       <text x="247" y="192">lives about a minute</text>
 
       <rect x="436" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <rect class="fx h-llm" x="436" y="120" width="165" height="100" rx="12" fill="#f8f0e0" stroke="#8a5a14" stroke-width="2.5"/>
       <text x="450" y="148" font-size="16" font-weight="700" fill="#16181c">LLM proposes</text>
       <text x="450" y="172">8 s cap, then rules</text>
       <text x="450" y="192">known item IDs only</text>
 
       <rect x="639" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <rect class="fx h-opa" x="639" y="120" width="165" height="100" rx="12" fill="#f8f0e0" stroke="#8a5a14" stroke-width="2.5"/>
+      <rect class="fx h-opaG" x="639" y="120" width="165" height="100" rx="12" fill="#e6f2ea" stroke="#1e7a45" stroke-width="2.5"/>
+      <rect class="fx h-opaR" x="639" y="120" width="165" height="100" rx="12" fill="#fbeae8" stroke="#b3261e" stroke-width="3"/>
       <text x="653" y="148" font-size="16" font-weight="700" fill="#16181c">OPA decides</text>
       <text x="653" y="172">7 rules, first match</text>
       <text x="653" y="192">fails closed at 2 s</text>
-      <circle cx="794" cy="120" r="13" fill="#8a5a14"/><text x="794" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">3</text>
+      <circle class="fx ring h-r3" cx="794" cy="120" r="13" fill="#d9c7a3" stroke="#8a5a14" stroke-width="2.5"/><circle class="fx ring h-r3r" cx="794" cy="120" r="13" fill="#f3d3cf" stroke="#b3261e" stroke-width="2.5"/><circle cx="794" cy="120" r="13" fill="#8a5a14"/><text x="794" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">3</text>
 
       <rect x="842" y="120" width="165" height="100" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+      <rect class="fx h-peer" x="842" y="120" width="165" height="100" rx="12" fill="#f8f0e0" stroke="#8a5a14" stroke-width="2.5"/>
       <text x="856" y="148" font-size="16" font-weight="700" fill="#16181c">Peer delegate</text>
       <text x="856" y="172">NetworkPolicy admits</text>
       <text x="856" y="192">only this encounter</text>
-      <circle cx="997" cy="120" r="13" fill="#8a5a14"/><text x="997" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">2</text>
+      <circle class="fx ring h-r2" cx="997" cy="120" r="13" fill="#d9c7a3" stroke="#8a5a14" stroke-width="2.5"/><circle cx="997" cy="120" r="13" fill="#8a5a14"/><text x="997" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">2</text>
 
+      <rect class="fx h-glow" x="1045" y="120" width="165" height="100" rx="12" fill="#c9a25f" filter="url(#blur)"/>
       <rect x="1045" y="120" width="165" height="100" rx="12" fill="#16181c"/>
+      <rect class="fx h-track" x="1059" y="205" width="137" height="4" rx="2" fill="#3a3a3a"/>
+      <rect class="fx bar h-bar0" x="1059" y="205" width="66" height="4" rx="2" fill="#d9c7a3"/>
+      <rect class="fx bar h-bar1" x="1130" y="205" width="66" height="4" rx="2" fill="#d9c7a3"/>
       <text x="1059" y="148" font-size="16" font-weight="700" fill="#efebe4">Shared brief</text>
       <text x="1059" y="172" fill="#d8d3c8">summaries, never text</text>
       <text x="1059" y="192" fill="#d8d3c8">in your own language</text>
@@ -61,13 +144,24 @@
 
     <path d="M721 220 V262" stroke="#b3261e" stroke-width="2" fill="none" marker-end="url(#r)"/>
     <text x="729" y="246" font-size="12" font-weight="700" fill="#b3261e">deny</text>
+    <g>
+      <use class="fx h-c0a" href="#chipW"/>
+      <use class="fx h-c0b" href="#chipG"/>
+      <use class="fx h-c1a" href="#chipW"/>
+      <use class="fx h-c1b" href="#chipG"/>
+      <use class="fx h-c2a" href="#chipW"/>
+      <use class="fx h-c2b" href="#chipR"/>
+    </g>
     <rect x="560" y="266" width="320" height="76" rx="12" fill="#fbeae8" stroke="#b3261e" stroke-width="1.5"/>
+    <rect class="fx h-drop" x="560" y="266" width="320" height="76" rx="12" fill="#f8dcd8" stroke="#b3261e" stroke-width="3"/>
+    <rect class="fx h-rule" x="644" y="320" width="146" height="17" rx="4" fill="#f0bdb7"/>
     <text x="576" y="292" font-size="15" font-weight="700" fill="#b3261e">Dropped, and reported</text>
     <text x="576" y="314" font-size="13" fill="#4a4740">a policy_decision event with its rule_id,</text>
     <text x="576" y="332" font-size="13" fill="#4a4740">for example pricing_needs_approval</text>
 
     <rect x="35" y="266" width="370" height="76" rx="12" fill="#ebe7df" stroke="#8c877c" stroke-width="1.5" stroke-dasharray="6 5"/>
     <text x="51" y="292" font-size="15" font-weight="700" fill="#16181c">Never leaves the company</text>
+    <g class="lock" transform="translate(383 287) scale(.8) translate(-383 -285)" fill="none" stroke="#8c877c" stroke-width="2" stroke-linecap="round"><path d="M377 284 V279.5 A6 6 0 0 1 389 279.5 V284"/><rect x="374" y="284" width="18" height="13" rx="3" fill="#8c877c" stroke="none"/><circle cx="383" cy="289.5" r="1.8" fill="#ebe7df" stroke="none"/></g>
     <text x="51" y="314" font-size="13" fill="#4a4740">rapport-acme-internal (acme-doc-0008, acme-note-0007),</text>
     <text x="51" y="332" font-size="13" fill="#4a4740">private profiles, record text, prompts</text>
 

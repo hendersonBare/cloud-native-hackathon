@@ -23,4 +23,15 @@ Rapport is a conference networking app: each company's agents meet on Kubernetes
 - `/internal/*` is served only on the gateway's cluster-only port 8081, never on the public port 8080.
 - The PR description has a "Track evidence" section and, where needed, "Security review needed".
 
+## Stack context
+
+How Rapport uses each technology, where it lives and the invariants a PR must keep:
+
+@../../docs/stack/README.md
+@../../docs/stack/gitar-sonar.md
+@../../docs/stack/dash0.md
+@../../docs/stack/radar.md
+@../../docs/stack/elasticsearch.md
+@../../docs/stack/opa.md
+
 Do not suppress or downgrade standard reliability or security findings.

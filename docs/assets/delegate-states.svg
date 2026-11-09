@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 494" width="1240" height="494" role="img" aria-labelledby="t d">
+<title id="t">The delegate state machine</title>
+<desc id="d">State machine of one delegate pod. The Job starts with TRACEPARENT in state waiting. When the peer's /healthz answers (30 s max) it moves to hello, round 1, where cards are exchanged; then offers_asks, round 2, where each offer is checked by OPA; then answers_followups, round 3, where each answer is checked by OPA; then brief, which posts shared_brief, and done, exit 0. Two failure paths lead to failed, exit non-zero, which reports delegate_status failed: from waiting when the peer is never ready, and from offers_asks on a timeout of 20 s per call or 90 s in all. A policy deny is not a failure: a denied offer is dropped, a denied answer goes back as declined, each deny is reported as a policy_decision with its rule_id, and the exchange goes on.</desc>
+<style>.tk,.tr,.hg,.to,.fe,.ff{animation-duration:16s;animation-iteration-count:infinite;animation-timing-function:linear}.tk,.tr,.hg,.to,.fe,.ff{opacity:0}@keyframes tk{0.00%{transform:translate(45.0px,222.0px);opacity:0}1.25%{transform:translate(45.0px,222.0px);opacity:1}3.63%{transform:translate(101.0px,222.0px);opacity:1}9.56%{transform:translate(216.6px,222.0px);opacity:1}11.94%{transform:translate(285.2px,222.0px);opacity:1}17.88%{transform:translate(354.1px,222.0px);opacity:1}20.25%{transform:translate(422.6px,222.0px);opacity:1}26.19%{transform:translate(540.7px,222.0px);opacity:1}28.56%{transform:translate(609.3px,222.0px);opacity:1}34.50%{transform:translate(793.3px,222.0px);opacity:1}36.88%{transform:translate(861.8px,222.0px);opacity:1}42.81%{transform:translate(964.9px,222.0px);opacity:1}45.19%{transform:translate(1033.5px,222.0px);opacity:1}53.75%{transform:translate(1033.5px,222.0px);opacity:1}54.37%{transform:translate(1033.5px,222.0px);opacity:0}55.00%{transform:translate(45.0px,222.0px);opacity:0}55.94%{transform:translate(45.0px,222.0px);opacity:1}57.94%{transform:translate(101.0px,222.0px);opacity:1}61.69%{transform:translate(216.6px,222.0px);opacity:1}63.69%{transform:translate(285.2px,222.0px);opacity:1}67.44%{transform:translate(354.1px,222.0px);opacity:1}69.44%{transform:translate(422.6px,222.0px);opacity:1}69.75%{transform:translate(422.6px,222.0px);opacity:0}100.00%{transform:translate(45.0px,222.0px);opacity:0}}@keyframes tr{0.00%{transform:translate(481.7px,248.0px);opacity:0}76.88%{transform:translate(481.7px,248.0px);opacity:0}76.94%{transform:translate(481.7px,248.0px);opacity:1}79.75%{transform:translate(481.7px,366.0px);opacity:1}83.19%{transform:translate(381.6px,366.0px);opacity:1}83.50%{transform:translate(381.6px,366.0px);opacity:0}100.00%{transform:translate(481.7px,248.0px);opacity:0}}@keyframes s0{0%{opacity:0}3.13%{opacity:0}4.12%,9.56%{opacity:1}10.50%{opacity:0}57.44%{opacity:0}58.44%,61.69%{opacity:1}62.63%{opacity:0}100%{opacity:0}}.s0{animation-name:s0}@keyframes s1{0%{opacity:0}11.44%{opacity:0}12.44%,17.88%{opacity:1}18.81%{opacity:0}63.19%{opacity:0}64.19%,67.44%{opacity:1}68.38%{opacity:0}100%{opacity:0}}.s1{animation-name:s1}@keyframes s2{0%{opacity:0}19.75%{opacity:0}20.75%,26.19%{opacity:1}27.13%{opacity:0}68.94%{opacity:0}69.94%,72.56%{opacity:1}73.50%{opacity:0}100%{opacity:0}}.s2{animation-name:s2}@keyframes s3{0%{opacity:0}28.06%{opacity:0}29.06%,34.50%{opacity:1}35.44%{opacity:0}100%{opacity:0}}.s3{animation-name:s3}@keyframes s4{0%{opacity:0}36.38%{opacity:0}37.38%,42.81%{opacity:1}43.75%{opacity:0}100%{opacity:0}}.s4{animation-name:s4}@keyframes s5{0%{opacity:0}44.69%{opacity:0}45.69%,53.75%{opacity:1}54.69%{opacity:0}100%{opacity:0}}.s5{animation-name:s5}@keyframes to{0%,72.56%{opacity:0}73.81%{opacity:1}75.69%{opacity:.35}77.56%,95.62%{opacity:1}98.75%,100%{opacity:0}}@keyframes fe{0%,76.94%{stroke-dashoffset:100;opacity:1}83.19%,95.62%{stroke-dashoffset:0;opacity:1}98.75%,100%{stroke-dashoffset:0;opacity:0}}@keyframes ff{0%,83.19%{opacity:0}84.12%{opacity:1}86.00%{opacity:.2}87.88%{opacity:1}89.75%{opacity:.2}91.62%,95.62%{opacity:1}98.75%,100%{opacity:0}}.tk{animation-name:tk}.tr{animation-name:tr}.to{animation-name:to}.fe{animation-name:fe}.ff{animation-name:ff}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
+<g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="1240" height="494" rx="16" fill="#faf8f4"/>
+<text x="36" y="50" font-family="Georgia, 'Times New Roman', serif" font-size="27" fill="#16181c">Each delegate is a small state machine</text>
+<text x="36" y="80" font-size="15" fill="#4a4740">One pod per company per encounter. It walks the three rounds, or stops on a timeout and reports failed.</text>
+<text x="36.0" y="136" text-anchor="start" font-size="15" fill="#4a4740">Job starts with</text>
+<text x="36.0" y="157" text-anchor="start" font-size="15" fill="#4a4740">TRACEPARENT</text>
+<path d="M45.0 166 V208.0" stroke="#d9c7a3" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+<path d="M55.0 222.0 H83.0" stroke="#16181c" stroke-width="2" fill="none"/>
+<path d="M91.0 222.0 l-10 -6 v12 z" fill="#16181c"/>
+<text x="250.9" y="136" text-anchor="middle" font-size="15" fill="#4a4740">peer /healthz answers</text>
+<text x="250.9" y="157" text-anchor="middle" font-size="15" fill="#4a4740">(30 s max)</text>
+<path d="M250.9 166 V213.0" stroke="#d9c7a3" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+<path d="M225.6 222.0 H267.2" stroke="#16181c" stroke-width="2" fill="none"/>
+<path d="M275.2 222.0 l-10 -6 v12 z" fill="#16181c"/>
+<text x="388.3" y="136" text-anchor="middle" font-size="15" fill="#4a4740">cards</text>
+<text x="388.3" y="157" text-anchor="middle" font-size="15" fill="#4a4740">exchanged</text>
+<path d="M388.3 166 V213.0" stroke="#d9c7a3" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+<path d="M363.1 222.0 H404.6" stroke="#16181c" stroke-width="2" fill="none"/>
+<path d="M412.6 222.0 l-10 -6 v12 z" fill="#16181c"/>
+<text x="575.0" y="136" text-anchor="middle" font-size="15" fill="#4a4740">each offer</text>
+<text x="575.0" y="157" text-anchor="middle" font-size="15" fill="#4a4740">checked by OPA</text>
+<path d="M575.0 166 V213.0" stroke="#d9c7a3" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+<path d="M549.7 222.0 H591.3" stroke="#16181c" stroke-width="2" fill="none"/>
+<path d="M599.3 222.0 l-10 -6 v12 z" fill="#16181c"/>
+<text x="827.6" y="136" text-anchor="middle" font-size="15" fill="#4a4740">each answer</text>
+<text x="827.6" y="157" text-anchor="middle" font-size="15" fill="#4a4740">checked by OPA</text>
+<path d="M827.6 166 V213.0" stroke="#d9c7a3" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+<path d="M802.3 222.0 H843.8" stroke="#16181c" stroke-width="2" fill="none"/>
+<path d="M851.8 222.0 l-10 -6 v12 z" fill="#16181c"/>
+<text x="999.2" y="136" text-anchor="middle" font-size="15" fill="#4a4740">shared_brief,</text>
+<text x="999.2" y="157" text-anchor="middle" font-size="15" fill="#4a4740">exit 0</text>
+<path d="M999.2 166 V213.0" stroke="#d9c7a3" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+<path d="M973.9 222.0 H1015.5" stroke="#16181c" stroke-width="2" fill="none"/>
+<path d="M1023.5 222.0 l-10 -6 v12 z" fill="#16181c"/>
+<circle cx="45" cy="222.0" r="9" fill="#16181c"/>
+<path d="M158.8 258 V366.0 H237.9" stroke="#b3261e" stroke-width="2" stroke-dasharray="7 5" fill="none"/>
+<path d="M245.9 366.0 l-10 -6 v12 z" fill="#b3261e"/>
+<path d="M481.7 258 V366.0 H402.6" stroke="#b3261e" stroke-width="2" stroke-dasharray="7 5" fill="none"/>
+<path d="M394.6 366.0 l10 -6 v12 z" fill="#b3261e"/>
+<path class="fe" d="M481.7 258 V366.0 H402.6" stroke="#b3261e" stroke-width="4.5" fill="none" pathLength="100" stroke-dasharray="100"/>
+<text x="170.8" y="294" font-size="15" font-weight="700" fill="#b3261e">peer never ready</text>
+<text x="493.7" y="294" font-size="15" font-weight="700" fill="#b3261e">20 s per call, 90 s in all</text>
+<path d="M320.2 402 V427" stroke="#b3261e" stroke-width="2" fill="none"/>
+<path d="M320.2 436 l-6 -10 h12 z" fill="#b3261e"/>
+<circle cx="320.2" cy="448" r="11" fill="none" stroke="#b3261e" stroke-width="2"/>
+<circle cx="320.2" cy="448" r="6" fill="#b3261e"/>
+<text x="342.2" y="453" font-size="15" fill="#b3261e">delegate_status failed</text>
+<circle class="tk" r="9" fill="#8a5a14" stroke="#ffffff" stroke-width="2.5"/>
+<circle class="tr" r="9" fill="#b3261e" stroke="#ffffff" stroke-width="2.5"/>
+<rect x="92.0" y="186" width="133.6" height="72" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+<rect class="hg s0" x="92.0" y="186" width="133.6" height="72" rx="12" fill="#f5ead3" stroke="#8a5a14" stroke-width="3"/>
+<text x="158.8" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#16181c">waiting</text>
+<text x="158.8" y="240" text-anchor="middle" font-size="15" fill="#4a4740">before round 1</text>
+<rect x="276.2" y="186" width="86.9" height="72" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+<rect class="hg s1" x="276.2" y="186" width="86.9" height="72" rx="12" fill="#f5ead3" stroke="#8a5a14" stroke-width="3"/>
+<text x="319.6" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#16181c">hello</text>
+<text x="319.6" y="240" text-anchor="middle" font-size="15" fill="#4a4740">round 1</text>
+<rect x="413.6" y="186" width="136.1" height="72" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+<rect class="hg s2" x="413.6" y="186" width="136.1" height="72" rx="12" fill="#f5ead3" stroke="#8a5a14" stroke-width="3"/>
+<text x="481.7" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#16181c">offers_asks</text>
+<text x="481.7" y="240" text-anchor="middle" font-size="15" fill="#4a4740">round 2</text>
+<rect x="600.3" y="186" width="202.0" height="72" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+<rect class="hg s3" x="600.3" y="186" width="202.0" height="72" rx="12" fill="#f5ead3" stroke="#8a5a14" stroke-width="3"/>
+<text x="701.3" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#16181c">answers_followups</text>
+<text x="701.3" y="240" text-anchor="middle" font-size="15" fill="#4a4740">round 3</text>
+<rect x="852.8" y="186" width="121.1" height="72" rx="12" fill="#ffffff" stroke="#16181c" stroke-width="1.5"/>
+<rect class="hg s4" x="852.8" y="186" width="121.1" height="72" rx="12" fill="#f5ead3" stroke="#8a5a14" stroke-width="3"/>
+<text x="913.4" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#16181c">brief</text>
+<text x="913.4" y="240" text-anchor="middle" font-size="15" fill="#4a4740">after round 3</text>
+<rect class="hg s5" x="1018.5" y="180" width="191.5" height="84" rx="17" fill="none" stroke="#8a5a14" stroke-width="3"/>
+<rect x="1024.5" y="186" width="179.5" height="72" rx="12" fill="#16181c"/>
+<text x="1114.2" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#efebe4">done</text>
+<text x="1114.2" y="240" text-anchor="middle" font-size="15" fill="#d8d3c8">delegate_status done</text>
+<rect class="to" x="413.6" y="186" width="136.1" height="72" rx="12" fill="#fbeae8" stroke="#b3261e" stroke-width="3"/>
+<g class="to"><text x="481.7" y="217" text-anchor="middle" font-size="18" font-weight="700" fill="#b3261e">offers_asks</text><text x="481.7" y="240" text-anchor="middle" font-size="15" fill="#b3261e">timed out</text></g>
+<rect x="246.9" y="330" width="146.7" height="72" rx="12" fill="#fbeae8" stroke="#b3261e" stroke-width="2"/>
+<rect class="ff" x="246.9" y="330" width="146.7" height="72" rx="12" fill="#f3c9c4" stroke="#b3261e" stroke-width="3"/>
+<text x="320.2" y="361" text-anchor="middle" font-size="18" font-weight="700" fill="#b3261e">failed</text>
+<text x="320.2" y="384" text-anchor="middle" font-size="15" fill="#b3261e">exit non-zero</text>
+<rect x="835.5" y="324" width="368.5" height="136" rx="12" fill="#efebe4" stroke="#8c877c" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text x="853.5" y="354" font-size="15" font-weight="700" fill="#16181c">A deny is not a failure.</text>
+<text x="853.5" y="376" font-size="15" fill="#4a4740">A denied offer is dropped; a denied answer goes</text>
+<text x="853.5" y="398" font-size="15" fill="#4a4740">back as declined. Each deny is reported as a</text>
+<text x="853.5" y="420" font-size="15" fill="#4a4740">policy_decision with its rule_id, and the exchange</text>
+<text x="853.5" y="442" font-size="15" fill="#4a4740">goes on to the brief.</text>
+</g>
+</svg>
