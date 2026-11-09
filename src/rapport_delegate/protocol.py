@@ -221,6 +221,12 @@ def review_text(language: Language, title: str, peer_org_name: str) -> str:
     return truncate(f"Revisar {title} de {peer}" if language == "es" else f"Review {title} from {peer}", 200)
 
 
+def generic_followup_text(language: Language, org_name: str) -> str:
+    """Language-correct stand-in when a follow-up's own words cannot be translated (no model)."""
+    peer = short_org(org_name)
+    return truncate(f"Dar seguimiento con {peer}" if language == "es" else f"Follow up with {peer}", 200)
+
+
 def shared_items(self_org: str, peer_org: str, mine: list[OfferItem], theirs: list[OfferItem]) -> list[SharedItem]:
     """Everything that was actually shared, in either direction, once per item."""
     seen: dict[str, SharedItem] = {}
@@ -243,7 +249,10 @@ def build_shared_brief(
     suggested_talk: TalkHit | None,
     summary: str,
 ) -> SharedBrief:
-    """Deterministic structure; `summary` (and any followup translation) is the only model-written part."""
+    """Deterministic structure; `summary` (and any followup translation) is the only model-written part.
+    At most MAX_FOLLOWUPS follow-ups, with "attend <talk> together" first."""
+    talk_id = talk_followup_id(encounter_id)
+    ordered = sorted(followups, key=lambda f: f.followup_id != talk_id)  # stable: talk first, rest keep order
     return SharedBrief(
         encounter_id=encounter_id,
         for_persona_id=persona.persona_id,
@@ -252,6 +261,6 @@ def build_shared_brief(
         mutual_interests=mutual,
         shared_items=items,
         declined=declined,
-        followups=followups[:MAX_FOLLOWUPS + 2],
+        followups=ordered[:MAX_FOLLOWUPS],
         suggested_talk=suggested_talk,
     )

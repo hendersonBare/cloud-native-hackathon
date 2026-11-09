@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
 <link rel="stylesheet" href="stage.css">
+<link rel="stylesheet" href="swarm/swarm.css">
 </head>
 <body>
 <header class="toolbar" id="toolbar">
@@ -22,6 +23,7 @@
       <input type="checkbox" id="malicious">
       <span>Malicious responder</span>
     </label>
+    <button type="button" id="swarm-btn" class="tb-btn" aria-controls="swarm" aria-pressed="true">Hide swarm panel</button>
     <button type="button" id="reset-btn" class="tb-btn">Reset demo</button>
     <button type="button" id="fs-btn" class="tb-btn" aria-label="Enter full screen">Full screen</button>
     <button type="button" id="hide-btn" class="tb-btn tb-icon" aria-label="Hide presenter controls" aria-controls="toolbar" aria-expanded="true">
@@ -35,6 +37,7 @@
 
 <main class="stage" id="stage">
   <section class="device" data-persona="acme.ava" data-name="Ava" data-role="Solutions Engineer, Acme Observability"></section>
+  <aside class="swarm" id="swarm"></aside>
   <section class="device" data-persona="bluefin.bo" data-name="Bo" data-role="Platform Lead, Bluefin Health"></section>
 </main>
 
