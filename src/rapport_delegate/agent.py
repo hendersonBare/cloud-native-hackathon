@@ -120,7 +120,9 @@ class DelegateAgent:
         self.reporter.send("exchange_message", data.model_dump(mode="json"))
         return msg
 
-    def _check_envelope(self, msg: ExchangeMessage, round_: int) -> None:
+    def check_sender(self, msg: ExchangeMessage) -> None:
+        """Encounter, sender and recipient must be exactly the configured peer pair. Runs before anything else,
+        including a replay of a cached reply."""
         cfg = self.cfg
         if msg.encounter_id != cfg.encounter_id:
             raise ProtocolError("message is for another encounter", 403)
@@ -128,6 +130,9 @@ class DelegateAgent:
             cfg.peer_org, cfg.peer_persona, cfg.self_org, cfg.self_persona,
         ):
             raise ProtocolError("unexpected sender or recipient", 403)
+
+    def _check_envelope(self, msg: ExchangeMessage, round_: int) -> None:
+        self.check_sender(msg)
         if msg.round != round_:
             raise ProtocolError(f"expected round {round_}", 409)
 

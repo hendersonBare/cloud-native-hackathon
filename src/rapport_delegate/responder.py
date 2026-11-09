@@ -53,6 +53,10 @@ class ResponderService:
 
     async def handle(self, msg: ExchangeMessage) -> ExchangeMessage:
         agent = self.agent
+        try:
+            agent.check_sender(msg)  # before the replay lookup: only the configured peer may see a cached reply
+        except ProtocolError as exc:
+            raise HTTPException(status_code=exc.status, detail=exc.detail) from None
         async with self._lock:
             if msg.round in self._replies:
                 return self._replies[msg.round]

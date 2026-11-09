@@ -76,6 +76,17 @@ async def test_rounds_must_come_in_order_and_a_repeat_replays_the_reply():
     assert again.json() == first.json()
 
 
+async def test_a_cached_reply_is_never_replayed_to_anyone_but_the_peer():
+    app, _ = new_app()
+    async with app.router.lifespan_context(app):
+        async with await client_for(app) as client:
+            assert (await client.post("/v1/exchange", json=hello())).status_code == 200
+            for body in (hello(encounter_id="enc-other"), hello(from_org="globex", from_persona="globex.eve"),
+                         hello(to_persona="bluefin.kai")):
+                resp = await client.post("/v1/exchange", json=body)
+                assert resp.status_code == 403 and "card" not in resp.json()
+
+
 async def test_internal_failure_is_a_500_with_detail_and_reports_failed():
     class Boom:
         def get(self, *a, **k):
