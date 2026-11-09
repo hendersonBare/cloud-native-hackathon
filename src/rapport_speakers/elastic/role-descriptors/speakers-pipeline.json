@@ -1,0 +1,17 @@
+{
+  "rapport-speakers-pipeline": {
+    "cluster": ["monitor_inference", "manage_index_templates"],
+    "indices": [
+      {
+        "names": [
+          "rapport-speakers-sessions",
+          "rapport-speakers-voiceprint-samples",
+          "rapport-speakers-voiceprints",
+          "rapport-speakers-utterances",
+          "rapport-speakers-unknown-voices"
+        ],
+        "privileges": ["read", "write", "create_index", "view_index_metadata"]
+      }
+    ]
+  }
+}

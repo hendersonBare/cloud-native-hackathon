@@ -1,0 +1,11 @@
+{
+  "rapport-speakers-reader": {
+    "cluster": ["monitor_inference"],
+    "indices": [
+      {
+        "names": ["rapport-speakers-utterances", "rapport-speakers-sessions"],
+        "privileges": ["read"]
+      }
+    ]
+  }
+}
