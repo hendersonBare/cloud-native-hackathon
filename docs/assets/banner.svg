@@ -1,26 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 220" width="1280" height="220" role="img" aria-labelledby="t d">
   <title id="t">Rapport</title>
-  <desc id="d">Rapport: your agent meets their agent, on Kubernetes. Built for the Cloud Native Hackathon with Gitar, Dash0, Radar and Elasticsearch.</desc>
-  <rect width="1280" height="320" rx="20" fill="#efebe4"/>
-  <circle cx="1120" cy="70" r="170" fill="none" stroke="#d9c7a3" stroke-width="2"/>
-  <circle cx="1120" cy="70" r="120" fill="none" stroke="#d9c7a3" stroke-width="2"/>
-  <circle cx="1120" cy="70" r="70" fill="none" stroke="#d9c7a3" stroke-width="2"/>
+  <desc id="d">Rapport: your agent meets their agent, on Kubernetes.</desc>
+  <defs>
+    <clipPath id="c"><rect width="1280" height="220" rx="20"/></clipPath>
+  </defs>
+  <rect width="1280" height="220" rx="20" fill="#efebe4"/>
+  <g clip-path="url(#c)" fill="none" stroke="#d9c7a3" stroke-width="2">
+    <circle cx="1120" cy="70" r="170"/>
+    <circle cx="1120" cy="70" r="120"/>
+    <circle cx="1120" cy="70" r="70"/>
+  </g>
   <circle cx="80" cy="96" r="13" fill="none" stroke="#8a5a14" stroke-width="3"/>
   <circle cx="80" cy="96" r="5" fill="#8a5a14"/>
   <text x="108" y="112" font-family="Georgia, 'Times New Roman', serif" font-size="56" fill="#16181c">Rapport</text>
   <text x="64" y="172" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-style="italic" fill="#8a5a14">Your agent meets their agent, on Kubernetes.</text>
-  <text x="64" y="212" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" fill="#4a4740">Two people connect at a conference. Their agents meet in two pods, swap only what policy allows,</text>
-  <text x="64" y="238" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" fill="#4a4740">and each person walks away with a brief, follow-ups and a talk to attend together.</text>
-  <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="600">
-    <rect x="64" y="262" width="150" height="34" rx="17" fill="#16181c"/>
-    <text x="139" y="284" text-anchor="middle" fill="#efebe4">Sonar · Gitar</text>
-    <rect x="224" y="262" width="96" height="34" rx="17" fill="#16181c"/>
-    <text x="272" y="284" text-anchor="middle" fill="#efebe4">Dash0</text>
-    <rect x="330" y="262" width="96" height="34" rx="17" fill="#16181c"/>
-    <text x="378" y="284" text-anchor="middle" fill="#efebe4">Radar</text>
-    <rect x="436" y="262" width="150" height="34" rx="17" fill="#16181c"/>
-    <text x="511" y="284" text-anchor="middle" fill="#efebe4">Elasticsearch</text>
-    <rect x="596" y="262" width="160" height="34" rx="17" fill="none" stroke="#16181c" stroke-width="2"/>
-    <text x="676" y="284" text-anchor="middle" fill="#16181c">Merge Forward</text>
-  </g>
 </svg>
