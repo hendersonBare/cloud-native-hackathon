@@ -1,5 +1,6 @@
 // Match summary, adapted from Match.dc.html for each demo persona.
 import { h, icon, avatar, agentMark, bottomNav, eyebrow, nextId } from '../ui.js';
+import { livePrivateBrief, liveSharedBrief } from './match-live.js';
 
 const CONTENT = {
   'acme.ava': {
@@ -84,7 +85,7 @@ export function render(ctx) {
           h('p', null, description))))),
   );
 
-  const privateBrief = h('section', {
+  const staticPrivateBrief = h('section', {
     class: 'card-gold match-private',
     'aria-labelledby': privateHeading,
     'aria-live': 'polite',
@@ -93,6 +94,9 @@ export function render(ctx) {
   h('h2', { id: privateHeading, class: 'match-private-heading', lang: 'en' },
     icon('lock', { size: 18 }), 'Private brief · only you see this'),
   h('p', null, content.privateBrief));
+  // Live mode shows the gateway's briefs instead of the scripted demo copy.
+  const live = ctx.mode === 'live';
+  const privateBrief = live ? livePrivateBrief(ctx) : staticPrivateBrief;
 
   return h('div', { class: 'screen match', lang: 'en' },
     h('header', { class: 'match-head' },
@@ -105,13 +109,15 @@ export function render(ctx) {
           agentMark(48, 22), avatar(counterpart.initials, counterpart.tone, 48, 16)),
         h('h1', { class: 'serif match-title' }, "It's a ", h('em', null, 'match')),
         h('p', { class: 'match-subtitle' }, `Your agent and ${counterpart.name}’s agent found real common ground.`)),
-      meeting,
-      summary,
-      opportunities,
-      privateBrief,
-      h('p', { class: 'match-shared-brief' },
-        h('strong', null, 'Shared brief'),
-        h('span', null, "Coffee Wed 10:00 AM · zero-code eBPF tracing for Bluefin's clinical systems."))),
+      live ? [liveSharedBrief(ctx), privateBrief] : [
+        meeting,
+        summary,
+        opportunities,
+        privateBrief,
+        h('p', { class: 'match-shared-brief' },
+          h('strong', null, 'Shared brief'),
+          h('span', null, "Coffee Wed 10:00 AM · zero-code eBPF tracing for Bluefin's clinical systems.")),
+      ]),
     bottomNav('match'),
   );
 }

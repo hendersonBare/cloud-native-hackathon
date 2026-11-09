@@ -1,0 +1,674 @@
+{
+  "_comment": "Scripted demo. phase=upload plays after Ava uploads her CV; phase=swipe plays after she swipes right on Bo (deep dive, agent decision, agent-initiated connect request); phase=accept plays after Bo taps Accept (handshake with a blocked prompt injection). at_ms is relative to the start of its phase. The real gateway must emit the same shapes.",
+  "events": [
+    {
+      "phase": "upload",
+      "at_ms": 0,
+      "event": {
+        "type": "profile_updated",
+        "ts": "2026-11-09T21:00:00Z",
+        "encounter_id": null,
+        "persona_id": "acme.ava",
+        "trace_id": null,
+        "data": {
+          "persona_id": "acme.ava",
+          "shareable": {
+            "visibility": "shareable",
+            "headline": "Solutions engineer helping platform teams adopt eBPF tracing",
+            "interests": [
+              "ebpf",
+              "observability",
+              "opentelemetry",
+              "kubernetes"
+            ],
+            "goals": [
+              "Meet platform teams evaluating eBPF tracing"
+            ],
+            "highlights": [
+              "Led a hospital rollout that cut incident time by 40%"
+            ]
+          },
+          "private": {
+            "visibility": "private",
+            "headline": "Wants a healthcare design partner this quarter",
+            "interests": [
+              "healthcare"
+            ],
+            "goals": [
+              "Find a design partner in healthcare"
+            ],
+            "highlights": []
+          },
+          "source_files": [
+            "ava-cv-synthetic.pdf"
+          ],
+          "updated_at": "2026-11-09T21:00:00Z"
+        }
+      }
+    },
+    {
+      "phase": "swipe",
+      "at_ms": 1000,
+      "event": {
+        "type": "deep_dive_started",
+        "ts": "2026-11-09T21:00:01Z",
+        "encounter_id": null,
+        "persona_id": "acme.ava",
+        "trace_id": null,
+        "data": {
+          "target_persona_id": "bluefin.bo"
+        }
+      }
+    },
+    {
+      "phase": "swipe",
+      "at_ms": 3500,
+      "event": {
+        "type": "deep_dive_ready",
+        "ts": "2026-11-09T21:00:03.500000Z",
+        "encounter_id": null,
+        "persona_id": "acme.ava",
+        "trace_id": null,
+        "data": {
+          "persona_id": "acme.ava",
+          "target_persona_id": "bluefin.bo",
+          "language": "en",
+          "summary": "Bo runs Bluefin's platform team and wants tracing with no code changes. Acme's pilot with Bluefin stalled in March on a security questionnaire.",
+          "plan": {
+            "goals": [
+              "Restart the Bluefin pilot",
+              "Learn their eBPF timeline"
+            ],
+            "offers": [
+              "Case study: hospital network",
+              "Security whitepaper"
+            ],
+            "questions": [
+              "Who signs off on HIPAA?",
+              "How many services need tracing?"
+            ],
+            "watch_outs": [
+              "They are also evaluating a competitor"
+            ],
+            "opener": "Bo, I hear you want tracing without touching 300 services. Want to see how a hospital did it?"
+          },
+          "decision": {
+            "action": "agent_handshake",
+            "reason": "Bo matches both of your goals, Bluefin runs an agent, and you have an open follow-up with them.",
+            "confidence": 0.86,
+            "checks": [
+              "target has an agent: yes",
+              "match score 86 >= 40: yes",
+              "no do-not-contact note: yes",
+              "handshakes this hour 0/5: yes"
+            ]
+          },
+          "citations": [
+            {
+              "memory_id": "acme-note-0007",
+              "title": "Call notes: Bluefin pilot (March)",
+              "kind": "account_note",
+              "snippet": "Sam promised Kai the security questionnaire."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "swipe",
+      "at_ms": 3600,
+      "event": {
+        "type": "agent_decision",
+        "ts": "2026-11-09T21:00:03.600000Z",
+        "encounter_id": null,
+        "persona_id": "acme.ava",
+        "trace_id": null,
+        "data": {
+          "target_persona_id": "bluefin.bo",
+          "action": "agent_handshake",
+          "request_id": "req-01"
+        }
+      }
+    },
+    {
+      "phase": "swipe",
+      "at_ms": 3700,
+      "event": {
+        "type": "connect_request",
+        "ts": "2026-11-09T21:00:03.700000Z",
+        "encounter_id": null,
+        "persona_id": "bluefin.bo",
+        "trace_id": null,
+        "data": {
+          "request_id": "req-01",
+          "from_persona_id": "acme.ava",
+          "to_persona_id": "bluefin.bo",
+          "malicious": true,
+          "initiated_by": "agent"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 0,
+      "event": {
+        "type": "encounter_started",
+        "ts": "2026-11-09T21:00:00Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "initiator_persona_id": "acme.ava",
+          "responder_persona_id": "bluefin.bo"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 600,
+      "event": {
+        "type": "pod_status",
+        "ts": "2026-11-09T21:00:00.600000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "acme",
+          "side": "initiator",
+          "pod": "delegate-enc-1a2b3c4d-x7k2p",
+          "phase": "Pending"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 700,
+      "event": {
+        "type": "pod_status",
+        "ts": "2026-11-09T21:00:00.700000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "bluefin",
+          "side": "responder",
+          "pod": "delegate-enc-1a2b3c4d-q9d4m",
+          "phase": "Pending"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 2100,
+      "event": {
+        "type": "pod_status",
+        "ts": "2026-11-09T21:00:02.100000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "acme",
+          "side": "initiator",
+          "pod": "delegate-enc-1a2b3c4d-x7k2p",
+          "phase": "Running"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 2300,
+      "event": {
+        "type": "pod_status",
+        "ts": "2026-11-09T21:00:02.300000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "bluefin",
+          "side": "responder",
+          "pod": "delegate-enc-1a2b3c4d-q9d4m",
+          "phase": "Running"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 2900,
+      "event": {
+        "type": "private_brief",
+        "ts": "2026-11-09T21:00:02.900000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": "acme.ava",
+        "trace_id": null,
+        "data": {
+          "encounter_id": "enc-1a2b3c4d",
+          "persona_id": "acme.ava",
+          "counterparty_persona_id": "bluefin.bo",
+          "language": "en",
+          "headline": "Bo leads Bluefin's platform team and is evaluating eBPF tracing to cut costs.",
+          "talking_points": [
+            "Zero-code tracing fits Bo's goal of no app changes",
+            "Hospital case study: 40% faster incidents"
+          ],
+          "watch_outs": [
+            "Bluefin is also evaluating a competitor",
+            "Sam still owes Kai the security questionnaire"
+          ],
+          "goal_matches": [
+            "Bluefin could be your healthcare design partner"
+          ],
+          "conversation_starters": [
+            "Ask how Bluefin handles tracing across legacy apps today."
+          ],
+          "history": [
+            {
+              "memory_id": "acme-note-0007",
+              "title": "Call notes: Bluefin pilot (March)",
+              "kind": "account_note",
+              "snippet": "Sam promised Kai the security questionnaire before the pilot starts."
+            }
+          ],
+          "suggested_talks": [
+            {
+              "talk_id": "talk-ebpf-zero-code",
+              "title": "Zero-code tracing with eBPF on Kubernetes",
+              "starts_at": "2026-11-09T22:30:00Z",
+              "room": "Room B",
+              "track": "Observability",
+              "speakers": [
+                "R. Alvarez"
+              ],
+              "reason": "Both of you listed eBPF as an interest"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 3200,
+      "event": {
+        "type": "private_brief",
+        "ts": "2026-11-09T21:00:03.200000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": "bluefin.bo",
+        "trace_id": null,
+        "data": {
+          "encounter_id": "enc-1a2b3c4d",
+          "persona_id": "bluefin.bo",
+          "counterparty_persona_id": "acme.ava",
+          "language": "es",
+          "headline": "Ava es ingeniera de soluciones en Acme; su trazado eBPF no requiere cambios de código.",
+          "talking_points": [
+            "Pregunta por el caso del hospital",
+            "Confirma el plazo del cuestionario de seguridad"
+          ],
+          "watch_outs": [
+            "Kai debe aprobar cualquier proveedor (HIPAA)"
+          ],
+          "goal_matches": [
+            "Coincide con tu meta: trazado sin cambios de código"
+          ],
+          "conversation_starters": [
+            "¿Qué costo tuvo el despliegue en el hospital?"
+          ],
+          "history": [],
+          "suggested_talks": [
+            {
+              "talk_id": "talk-ebpf-zero-code",
+              "title": "Zero-code tracing with eBPF on Kubernetes",
+              "starts_at": "2026-11-09T22:30:00Z",
+              "room": "Room B",
+              "track": "Observability",
+              "speakers": [
+                "R. Alvarez"
+              ],
+              "reason": "Both of you listed eBPF as an interest"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 4000,
+      "event": {
+        "type": "exchange_message",
+        "ts": "2026-11-09T21:00:04Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "round": 1,
+          "type": "hello",
+          "from_org": "acme",
+          "to_org": "bluefin",
+          "display": "Ava's agent introduces Ava (eBPF, observability)"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 4400,
+      "event": {
+        "type": "exchange_message",
+        "ts": "2026-11-09T21:00:04.400000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "round": 1,
+          "type": "hello",
+          "from_org": "bluefin",
+          "to_org": "acme",
+          "display": "Bo's agent introduces Bo (Kubernetes, cost)"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 5100,
+      "event": {
+        "type": "policy_decision",
+        "ts": "2026-11-09T21:00:05.100000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "acme",
+          "action": "offer",
+          "item_id": "acme-doc-0002",
+          "item_title": "Case study: hospital network",
+          "decision": "allow",
+          "rule_id": "public_ok"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 5200,
+      "event": {
+        "type": "policy_decision",
+        "ts": "2026-11-09T21:00:05.200000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "acme",
+          "action": "offer",
+          "item_id": "acme-doc-0003",
+          "item_title": "Security whitepaper",
+          "decision": "allow",
+          "rule_id": "partner_with_nda"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 5600,
+      "event": {
+        "type": "exchange_message",
+        "ts": "2026-11-09T21:00:05.600000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "round": 2,
+          "type": "offers_asks",
+          "from_org": "acme",
+          "to_org": "bluefin",
+          "display": "Acme offers 2 items, asks about platform requirements"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 6100,
+      "event": {
+        "type": "exchange_message",
+        "ts": "2026-11-09T21:00:06.100000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "round": 2,
+          "type": "offers_asks",
+          "from_org": "bluefin",
+          "to_org": "acme",
+          "display": "Bluefin offers 1 item, asks about pricing"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 6900,
+      "event": {
+        "type": "policy_decision",
+        "ts": "2026-11-09T21:00:06.900000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "acme",
+          "action": "answer",
+          "item_id": "acme-doc-0004",
+          "item_title": "Pricing overview 2026",
+          "decision": "deny",
+          "rule_id": "pricing_needs_approval"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 7000,
+      "event": {
+        "type": "policy_decision",
+        "ts": "2026-11-09T21:00:07Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "org_id": "bluefin",
+          "action": "answer",
+          "item_id": "bluefin-doc-0001",
+          "item_title": "Platform requirements (summary)",
+          "decision": "allow",
+          "rule_id": "partner_with_nda"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 7500,
+      "event": {
+        "type": "exchange_message",
+        "ts": "2026-11-09T21:00:07.500000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "round": 3,
+          "type": "answers_followups",
+          "from_org": "acme",
+          "to_org": "bluefin",
+          "display": "Acme answers 0/1 (pricing declined), proposes 2 follow-ups"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 7900,
+      "event": {
+        "type": "exchange_message",
+        "ts": "2026-11-09T21:00:07.900000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "round": 3,
+          "type": "answers_followups",
+          "from_org": "bluefin",
+          "to_org": "acme",
+          "display": "Bluefin answers 1/1, proposes 1 follow-up"
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 8800,
+      "event": {
+        "type": "shared_brief",
+        "ts": "2026-11-09T21:00:08.800000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": "acme.ava",
+        "trace_id": null,
+        "data": {
+          "encounter_id": "enc-1a2b3c4d",
+          "for_persona_id": "acme.ava",
+          "language": "en",
+          "summary": "You both care about eBPF and Kubernetes. Bluefin asked about pricing; your policy declined it.",
+          "mutual_interests": [
+            "ebpf",
+            "kubernetes"
+          ],
+          "shared_items": [
+            {
+              "from_org": "acme",
+              "item_id": "acme-doc-0002",
+              "title": "Case study: hospital network",
+              "summary": "A hospital network cut incident time by 40% with zero-code tracing."
+            },
+            {
+              "from_org": "bluefin",
+              "item_id": "bluefin-doc-0001",
+              "title": "Platform requirements (summary)",
+              "summary": "Bluefin needs tracing across 300 services without code changes."
+            }
+          ],
+          "declined": [
+            {
+              "from_org": "acme",
+              "topic": "pricing",
+              "reason_code": "policy_deny",
+              "rule_id": "pricing_needs_approval"
+            }
+          ],
+          "followups": [
+            {
+              "followup_id": "fu-1",
+              "text": "Acme sends the security questionnaire to Kai by Friday",
+              "owner_org_id": "acme",
+              "status": "proposed"
+            },
+            {
+              "followup_id": "fu-2",
+              "text": "Attend 'Zero-code tracing with eBPF' together at 3:30 PM, Room B",
+              "owner_org_id": "acme",
+              "status": "proposed"
+            },
+            {
+              "followup_id": "fu-3",
+              "text": "Bo shares Bluefin's platform requirements",
+              "owner_org_id": "bluefin",
+              "status": "proposed"
+            }
+          ],
+          "suggested_talk": {
+            "talk_id": "talk-ebpf-zero-code",
+            "title": "Zero-code tracing with eBPF on Kubernetes",
+            "starts_at": "2026-11-09T22:30:00Z",
+            "room": "Room B",
+            "track": "Observability",
+            "speakers": [
+              "R. Alvarez"
+            ],
+            "reason": "Both of you listed eBPF as an interest"
+          }
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 9100,
+      "event": {
+        "type": "shared_brief",
+        "ts": "2026-11-09T21:00:09.100000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": "bluefin.bo",
+        "trace_id": null,
+        "data": {
+          "encounter_id": "enc-1a2b3c4d",
+          "for_persona_id": "bluefin.bo",
+          "language": "es",
+          "summary": "Ambos se interesan por eBPF y Kubernetes. La consulta de precios fue rechazada por la política de Acme.",
+          "mutual_interests": [
+            "ebpf",
+            "kubernetes"
+          ],
+          "shared_items": [
+            {
+              "from_org": "acme",
+              "item_id": "acme-doc-0002",
+              "title": "Caso: red hospitalaria",
+              "summary": "Una red hospitalaria redujo un 40% el tiempo de incidentes."
+            }
+          ],
+          "declined": [
+            {
+              "from_org": "acme",
+              "topic": "pricing",
+              "reason_code": "policy_deny",
+              "rule_id": "pricing_needs_approval"
+            }
+          ],
+          "followups": [
+            {
+              "followup_id": "fu-1",
+              "text": "Acme envía el cuestionario de seguridad a Kai antes del viernes",
+              "owner_org_id": "acme",
+              "status": "proposed"
+            },
+            {
+              "followup_id": "fu-2",
+              "text": "Asistir juntos a 'Zero-code tracing with eBPF' a las 3:30 PM, Sala B",
+              "owner_org_id": "acme",
+              "status": "proposed"
+            },
+            {
+              "followup_id": "fu-3",
+              "text": "Bo comparte los requisitos de la plataforma de Bluefin",
+              "owner_org_id": "bluefin",
+              "status": "proposed"
+            }
+          ],
+          "suggested_talk": {
+            "talk_id": "talk-ebpf-zero-code",
+            "title": "Zero-code tracing with eBPF on Kubernetes",
+            "starts_at": "2026-11-09T22:30:00Z",
+            "room": "Room B",
+            "track": "Observability",
+            "speakers": [
+              "R. Alvarez"
+            ],
+            "reason": "Both of you listed eBPF as an interest"
+          }
+        }
+      }
+    },
+    {
+      "phase": "accept",
+      "at_ms": 9500,
+      "event": {
+        "type": "encounter_completed",
+        "ts": "2026-11-09T21:00:09.500000Z",
+        "encounter_id": "enc-1a2b3c4d",
+        "persona_id": null,
+        "trace_id": null,
+        "data": {
+          "status": "completed",
+          "detail": null
+        }
+      }
+    }
+  ]
+}

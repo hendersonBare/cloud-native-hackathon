@@ -65,3 +65,10 @@
 .match .match-private > p { font-size: 14px; line-height: 1.45; }
 .match .match-shared-brief { display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.4; color: var(--text2); }
 .match .match-shared-brief strong { font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* Live mode: briefs from the gateway (match-live.js) */
+.match .match-live-body { display: flex; flex-direction: column; gap: 8px; }
+.match .match-live-headline { font-size: 15px; line-height: 1.45; font-weight: 600; }
+.match .match-live-list { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
+.match .match-live-waiting { font-size: 14px; color: var(--text2); }
+.match .match-live-shared { display: flex; flex-direction: column; gap: 8px; }
