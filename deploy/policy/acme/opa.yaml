@@ -1,0 +1,81 @@
+# Acme's OPA (SPEC section 6). The delegate calls it at http://opa.org-acme.svc.cluster.local:8181
+# (names.opa_url("acme")). The opa-policy ConfigMap (rapport.rego + data.json) comes from the
+# configMapGenerator in kustomization.yaml; kustomize adds a content hash to its name and
+# rewrites the volume below, so a policy change rolls the pod.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa
+  namespace: org-acme
+  labels:
+    app: opa
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: opa
+    rapport.dev/org: acme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opa
+  template:
+    metadata:
+      labels:
+        app: opa
+        app.kubernetes.io/part-of: rapport
+        rapport.dev/role: opa
+        rapport.dev/org: acme
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: opa
+          image: openpolicyagent/opa:1.22.2 # pinned release (not `app`: this is not the Rapport image)
+          imagePullPolicy: IfNotPresent
+          # OPA 1.x binds to localhost by default; 0.0.0.0 lets the Service reach it.
+          args: ["run", "--server", "--addr=0.0.0.0:8181", "/policy"]
+          ports:
+            - name: http
+              containerPort: 8181
+          volumeMounts:
+            - name: policy
+              mountPath: /policy
+              readOnly: true
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits: { cpu: 100m, memory: 128Mi }
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+            initialDelaySeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001 # explicit, so runAsNonRoot holds whatever the image's default user is
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile: { type: RuntimeDefault }
+            capabilities: { drop: ["ALL"] }
+      volumes:
+        - name: policy
+          configMap:
+            name: opa-policy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa
+  namespace: org-acme
+  labels:
+    app: opa
+    app.kubernetes.io/part-of: rapport
+    rapport.dev/role: opa
+    rapport.dev/org: acme
+spec:
+  selector:
+    app: opa
+  ports:
+    - name: http
+      port: 8181
+      targetPort: http
