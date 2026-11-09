@@ -6,7 +6,8 @@ const EVENT_TYPES = [
   'profile_updated', 'deep_dive_started', 'deep_dive_ready', 'agent_decision', 'error',
 ];
 
-async function request(url, { method = 'GET', body } = {}) {
+/** Fetch JSON from the gateway. Errors carry only the HTTP status (bodies are never read on failure). */
+export async function request(url, { method = 'GET', body } = {}) {
   const multipart = body instanceof FormData;
   const headers = { Accept: 'application/json' };
   if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
@@ -16,7 +17,11 @@ async function request(url, { method = 'GET', body } = {}) {
     headers,
     body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
   });
-  if (!response.ok) throw new Error(`${method} request failed with status ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(`${method} request failed with status ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
   if (response.status === 204) return null;
   const text = await response.text();
   return text ? JSON.parse(text) : null;

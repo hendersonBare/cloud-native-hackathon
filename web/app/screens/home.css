@@ -1,6 +1,6 @@
 .home-main { padding: 20px 20px 10px; gap: 12px; }
 .home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.home-greeting { font-size: 36px; }
+.home-greeting { font-size: 30px; }
 .home-me { border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold); }
 
 .live-card { padding: 12px 12px 12px 16px; display: flex; align-items: center; gap: 12px; flex: none; }
@@ -36,6 +36,10 @@
 .opp-role { font-size: 14px; line-height: 18px; color: var(--text2); }
 .opp-topics { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
 .topic { display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 22px; }
+/* The find button sits beside "Talk about"; negative margins keep its 44px target from growing the card. */
+.topics-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.find-btn { margin: -14px -8px -14px 0; flex: none; }
+.decide-chip.find-chip { width: 32px; height: 32px; border-radius: 16px; color: var(--gold); background: var(--gold-bg); border-color: var(--gold-line); }
 .topic-dot { width: 5px; height: 5px; flex: none; border-radius: 3px; background: var(--gold); }
 .decide-btn { width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 22px; }
 .decide-chip {

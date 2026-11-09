@@ -101,7 +101,9 @@ test('bottomNav marks the tab that owns the current route', () => {
     .findAll((el) => el.getAttribute('aria-current') === 'page')
     .map((el) => el.getAttribute('href'));
   assert.deepEqual(current('home'), ['#/home']);
-  assert.deepEqual(current('exchange'), ['#/person']);
+  assert.deepEqual(current('exchange'), ['#/people']);
+  assert.deepEqual(current('person'), ['#/people']);
+  assert.deepEqual(current('people'), ['#/people']);
   assert.deepEqual(current('tag'), ['#/live']);
 });
 

@@ -1,0 +1,132 @@
+{
+  "persona_id": "acme.ava",
+  "cards": [
+    {
+      "persona_id": "bluefin.bo",
+      "name": "Bo",
+      "title": "Platform Lead",
+      "org_id": "bluefin",
+      "org_name": "Bluefin Health",
+      "language": "es",
+      "headline": "Platform lead moving 300 hospital services to Kubernetes",
+      "interests": [
+        "kubernetes",
+        "ebpf",
+        "cost",
+        "platform-engineering"
+      ],
+      "looking_for": [
+        "Tracing with no code changes",
+        "Lower observability costs"
+      ],
+      "agent_available": true,
+      "match_score": 86,
+      "shared_interests": [
+        "ebpf",
+        "kubernetes"
+      ],
+      "why_meet": "Bo wants zero-code tracing for 300 services, exactly your hospital case study. Acme already has an open pilot with Bluefin.",
+      "their_talks": [],
+      "company_history": [
+        {
+          "memory_id": "acme-note-0007",
+          "title": "Call notes: Bluefin pilot (March)",
+          "kind": "account_note",
+          "snippet": "Sam promised Kai the security questionnaire."
+        }
+      ]
+    },
+    {
+      "persona_id": "lumenly.priya",
+      "name": "Priya",
+      "title": "Head of Infrastructure",
+      "org_id": "lumenly",
+      "org_name": "Lumenly Energy",
+      "language": "en",
+      "headline": "Runs a lean platform team; wants cheaper visibility",
+      "interests": [
+        "kubernetes",
+        "ebpf",
+        "cost"
+      ],
+      "looking_for": [
+        "Cut cloud spend without losing visibility"
+      ],
+      "agent_available": false,
+      "match_score": 72,
+      "shared_interests": [
+        "ebpf",
+        "kubernetes"
+      ],
+      "why_meet": "Priya is speaking on eBPF cost savings at 2:30 PM; good chance to talk right after.",
+      "their_talks": [
+        {
+          "talk_id": "talk-ebpf-cost",
+          "title": "Cutting the cloud bill with eBPF",
+          "starts_at": "2026-11-09T21:30:00Z",
+          "room": "Room A",
+          "track": "Cost",
+          "speakers": [
+            "Priya"
+          ],
+          "reason": null
+        }
+      ],
+      "company_history": []
+    },
+    {
+      "persona_id": "kestrel.mia",
+      "name": "Mia",
+      "title": "Platform Engineer",
+      "org_id": "kestrel",
+      "org_name": "Kestrel Robotics",
+      "language": "en",
+      "headline": "Tracing Kubernetes clusters on warehouse robots",
+      "interests": [
+        "ebpf",
+        "kubernetes",
+        "edge",
+        "robotics"
+      ],
+      "looking_for": [
+        "Low-overhead tracing for edge clusters"
+      ],
+      "agent_available": false,
+      "match_score": 64,
+      "shared_interests": [
+        "ebpf",
+        "kubernetes"
+      ],
+      "why_meet": "Mia needs low-overhead tracing at the edge; your eBPF agent fits, but robotics is new for Acme.",
+      "their_talks": [],
+      "company_history": []
+    },
+    {
+      "persona_id": "harborline.lena",
+      "name": "Lena",
+      "title": "SRE Manager",
+      "org_id": "harborline",
+      "org_name": "Harborline Bank",
+      "language": "en",
+      "headline": "SRE manager evaluating observability vendors",
+      "interests": [
+        "observability",
+        "opentelemetry",
+        "compliance"
+      ],
+      "looking_for": [
+        "Reduce incident time",
+        "Evaluate observability vendors"
+      ],
+      "agent_available": false,
+      "match_score": 58,
+      "shared_interests": [
+        "observability",
+        "opentelemetry"
+      ],
+      "why_meet": "Lena is actively evaluating vendors; a short intro could book a demo.",
+      "their_talks": [],
+      "company_history": []
+    }
+  ]
+}

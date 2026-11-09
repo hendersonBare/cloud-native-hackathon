@@ -50,20 +50,32 @@
 .memory .memory-waves > span:nth-child(3) { animation-delay: .3s; }
 .memory .memory-waves > span:nth-child(4) { animation-delay: .45s; }
 
-.memory .memory-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Suggested questions: two tiles side by side, text wraps inside each. */
+.memory .memory-suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .memory .memory-suggestion {
-  min-height: 44px;
-  max-width: 100%;
-  padding: 8px 12px;
-  border-radius: 999px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
-  color: var(--text2);
-  font-size: 13px;
+  box-shadow: var(--chip-shadow);
+  color: var(--text);
+  font-size: 13.5px;
   font-weight: 500;
+  line-height: 1.3;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
 }
+.memory .memory-suggestion svg { flex: none; color: var(--gold); }
+.memory .memory-suggestion span { overflow-wrap: anywhere; }
+.memory .memory-suggestion:hover { border-color: var(--gold-line); background: var(--gold-bg); }
+/* An odd last tile spans both columns instead of leaving a gap. */
+.memory .memory-suggestion:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .memory .memory-answer { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .memory .memory-question { font-size: 14px; font-weight: 600; color: var(--text2); overflow-wrap: anywhere; }
 .memory .memory-answer-text { font-size: 16.5px; line-height: 1.5; overflow-wrap: anywhere; }
