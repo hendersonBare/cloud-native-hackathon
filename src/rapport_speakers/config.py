@@ -8,8 +8,8 @@
 | `SPEAKERS_T_ACCEPT`, `SPEAKERS_MARGIN`, `SPEAKERS_MIN_SPEECH_S` | 0.55, 0.10, 3.0 | Decision rule (§5.4) |
 | `SPEAKERS_POOL_MODE` | `boost` | Scheduled-speaker narrowing: `boost`, `filter` or `off` (§5.4, §10) |
 | `SPEAKERS_POOL_BONUS` | 0.05 | Cosine bonus for scheduled speakers in `boost` mode |
-| `SPEAKERS_STORE` | auto | `es` or `memory`; auto picks `es` when `ES_URL` and a key are set |
-| `ES_URL`, `SPEAKERS_ES_API_KEY` (else `ES_API_KEY`) | | Elasticsearch connection |
+| `SPEAKERS_STORE` | auto | `es` or `memory`; auto = `es` when `ES_URL` and `SPEAKERS_ES_API_KEY` are set |
+| `ES_URL`, `SPEAKERS_ES_API_KEY` | | Elasticsearch; `ES_API_KEY` is used only with `SPEAKERS_STORE=es` |
 | `ES_INFERENCE_ID` | auto-detected | `semantic_text` endpoint, as for the memory indices (§10 open question) |
 | `ES_RERANK_INFERENCE_ID` | unset | Optional Jina reranker over the RRF result, as in `rapport_memory` |
 """
@@ -108,10 +108,13 @@ class Settings:
         if pool_mode not in POOL_MODES:
             raise ValueError(f"SPEAKERS_POOL_MODE must be one of {', '.join(POOL_MODES)}")
         es_url = env.get("ES_URL") or None
-        es_api_key = env.get("SPEAKERS_ES_API_KEY") or env.get("ES_API_KEY") or None
+        speakers_key = env.get("SPEAKERS_ES_API_KEY") or None
         store = (env.get("SPEAKERS_STORE") or "").strip().lower()
         if not store:
-            store = STORE_ES if es_url and es_api_key else STORE_MEMORY
+            # Only the dedicated key switches to Elasticsearch on its own: a pod that mounts this router may hold
+            # another component's ES_API_KEY (a briefer's, say), which has no access to the speaker indices.
+            store = STORE_ES if es_url and speakers_key else STORE_MEMORY
+        es_api_key = speakers_key or (env.get("ES_API_KEY") if store == STORE_ES else None) or None
         if store not in (STORE_ES, STORE_MEMORY):
             raise ValueError("SPEAKERS_STORE must be es or memory")
         return cls(

@@ -90,8 +90,11 @@ def test_top_two_reports_raw_cosines_for_review():
 
 def test_settings_from_env_validates_pool_mode_and_picks_the_store():
     assert Settings.from_env({}).store == "memory"
-    env = {"ES_URL": "https://es.example.invalid", "ES_API_KEY": "placeholder", "SPEAKERS_POOL_MODE": "filter",
-           "SPEAKERS_T_ACCEPT": "0.6"}
+    other_key = {"ES_URL": "https://es.example.invalid", "ES_API_KEY": "placeholder"}
+    assert Settings.from_env(other_key).store == "memory"  # another component's key never switches to ES
+    assert Settings.from_env({**other_key, "SPEAKERS_STORE": "es"}).es_api_key == "placeholder"
+    env = {"ES_URL": "https://es.example.invalid", "SPEAKERS_ES_API_KEY": "placeholder",
+           "SPEAKERS_POOL_MODE": "filter", "SPEAKERS_T_ACCEPT": "0.6"}
     s = Settings.from_env(env)
     assert (s.store, s.pool_mode, s.thresholds.t_accept) == ("es", "filter", 0.6)
     with pytest.raises(ValueError):
