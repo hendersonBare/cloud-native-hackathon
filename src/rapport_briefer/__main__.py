@@ -41,7 +41,7 @@ def main() -> None:
     # A pod must listen on every interface to be reachable by its Service (house rule: 0.0.0.0:8080). Ingress is
     # restricted by deploy/base/network-policies.yaml (only the gateway and the same namespace).
     host = "0.0.0.0"  # NOSONAR
-    uvicorn.run(app, host=host, port=int(os.environ.get("PORT", names.HTTP_PORT)), log_level="info")
+    uvicorn.run(app, host=host, port=int(os.environ.get("PORT", names.HTTP_PORT)), log_level="info")  # NOSONAR
 
 
 if __name__ == "__main__":
