@@ -10,7 +10,7 @@
 
 <p align="center">
   <b>Cloud Native Hackathon · Salt Lake City · Nov 9 2026</b><br>
-  Live at <a href="https://rapport.cnh.radarhq.io/?live=1">rapport.cnh.radarhq.io</a><br><br>
+  Live at <a href="https://rapport.cnh.radarhq.io/">rapport.cnh.radarhq.io</a><br><br>
   <a href="#-see-it-run">See it run</a> ·
   <a href="#-the-two-person-demo">Two-person demo</a> ·
   <a href="#-judging-map">Judging map</a> ·
@@ -42,7 +42,7 @@ You meet 30 people at a conference, remember 5 and follow up with 2. The context
 
 Two presenters stand side by side and talk, one as Ava (Acme Observability, left phone) and one as Bo (Bluefin Health, right phone). Their phones show a live transcript of the conversation; then they connect, and their agents meet on Kubernetes while the room watches. It takes about two minutes.
 
-**Before you start.** Open the stage at https://rapport.cnh.radarhq.io/?live=1 and press **Reset demo**. Keep one live stage open at a time: Ava and Bo are shared personas, so every live stage sees every request and encounter, and a teammate's test shows up on yours. Without the cluster, the same demo runs offline in mock mode (see [Run it](#-run-it)).
+**Before you start.** Open the stage at https://rapport.cnh.radarhq.io and press **Reset demo**. Keep one live stage open at a time: Ava and Bo are shared personas, so every live stage sees every request and encounter, and a teammate's test shows up on yours. Without a gateway, the same demo runs entirely in the browser (see [Run it](#-run-it)).
 
 | # | Who | Taps | What the room sees |
 |---|---|---|---|
@@ -284,7 +284,7 @@ pie showData
 
 <p align="center"><sub>Four phone screens from the public site, captured headless in mock mode.</sub></p>
 
-One web page holds the whole demo: Ava's phone on the left, Bo's on the right, the **Agents on Kubernetes** swarm panel between them, and a presenter bar with the **Malicious responder** switch and **Reset demo**. It's plain HTML, CSS and ES modules with no build step, served by the gateway. Mock mode (the default) replays `contracts/demo-events.json`, which is also the stage fallback; `?live=1` drives the real cluster. Server strings always go in as text nodes, never `innerHTML`.
+One web page holds the whole demo: Ava's phone on the left, Bo's on the right, the **Agents on Kubernetes** swarm panel between them, and a presenter bar with the **Malicious responder** switch and **Reset demo**. It's plain HTML, CSS and ES modules with no build step, served by the gateway. There's one mode: the stage checks for a gateway at load and drives the real cluster when it finds one. Any feature whose API is missing or failing falls back to its in-browser client. With no gateway at all, the page replays the scripted events (`contracts/demo-events.json`). Server strings always go in as text nodes, never `innerHTML`.
 
 ## 🛡 Guardrails
 
@@ -386,9 +386,9 @@ All people and companies are fictional. The demo depends on these seed IDs ([SPE
 
 ## 🚀 Run it
 
-The live demo is at **https://rapport.cnh.radarhq.io/?live=1**. Tick **Malicious responder** before Bo accepts to see the deny.
+The live demo is at **https://rapport.cnh.radarhq.io**. Tick **Malicious responder** before Bo accepts to see the deny.
 
-Locally, the stage runs with no backend at all (mock mode):
+Locally, the stage runs with no backend at all; every feature then runs in the browser:
 
 ```bash
 python3 -m http.server 5180 --directory web            # http://localhost:5180
@@ -437,7 +437,7 @@ House rules for every agent and human: [`AGENTS.md`](AGENTS.md). The starter tem
 <summary><b>Honest limits</b></summary>
 
 - All people, companies and data are fictional and synthetic.
-- The public site defaults to mock mode; `?live=1` drives the cluster. The phone screens above are mock mode, so the rule label on the exchange screen is the mock's, not OPA's (a fix is open in PR #18).
+- The phone screens above were captured in the old mock mode, so the rule label on the exchange screen is the mock's, not OPA's.
 - **Dash0:** the telemetry above is in the code and exported wherever the `dash0-otlp` Secret is set. The SLO, the dashboard, an Agent0 investigation and browser RUM aren't captured in this repo yet.
 - **Radar:** Checks before and after, and the day's Timeline, aren't captured in this repo yet.
 - **Gitar:** the fixes were committed by us after Gitar's findings; we haven't captured an auto-apply CI fix. PR #10 merged with 2 of its 6 findings still open. On PR #14 Gitar's final summary run didn't complete; its 7 inline reviews were addressed in a follow-up commit.
