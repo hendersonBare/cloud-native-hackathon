@@ -1,7 +1,8 @@
-// Home: greeting, live capture card, swipeable opportunity deck, agreed-meeting
-// banner, up next, and the "Ask your memory" bar. Ported from Main.dc.html.
+// Home: greeting, "Ask your memory" bar, live capture card, swipeable
+// opportunity deck, latest agent conversation card and up next. Ported from
+// Main.dc.html (v2 design).
 
-import { h, icon, avatar, agentMark, bottomNav, eyebrow } from '../ui.js';
+import { h, svg, icon, avatar, bottomNav, eyebrow } from '../ui.js';
 
 const SWIPE_AT = 80;
 
@@ -28,7 +29,7 @@ export function render(ctx) {
   });
   // Shared with the Live screen so both show the same recording clock.
   if (!store.liveStart) store.liveStart = Date.now() - content.live.elapsedSec * 1000;
-  const people = content.opportunities.map((o) => ({ ...ctx.person(o.id), topics: o.topics }));
+  const people = content.opportunities.map((o) => ({ ...ctx.person(o.id), topics: o.topics, chips: o.chips }));
 
   // Header
   const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -49,17 +50,19 @@ export function render(ctx) {
   ctx.onCleanup(() => clearInterval(clockTimer));
 
   const live = h('section', { class: 'card-fill live-card', 'aria-labelledby': 'live-h' },
-    h('div', { class: 'row live-row' },
-      h('span', { class: 'live-tag' }, h('span', { class: 'live-dot rp-pulse', 'aria-hidden': 'true' }), 'LIVE'),
-      h('h2', { id: 'live-h', class: 'grow live-title' }, content.live.title),
-      clock,
+    h('div', { class: 'live-info' },
+      h('span', { class: 'live-tag' },
+        h('span', { class: 'live-dot rp-pulse', 'aria-hidden': 'true' }),
+        'LIVE',
+        h('span', { class: 'live-sep' }, '· ', clock)),
+      h('h2', { id: 'live-h', class: 'live-title' }, content.live.title),
     ),
-    h('a', { class: 'live-open', href: '#/live' }, 'Open transcript', icon('chevron', { size: 18, stroke: 1.8 })),
+    h('a', { class: 'live-open', href: '#/live' }, 'Open transcript'),
   );
 
   // Opportunity deck
   const deck = h('div', { class: 'deck' });
-  const bannerSlot = h('div', { class: 'banner-slot' });
+  const latestSlot = h('div', { class: 'latest-slot' });
 
   function emptyState() {
     return h('div', { class: 'deck-empty' },
@@ -68,7 +71,7 @@ export function render(ctx) {
       h('button', {
         type: 'button',
         class: 'link-btn',
-        onClick: () => { st.idx = 0; st.talking = null; drawDeck(true); drawBanner(); },
+        onClick: () => { st.idx = 0; st.talking = null; drawDeck(true); drawLatest(); },
       }, 'Show them again'),
     );
   }
@@ -105,7 +108,7 @@ export function render(ctx) {
           bus.emitLocal('ui:pass', { from: me.id, to: p.id });
         }
         drawDeck(true);
-        drawBanner();
+        drawLatest();
       }, 240);
     };
 
@@ -178,40 +181,46 @@ export function render(ctx) {
     if (moveFocus) card.focus({ preventScroll: true });
   }
 
-  function bannerBody(initials, tone, title, body) {
-    return [
-      h('span', { class: 'avatar-pair', 'aria-hidden': 'true' },
-        agentMark(30, 15),
-        avatar(initials, tone, 30, 11)),
-      h('span', { class: 'grow stack', style: { gap: '2px' } },
-        h('span', { class: 'banner-title' }, title),
-        h('span', { class: 'banner-body' }, body)),
-    ];
-  }
-
-  function drawBanner() {
+  function drawLatest() {
     const t = st.talking ? ctx.person(st.talking) : null;
-    if (t && t.id === peer.id) {
-      bannerSlot.replaceChildren(h('a', { class: 'banner', href: '#/exchange' },
-        ...bannerBody(t.initials, t.tone, `Talking with ${t.name}’s agent`, content.peerBanner.body),
-        icon('chevron', { size: 18, stroke: 1.8 })));
-    } else if (t) {
-      bannerSlot.replaceChildren(h('div', { class: 'banner', role: 'status' },
-        ...bannerBody(t.initials, t.tone, `Talking with ${t.name}’s agent`, 'You’ll get a summary when they finish')));
+    const who = t || ctx.person(content.agreed.with);
+    const chips = (t ? content.opportunities.find((o) => o.id === t.id)?.chips : content.agreed.chips) || [];
+
+    let badge;
+    let action = null;
+    if (t) {
+      badge = h('span', { class: 'latest-badge talking' },
+        h('span', { class: 'latest-dots', 'aria-hidden': 'true' }, h('span'), h('span'), h('span')),
+        'Agents talking');
+      if (t.id === peer.id) {
+        action = h('a', { class: 'latest-action watch', href: '#/exchange', 'aria-label': 'Watch the agents talk' },
+          icon('chevron', { size: 18, stroke: 1.9 }));
+      }
     } else {
-      const a = ctx.person(content.agreed.with);
-      bannerSlot.replaceChildren(h('div', { class: 'banner', role: 'status' },
-        ...bannerBody(a.initials, a.tone, content.agreed.title, content.agreed.body)));
+      badge = h('span', { class: 'latest-badge agreed' }, icon('check', { size: 13, stroke: 3 }), 'Agents agreed');
+      action = h('a', { class: 'latest-action', href: '#/calendar', 'aria-label': `Create an event with ${who.name}` },
+        h('span', { class: 'decide-chip add', 'aria-hidden': 'true' }, icon('plus', { size: 18, stroke: 2.2 })));
     }
+
+    latestSlot.replaceChildren(h('div', { class: 'latest', role: 'status', 'aria-label': 'Latest agent conversation' },
+      h('div', { class: 'latest-top' },
+        avatar(who.initials, who.tone, 40, 14),
+        h('div', { class: 'latest-who' }, badge, h('span', { class: 'latest-name' }, who.name)),
+        action),
+      h('div', { class: 'latest-chips' },
+        svg([['path', { d: 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z' }]],
+          { size: 16, stroke: 1.8, label: "You'll talk about" }),
+        chips.map((c) => h('span', { class: 'latest-chip' }, c))),
+    ));
   }
 
   drawDeck(false);
-  drawBanner();
+  drawLatest();
 
   const opportunities = h('section', { class: 'stack', style: { gap: '10px' }, 'aria-labelledby': 'opp-h' },
     eyebrow('Opportunities', { id: 'opp-h' }),
     deck,
-    bannerSlot,
+    latestSlot,
   );
 
   // Up next
@@ -249,8 +258,7 @@ export function render(ctx) {
   drawAsk();
 
   return h('div', { class: 'screen home' },
-    h('main', { class: 'scroll home-main' }, header, live, opportunities, upNext),
-    h('div', { class: 'ask-wrap' }, askBar),
+    h('main', { class: 'scroll home-main' }, header, askBar, live, opportunities, upNext),
     bottomNav('home'),
   );
 }
