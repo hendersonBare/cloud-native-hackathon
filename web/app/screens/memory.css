@@ -127,6 +127,58 @@
 .memory .is-included .memory-level-detail { color: var(--gold); }
 .memory .memory-level[aria-pressed="true"] .memory-level-name { text-decoration: underline; text-underline-offset: 3px; }
 
+/* Your context: what the agent carries, and the editor that changes it. */
+.memory .memory-context-edit {
+  min-height: 44px; margin: -10px -8px -10px 0; padding: 0 10px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--gold); font: inherit; font-size: 14px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+}
+.memory .memory-context { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.memory .memory-context-topics { display: flex; gap: 6px; flex-wrap: wrap; }
+.memory .memory-context-working { font-size: 14px; line-height: 20px; color: var(--text2); overflow-wrap: anywhere; }
+.memory .memory-context-note { padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.memory .memory-context-note-text { font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.memory .memory-context-file,
+.memory .memory-context-meta { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text3); overflow-wrap: anywhere; }
+.memory .memory-context-file > svg,
+.memory .memory-context-meta > svg { flex: none; color: var(--gold); }
+.memory .memory-context-form { display: flex; flex-direction: column; gap: 10px; }
+.memory .memory-context-label { font-size: 15px; font-weight: 600; }
+.memory .memory-context-input {
+  width: 100%; min-height: 112px; padding: 10px 12px; box-sizing: border-box; resize: vertical;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--text);
+  font: inherit; font-size: 16px; line-height: 1.45;
+}
+.memory .memory-context-input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; border-color: var(--gold-line); }
+.memory .memory-context-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.memory .memory-context-attach {
+  position: relative; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text2);
+  display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.memory .memory-context-attach > svg { flex: none; color: var(--gold); }
+.memory .memory-context-attach > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.memory .memory-context-attach:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
+.memory .memory-context-count { flex: none; font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
+.memory .memory-context-visibility { min-width: 0; margin: 0; padding: 0; border: 0; }
+.memory .memory-context-choice {
+  min-height: 44px; display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer;
+}
+.memory .memory-context-choice input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--gold); }
+.memory .memory-context-status { font-size: 13px; font-weight: 600; color: var(--gold); }
+.memory .memory-context-status:empty { display: none; }
+.memory .memory-context-status.is-error { color: var(--no); }
+.memory .memory-context-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.memory .memory-context-cancel,
+.memory .memory-context-save {
+  min-height: 44px; padding: 0 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.memory .memory-context-cancel { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.memory .memory-context-save { border: 0; background: var(--fill); color: var(--on-fill); }
+.memory .memory-context-cancel:disabled,
+.memory .memory-context-save:disabled { opacity: .6; cursor: default; }
+
 .memory .memory-recent { padding: 0 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
 .memory .memory-recent-row { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 8px 0; }
 .memory .memory-recent-row + .memory-recent-row { border-top: 1px solid var(--line); }
