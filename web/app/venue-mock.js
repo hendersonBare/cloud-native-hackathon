@@ -1,4 +1,4 @@
-// In-browser replica of the venue API (src/rapport_venue), used in mock mode (phone.html?mock=1).
+// In-browser replica of the venue API (src/rapport_venue), used when no gateway serves the venue API (see mode.js).
 // It loads the same venue.json and applies the same rules: sharing is a per-person consent flag,
 // turning it off forgets that person's GPS position, a GPS fix only counts for gps_ttl_s, and
 // someone who is not sharing reveals nothing. Changes go to the other phone as `venue:sync`.
