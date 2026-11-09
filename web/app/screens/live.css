@@ -1,1 +1,89 @@
-/* live screen */
+.live .capture-pill {
+  display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;
+  min-width: 44px; padding: 6px 10px 6px 0; color: var(--live);
+  font-size: 13px; font-weight: 700; letter-spacing: .04em; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.live .capture-pill.is-saved { color: var(--text2); }
+.live .capture-dot { width: 8px; height: 8px; flex: none; border-radius: 4px; background: currentColor; }
+.live .capture-modes {
+  flex: none; margin: 4px 20px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+}
+.live .capture-modes button {
+  min-height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--text2);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.live .capture-modes button[aria-pressed="true"] { background: var(--fill); color: var(--on-fill); }
+.live .capture-main { padding: 18px 20px 8px; gap: 14px; }
+.live .capture-content { display: flex; flex-direction: column; gap: 16px; flex: none; }
+.live .capture-heading { display: flex; flex-direction: column; gap: 4px; }
+.live .capture-heading h2 { font-size: 32px; line-height: 1.05; }
+.live .capture-heading p { font-size: 14px; color: var(--text2); }
+.live .transcript { display: flex; flex-direction: column; gap: 12px; }
+.live .session-transcript { gap: 14px; }
+.live .transcript-line { display: flex; gap: 12px; }
+.live .speaker-avatar {
+  width: 34px; height: 34px; flex: none; border-radius: 17px;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+}
+.live .transcript-line.is-peer .speaker-avatar { margin-top: 5px; }
+.live .speaker-avatar.tone-gold { font-size: 11px; }
+.live .transcript-body { flex: 1; min-width: 0; }
+.live .speaker-row { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.live .speaker-name, .live .speaker-link { font-size: 14px; font-weight: 600; }
+.live .speaker-link {
+  min-height: 44px; display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text); text-decoration: none; overflow-wrap: anywhere;
+}
+.live .speaker-link svg { color: var(--gold); flex: none; }
+.live .speaker-tag {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px; border: 1px solid var(--gold-line); color: var(--gold);
+}
+.live .speaker-role { font-size: 13px; color: var(--text3); }
+.live .transcript-time {
+  margin-left: auto; flex: none; font-size: 13px; color: var(--text3); font-variant-numeric: tabular-nums;
+}
+.live .transcript-time[hidden] { display: none; }
+.live .transcript-text { margin: 2px 0 0; font-size: 15.5px; line-height: 1.5; }
+.live .is-peer .transcript-text { margin: 0; }
+.live .speaking {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; font-weight: 600; color: var(--live); white-space: nowrap;
+}
+.live .speaking .capture-dot { width: 7px; height: 7px; }
+.live .transcript-cursor {
+  display: inline-block; width: 2px; height: 17px; margin-left: 3px; vertical-align: -3px; background: var(--live);
+}
+.live .capture-brief {
+  display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 14px;
+  border: 1px solid var(--gold-line); border-radius: 16px; background: var(--gold-bg);
+  color: var(--gold); text-decoration: none; font-size: 15px; font-weight: 600;
+}
+.live .capture-brief span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.live .capture-brief svg { flex: none; }
+.live .capture-footer {
+  flex: none; min-height: 96px; padding: 8px 20px 0; display: flex; flex-direction: column;
+  gap: 8px; border-top: 1px solid var(--line2);
+}
+.live .capture-status {
+  display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--text2);
+}
+.live .capture-status svg { color: var(--gold); flex: none; }
+.live .capture-controls { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.live .capture-round {
+  width: 48px; height: 48px; flex: none; border-radius: 24px; padding: 0;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.live .capture-mark {
+  min-height: 48px; padding: 0 22px; border-radius: 24px; border: 0; background: var(--fill); color: var(--on-fill);
+  font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+.live .capture-stop { color: var(--live); }
+.live .session-ask {
+  min-height: 48px; border-radius: 24px; border: 1px solid var(--gold-line); background: var(--gold-bg);
+  color: var(--gold); text-decoration: none; font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
