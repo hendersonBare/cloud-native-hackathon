@@ -12,7 +12,7 @@ import { calendarClient } from '../calendar-api.js';
 import {
   directoryFromGateway, directoryFromLocal, filterPeople, metIds, sortPeople, suggestionsFor,
 } from '../people-model.js';
-import MOCK_RESEARCH from '../../mock/demo-research.json' with { type: 'json' };
+import { MOCK_DECKS, mockResearchFor } from '../mock-research.js';
 
 const MAX_PILLS = 4;
 const RESEARCH_LIMIT = 12;
@@ -23,9 +23,11 @@ const FILTERS = [
   { key: 'metOnly', label: 'Met' },
 ];
 
-function interestsFromResearch(research) {
+function interestsFromResearch(results) {
   const map = {};
-  for (const card of research?.cards || []) map[card.persona_id] = card.interests || [];
+  for (const research of results) {
+    for (const card of research?.cards || []) map[card.persona_id] = card.interests || [];
+  }
   return map;
 }
 
@@ -68,7 +70,7 @@ export function render(ctx) {
     if (!(key in st)) st[key] = value;
   }
 
-  const localDirectory = directoryFromLocal(PEOPLE, ORGS, { interests: interestsFromResearch(MOCK_RESEARCH) });
+  const localDirectory = directoryFromLocal(PEOPLE, ORGS, { interests: interestsFromResearch(MOCK_DECKS) });
   if (mode !== 'live' && !st.directory) st.directory = localDirectory;
 
   let alive = true;
@@ -130,7 +132,7 @@ export function render(ctx) {
   }
 
   function suggestions() {
-    const research = mode === 'live' ? st.research : MOCK_RESEARCH;
+    const research = mode === 'live' ? st.research : mockResearchFor(me.id);
     return suggestionsFor(me.id, { research, view: ctx.view, directory: others() });
   }
 

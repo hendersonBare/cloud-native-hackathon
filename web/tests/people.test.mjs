@@ -7,6 +7,8 @@ import {
   suggestionsFor, toneFor, withZone,
 } from '../app/people-model.js';
 
+import { mockResearchFor } from '../app/mock-research.js';
+
 const RESEARCH = JSON.parse(readFileSync(new URL('../mock/demo-research.json', import.meta.url), 'utf8'));
 const localDirectory = directoryFromLocal(PEOPLE, ORGS);
 const byId = (id) => localDirectory.find((p) => p.id === id);
@@ -141,6 +143,36 @@ test('suggestionsFor ignores research made for another persona', () => {
   assert.ok(suggestions.length > 0);
   assert.ok(suggestions.every((s) => s.score === null));
   assert.ok(suggestions.every((s) => s.id !== 'bluefin.bo'));
+});
+
+test('mockResearchFor returns the deck computed for each viewer, and null for others', () => {
+  assert.deepEqual(mockResearchFor('acme.ava'), RESEARCH);
+  assert.equal(mockResearchFor('bluefin.bo').persona_id, 'bluefin.bo');
+  assert.equal(mockResearchFor('kestrel.mia'), null);
+  assert.equal(mockResearchFor(undefined), null);
+});
+
+test("Bo's mock deck uses the contract card shape, real people and no one from Bluefin", () => {
+  const bo = mockResearchFor('bluefin.bo');
+  const keys = Object.keys(RESEARCH.cards[0]).sort();
+  for (const card of bo.cards) {
+    assert.deepEqual(Object.keys(card).sort(), keys, card.persona_id);
+    assert.ok(byId(card.persona_id), `${card.persona_id} is in the directory`);
+    assert.notEqual(card.org_id, 'bluefin');
+    assert.equal(card.agent_available, AGENT_ORGS.includes(card.org_id), card.persona_id);
+    assert.ok(Number.isInteger(card.match_score) && card.match_score >= 0 && card.match_score <= 100);
+  }
+});
+
+test("Bo's suggestions come from his own deck, with scores", () => {
+  const suggestions = suggestionsFor('bluefin.bo', {
+    research: mockResearchFor('bluefin.bo'), view: VIEWS['bluefin.bo'], directory: localDirectory,
+  });
+  assert.deepEqual(suggestions.map((s) => s.id), ['acme.ava', 'lumenly.priya', 'tidewater.sofia']);
+  assert.deepEqual(suggestions.map((s) => s.score), [86, 74, 68]);
+  assert.match(suggestions[0].why, /hospital/);
+  assert.equal(suggestions[0].agent, true);
+  assert.equal(suggestions[1].talks[0].talk_id, 'talk-ebpf-cost');
 });
 
 test('suggestionsFor drops the viewer and ids that are not in the directory', () => {
@@ -843,6 +875,18 @@ describe('person and people screens', () => {
       assert.equal(priya.getAttribute('href'), '#/person?id=lumenly.priya&from=people');
       assert.match(priya.getAttribute('aria-label'), /2:30 PM MST/);
       assert.equal(priya.byClass('people-why')[0].textContent.includes('2:30 PM MST'), true);
+    });
+
+    it('shows match scores on both phones in mock mode', () => {
+      for (const [me, first] of [['acme.ava', 'bluefin.bo'], ['bluefin.bo', 'acme.ava']]) {
+        const s = mountPeople({ me, store: {} });
+        const cards = s.el.byClass('people-card');
+        assert.equal(cards.length, 3, me);
+        assert.ok(cards.every((card) => card.byClass('people-score').length === 1), `${me} sees a score on every card`);
+        assert.equal(cards[0].getAttribute('href'), `#/person?id=${first}&from=people`);
+        assert.equal(cards[0].byClass('people-score')[0].textContent, '86% match');
+        s.unmount();
+      }
     });
 
     it('after a failed refresh, says the last suggestions are still shown', async () => {
