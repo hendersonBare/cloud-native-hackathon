@@ -5,17 +5,30 @@ In-memory state seeded from ``data/venue.json``; ``reset()`` restores it. The cl
 Privacy: a GPS fix is converted to floor-plan metres at once and only the placed point (0.1 m), its accuracy and
 its time are kept; the latitude and longitude are never stored, logged or put on a span. A fix is kept only while
 its owner shares and for at most ``gps_ttl_s``. Sharing is a per-person consent flag: turning it off deletes the
-stored fix at once, and directions to someone who is not sharing reveal nothing about them. The public venue never
+stored fix at once, and directions to someone who is not sharing reveal nothing about them.
+
+Per-device consent: turning sharing on returns a random ``sharing_token`` to that device only (the service keeps its
+SHA-256). GPS fixes, and turning sharing on again while a device holds it, need that token, so another device can't
+quietly feed fixes into someone's live sharing. Turning sharing off never needs it: that only reduces exposure, and it
+lets a person switch off sharing that someone else switched on.
+
+The gateway has no logins, so this is NOT identity, and it does not stop a determined caller: anyone can turn a
+person's sharing off and on again and get a token of their own (the real phone then sees 403 and knows), and anyone
+can switch sharing on for a person who isn't sharing. A person's own GPS position is returned only to their device,
+but directions TO a person who shares place them by GPS for any caller: sharing means "anyone may find me". Real
+protection needs logins (or signed persona sessions) across the whole gateway. The public venue never
 includes other people's check-in spots, sharing flags or the GPS anchor. Spans and logs carry persona IDs only.
 """
 
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import logging
 import math
 import os
+import secrets
 import threading
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -72,6 +85,10 @@ def _span(name: str, persona_id: str) -> Iterator[Span]:
         yield span
 
 
+def _digest(token: str) -> bytes:
+    return hashlib.sha256(token.encode()).digest()
+
+
 def load_venue(path: Path = VENUE_FILE) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -123,6 +140,7 @@ class VenueService:
         self._lock = threading.Lock()
         self._sharing: dict[str, bool] = {}
         self._fixes: dict[str, _Fix] = {}
+        self._tokens: dict[str, bytes] = {}  # persona_id -> SHA-256 of the sharing token its device holds
         self.reset()
 
     # ------------------------------------------------------------------ lifecycle
@@ -132,12 +150,15 @@ class VenueService:
         with self._lock:
             self._sharing = {pid: seeded.get(pid) is True for pid in self._persona_ids}
             self._fixes = {}
+            self._tokens = {}
 
     def now(self) -> datetime:
         return self._clock().astimezone(timezone.utc)
 
     # ------------------------------------------------------------------ endpoints
-    def view(self, persona_id: str) -> VenueView:
+    def view(self, persona_id: str, sharing_token: str | None = None) -> VenueView:
+        """The floor plan, my sharing flag and where I am. My GPS-placed position is returned only to my sharing
+        device (its token); anyone else asking about me gets my check-in spot."""
         self._require(persona_id)
         with _span("venue.view", persona_id):
             with self._lock:
@@ -146,18 +167,31 @@ class VenueService:
                     persona_id=persona_id,
                     venue=self._public.model_copy(deep=True),
                     sharing=self._sharing[persona_id],
-                    me=self._position(persona_id),
+                    me=self._position(persona_id, gps=self._holds(persona_id, sharing_token)),
                 )
 
     def set_sharing(self, body: SharingBody) -> SharingState:
-        self._require(body.persona_id)
-        with _span("venue.sharing", body.persona_id):
+        pid = body.persona_id
+        self._require(pid)
+        with _span("venue.sharing", pid):
+            token: str | None = None
             with self._lock:
-                self._sharing[body.persona_id] = body.enabled
                 if not body.enabled:
-                    self._fixes.pop(body.persona_id, None)  # consent withdrawn: forget the fix at once
-            log.info("venue sharing set persona=%s enabled=%s", body.persona_id, body.enabled)
-            return SharingState(persona_id=body.persona_id, enabled=body.enabled)
+                    # Anyone may withdraw: it only reduces exposure. Forget the fix and the device at once.
+                    self._sharing[pid] = False
+                    self._fixes.pop(pid, None)
+                    self._tokens.pop(pid, None)
+                elif pid in self._tokens:
+                    if not self._holds(pid, body.sharing_token):
+                        raise VenueError(403, "shared_from_another_device")
+                    self._sharing[pid] = True
+                    token = body.sharing_token
+                else:
+                    token = secrets.token_urlsafe(32)
+                    self._tokens[pid] = _digest(token)
+                    self._sharing[pid] = True
+            log.info("venue sharing set persona=%s enabled=%s", pid, body.enabled)
+            return SharingState(persona_id=pid, enabled=body.enabled, sharing_token=token)
 
     def update_location(self, body: LocationUpdate) -> Position:
         """Place a GPS fix on the floor plan and keep only the placed point. The degrees are never kept or logged."""
@@ -167,6 +201,8 @@ class VenueService:
             with self._lock:
                 if not self._sharing[pid]:
                     raise VenueError(409, "sharing_off")
+                if not self._holds(pid, body.sharing_token):
+                    raise VenueError(403, "not_this_device")
                 if body.accuracy_m is not None and body.accuracy_m > self._venue["max_accuracy_m"]:
                     raise VenueError(422, "too_inaccurate")
                 placed = geometry.place_on_site(self._venue, *geometry.geo_to_venue(self._venue, body.lat, body.lng))
@@ -175,7 +211,9 @@ class VenueService:
                 self._fixes[pid] = _Fix(x=placed[0], y=placed[1], accuracy_m=body.accuracy_m, at=self.now())
                 return self._position(pid)
 
-    def directions(self, persona_id: str, to: str) -> Directions:
+    def directions(self, persona_id: str, to: str, sharing_token: str | None = None) -> Directions:
+        """From me to ``to``. My own GPS fix is the start only for my sharing device (its token); a peer who shares
+        is placed by their GPS, which is what they consented to."""
         self._require(persona_id)
         self._require(to)
         if to == persona_id:
@@ -183,7 +221,7 @@ class VenueService:
         with _span("venue.directions", persona_id) as span:
             with self._lock:
                 self._prune()
-                me = self._position(persona_id)
+                me = self._position(persona_id, gps=self._holds(persona_id, sharing_token))
                 if not self._sharing[to]:
                     span.set_attribute(ATTR_PEER_STATUS, "not_sharing")
                     # Nothing about the peer: no position, no route, no distance, no bearing.
@@ -205,6 +243,11 @@ class VenueService:
             )
 
     # ------------------------------------------------------------------ helpers (call with the lock held)
+    def _holds(self, persona_id: str, token: str | None) -> bool:
+        """Whether ``token`` is the one this persona's sharing device holds (constant-time compare)."""
+        stored = self._tokens.get(persona_id)
+        return stored is not None and token is not None and secrets.compare_digest(stored, _digest(token))
+
     def _require(self, persona_id: str) -> None:
         if persona_id not in self._persona_ids:
             raise VenueError(404, "unknown_persona")
@@ -216,12 +259,13 @@ class VenueService:
         for pid in [p for p, fix in self._fixes.items() if (now - fix.at).total_seconds() > ttl]:
             del self._fixes[pid]
 
-    def _position(self, persona_id: str) -> Position:
+    def _position(self, persona_id: str, *, gps: bool = True) -> Position:
         """My stored GPS fix when I share and it is at most gps_ttl_s old, else my check-in spot (the corridor's
-        centre for someone without one)."""
+        centre for someone without one). ``gps=False`` always gives the check-in spot."""
         fix = self._fixes.get(persona_id)
         if (
-            fix is not None
+            gps
+            and fix is not None
             and self._sharing[persona_id]
             and (self.now() - fix.at).total_seconds() <= self._venue["gps_ttl_s"]
         ):
