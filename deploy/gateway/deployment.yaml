@@ -50,10 +50,16 @@ spec:
           readinessProbe:
             httpGet: { path: /healthz, port: http }
             periodSeconds: 5
+          # Cold starts (image pull plus OpenTelemetry imports under the CPU limit) can take ~60 s: liveness and
+          # readiness only begin once this succeeds, so a slow start is not a liveness kill.
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 40
           livenessProbe:
             httpGet: { path: /healthz, port: http }
             periodSeconds: 10
-            initialDelaySeconds: 10
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
