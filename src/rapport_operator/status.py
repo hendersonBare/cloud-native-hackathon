@@ -16,6 +16,8 @@ PHASE_COMPLETED = "Completed"
 PHASE_FAILED = "Failed"
 TERMINAL_PHASES = frozenset({PHASE_COMPLETED, PHASE_FAILED})
 
+TTL_MIN, TTL_MAX, DEFAULT_TTL_SECONDS = 60, 3600, 600  # the CRD's bounds and default for spec.ttlSeconds
+
 JOB_PENDING = "Pending"
 JOB_RUNNING = "Running"
 JOB_SUCCEEDED = "Succeeded"
@@ -117,5 +119,9 @@ def is_expired(enc: Mapping[str, Any], now: datetime) -> bool:
     created = enc["metadata"].get("creationTimestamp")
     if not created:
         return False
-    ttl = encounter_spec(enc).ttlSeconds
+    # Read the raw value instead of validating the whole spec: an invalid Encounter (already marked Failed)
+    # must still be deleted once its TTL passes. Out-of-range or non-integer values fall back to the default.
+    ttl = (enc.get("spec") or {}).get("ttlSeconds")
+    if not isinstance(ttl, int) or isinstance(ttl, bool) or not TTL_MIN <= ttl <= TTL_MAX:
+        ttl = DEFAULT_TTL_SECONDS
     return (now - parse_ts(created)).total_seconds() >= ttl

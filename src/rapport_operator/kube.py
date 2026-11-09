@@ -59,11 +59,12 @@ class KubeClient:
 
     def ensure(self, obj: Mapping[str, Any]) -> bool:
         kind, namespace = obj["kind"], obj["metadata"]["namespace"]
-        create = {
-            "Job": self._batch.create_namespaced_job,
-            "Service": self._core.create_namespaced_service,
-            "NetworkPolicy": self._net.create_namespaced_network_policy,
+        api, method = {
+            "Job": ("_batch", "create_namespaced_job"),
+            "Service": ("_core", "create_namespaced_service"),
+            "NetworkPolicy": ("_net", "create_namespaced_network_policy"),
         }[kind]
+        create = getattr(getattr(self, api), method)
         try:
             create(namespace, dict(obj))
         except ApiException as exc:

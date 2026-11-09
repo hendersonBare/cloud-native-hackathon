@@ -143,6 +143,20 @@ def test_is_expired_uses_ttl_from_creation():
     assert not st.is_expired(enc(created=NOW - timedelta(seconds=600), ttl=1200), NOW)
 
 
+def test_invalid_encounters_still_expire():
+    """An Encounter the create handler rejected (and marked Failed) must still be TTL-deleted."""
+    old = NOW - timedelta(seconds=601)
+    same_org = enc(created=old)
+    same_org["spec"]["responder"]["orgId"] = "acme"
+    no_responder = enc(created=old)
+    del no_responder["spec"]["responder"]
+    assert st.is_expired(same_org, NOW) and st.is_expired(no_responder, NOW)
+    # out-of-range or non-integer ttl falls back to the 600 s default instead of raising
+    assert st.is_expired(enc(created=old, ttl=5), NOW)
+    assert st.is_expired(enc(created=old, ttl="soon"), NOW)
+    assert not st.is_expired(enc(created=NOW - timedelta(seconds=599), ttl=99999), NOW)
+
+
 def test_timestamps_are_utc():
     local = datetime(2026, 11, 9, 13, 30, tzinfo=ZoneInfo("America/Denver"))
     assert st.iso(local) == "2026-11-09T20:30:00Z"
