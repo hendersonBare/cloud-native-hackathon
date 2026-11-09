@@ -13,6 +13,8 @@ from rapport_calendar.seed import load_seed
 from rapport_calendar.service import CalendarService
 from rapport_common import names
 from rapport_common.models import PodStatusData
+from rapport_speakers.runtime import Runtime as SpeakersRuntime
+from rapport_speakers.runtime import build_runtime as build_speakers_runtime
 
 from .backend import Backend, LiveBackend
 from .briefers import BrieferClient
@@ -42,6 +44,7 @@ class Deps:
     launcher: EncounterLauncher | None = None
     owns_http: bool = False
     calendar: CalendarService | None = None  # /api/calendar/* (rapport_calendar), in memory like connect requests
+    speakers: SpeakersRuntime | None = None  # /api/speakers/* (rapport_speakers), read-only; None if it failed to start
     extras: dict[str, object] = field(default_factory=dict)
 
     async def start(self) -> None:
@@ -57,6 +60,18 @@ class Deps:
             await close()
         if self.owns_http and self.http is not None:
             await self.http.aclose()
+
+
+def build_speakers() -> SpeakersRuntime | None:
+    """Speaker search: fixtures in memory, or Elasticsearch when SPEAKERS_ES_API_KEY is set.
+
+    Optional: if it can't start, the gateway still serves everything else and /api/speakers/* is 404.
+    """
+    try:
+        return build_speakers_runtime()
+    except Exception as exc:  # the gateway must start without it
+        log.warning("speaker search disabled: %s", type(exc).__name__)
+        return None
 
 
 def build_deps(
@@ -157,4 +172,5 @@ def build_deps(
         launcher=None if settings.mock else launcher,
         owns_http=owns_http,
         calendar=calendar,
+        speakers=build_speakers(),
     )

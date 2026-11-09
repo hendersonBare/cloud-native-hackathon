@@ -14,6 +14,7 @@ from starlette.types import Receive, Scope, Send
 
 from rapport_calendar.api import get_service as calendar_service
 from rapport_calendar.api import router as calendar_router
+from rapport_speakers.api import make_public_router as make_speakers_router
 
 from .deps import Deps, build_deps
 from .errors import GatewayError
@@ -36,6 +37,7 @@ TAGS = [
     {"name": "discover", "description": "Research cards, swipe, deep dive, the agent's decision."},
     {"name": "demo", "description": "Reset in-memory demo state."},
     {"name": "calendar", "description": "Conference-week calendar and meeting scheduling (src/rapport_calendar)."},
+    {"name": "speakers", "description": "Who said what in conference talks, read-only (src/rapport_speakers)."},
 ]
 
 
@@ -93,6 +95,10 @@ def create_app(settings: Settings | None = None, deps: Deps | None = None) -> Fa
     if deps.calendar is not None:  # this app's own instance, so tests and reset never share module state
         calendar = deps.calendar
         app.dependency_overrides[calendar_service] = lambda: calendar
+    # Read-only search only. Erasure (make_admin_router) is not mounted on either port: the internal port admits
+    # delegate pods, so voice data is erased with the CLI (python -m rapport_speakers.cli).
+    if deps.speakers is not None:
+        app.include_router(make_speakers_router(deps.speakers.search), prefix="/api/speakers")
 
     @app.api_route("/internal/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
     async def no_internal(path: str) -> JSONResponse:
