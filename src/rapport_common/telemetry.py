@@ -15,17 +15,22 @@ on spans, metrics or logs. IDs, counts, decisions and rule IDs only.
 
 from __future__ import annotations
 
+import copy
 import logging
 import os
+import re
+from collections.abc import Sequence
 from typing import Any
 
 from opentelemetry import metrics, trace
 from opentelemetry.context import Context
+from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace import Event, ReadableSpan, TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
+from opentelemetry.trace.status import Status
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 log = logging.getLogger("rapport.telemetry")
@@ -52,6 +57,107 @@ METRIC_ENCOUNTERS = "rapport.encounters.started"  # counter, gateway
 _providers: dict[str, Any] = {}
 _propagator = TraceContextTextMapPropagator()
 
+# --- Query-string scrubbing --------------------------------------------------------------------------------------
+# Search text travels in URL query strings (GET /api/talks?q=..., GET /v1/talks?q=...). The FastAPI and httpx
+# instrumentations record the full URL on every span (http.url / url.full; http.target / url.query on the server
+# side), so every exporter below strips queries before spans and logs leave the process. Paths stay: they hold IDs.
+_URL_KEYS_DROPPED = frozenset({"url.query"})
+_URL_KEYS_TRIMMED = frozenset({"http.url", "http.target", "url.full", "http.request.target"})
+_ABS_URL_QUERY_RE = re.compile(r"""(https?://[^\s'"<>?#]*)\?[^\s'"<>#]*""")
+_REQUEST_LINE_QUERY_RE = re.compile(r"\b((?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) [^\s?]*)\?\S*")
+
+
+def _strip_query(value: str) -> str:
+    """Drop the query and fragment from one URL or request target; scheme, host and path stay."""
+    return value.split("?", 1)[0].split("#", 1)[0]
+
+
+def _scrub_text(value: str) -> str:
+    """Remove query strings from URLs and request lines embedded in free text (exception messages, log lines)."""
+    if "?" not in value:
+        return value
+    return _REQUEST_LINE_QUERY_RE.sub(r"\1", _ABS_URL_QUERY_RE.sub(r"\1", value))
+
+
+def _scrub_attributes(attributes: Any) -> dict[str, Any] | None:
+    """Scrubbed copy of an attribute mapping, or None when nothing needed changing."""
+    if not attributes:
+        return None
+    out: dict[str, Any] = {}
+    changed = False
+    for key, value in attributes.items():
+        if key in _URL_KEYS_DROPPED:
+            changed = True
+            continue
+        if isinstance(value, str):
+            new = _strip_query(value) if key in _URL_KEYS_TRIMMED else _scrub_text(value)
+            changed = changed or new != value
+            value = new
+        out[key] = value
+    return out if changed else None
+
+
+def scrub_span(span: ReadableSpan) -> ReadableSpan:
+    """The span itself if it carries no query string, else a copy with URL attributes, events and status scrubbed."""
+    attributes = _scrub_attributes(span.attributes)
+    events = []
+    events_changed = False
+    for event in span.events:
+        new_attrs = _scrub_attributes(event.attributes)
+        events_changed = events_changed or new_attrs is not None
+        events.append(Event(event.name, new_attrs if new_attrs is not None else event.attributes, event.timestamp))
+    status = span.status
+    description = status.description
+    if description and _scrub_text(description) != description:
+        status = Status(status.status_code, _scrub_text(description))
+    if attributes is None and not events_changed and status is span.status:
+        return span
+    return ReadableSpan(
+        name=span.name,
+        context=span.context,
+        parent=span.parent,
+        resource=span.resource,
+        attributes=attributes if attributes is not None else span.attributes,
+        events=events if events_changed else span.events,
+        links=span.links,
+        kind=span.kind,
+        status=status,
+        start_time=span.start_time,
+        end_time=span.end_time,
+        instrumentation_scope=span.instrumentation_scope,
+    )
+
+
+class _ScrubbingSpanExporter(SpanExporter):
+    """Wraps the real exporter. Spans are immutable once ended, so scrubbed copies are what get exported."""
+
+    def __init__(self, inner: SpanExporter) -> None:
+        self._inner = inner
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        return self._inner.export([scrub_span(s) for s in spans])
+
+    def shutdown(self) -> None:
+        self._inner.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return self._inner.force_flush(timeout_millis)
+
+
+class _ScrubbingLoggingHandler(LoggingHandler):
+    """OTel log handler that strips query strings (httpx's 'HTTP Request: GET http://...?q=...' line, exceptions)."""
+
+    @staticmethod
+    def _get_attributes(record: logging.LogRecord) -> Any:
+        attributes = LoggingHandler._get_attributes(record)
+        return _scrub_attributes(attributes) or attributes
+
+    def _translate(self, record: logging.LogRecord) -> Any:
+        if isinstance(record.msg, str) and "?" in record.getMessage():
+            record = copy.copy(record)  # other handlers (stderr) keep the original record untouched
+            record.msg, record.args = _scrub_text(record.getMessage()), None
+        return super()._translate(record)
+
 
 def init_telemetry(service_name: str, *, org_id: str | None = None, fastapi_app: Any = None) -> None:
     """Call once at process start, before creating clients. Safe to call in tests."""
@@ -76,7 +182,7 @@ def init_telemetry(service_name: str, *, org_id: str | None = None, fastapi_app:
         from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-        tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+        tracer_provider.add_span_processor(BatchSpanProcessor(_ScrubbingSpanExporter(OTLPSpanExporter())))
         readers.append(PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=10_000))
     trace.set_tracer_provider(tracer_provider)
     meter_provider = MeterProvider(resource=resource, metric_readers=readers)
@@ -87,13 +193,14 @@ def init_telemetry(service_name: str, *, org_id: str | None = None, fastapi_app:
         try:
             from opentelemetry._logs import set_logger_provider
             from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
-            from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+            from opentelemetry.sdk._logs import LoggerProvider
             from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 
             logger_provider = LoggerProvider(resource=resource)
             logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
             set_logger_provider(logger_provider)
-            logging.getLogger().addHandler(LoggingHandler(level=logging.INFO, logger_provider=logger_provider))
+            handler = _ScrubbingLoggingHandler(level=logging.INFO, logger_provider=logger_provider)
+            logging.getLogger().addHandler(handler)
             _providers["logger"] = logger_provider
         except Exception:  # logs are a bonus; never block startup
             log.exception("OTel log export not configured")
