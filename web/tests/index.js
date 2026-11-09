@@ -8,3 +8,6 @@ import './route.test.mjs';
 import './ui.test.mjs';
 import './memory-scope.test.mjs';
 import './flow.test.mjs';
+import './time.test.mjs';
+import './calendar.test.mjs';
+import './people.test.mjs';

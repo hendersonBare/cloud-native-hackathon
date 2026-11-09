@@ -5,6 +5,7 @@ import { person, peerOf, VIEWS } from './data.js';
 import * as bus from './bus.js';
 import { initFlow } from './flow.js';
 import { parseHash, hashFor } from './route.js';
+import { calendarClient } from './calendar-api.js';
 
 const params = new URLSearchParams(location.search);
 const meId = person(params.get('persona')) ? params.get('persona') : 'acme.ava';
@@ -87,4 +88,7 @@ function showSafely(focus) {
 
 window.addEventListener('hashchange', () => showSafely(true));
 initFlow({ me: person(meId), peer: person(peerOf(meId)), store, mode, go, bus, overlay });
+// Create the calendar client now, not on first visit to Calendar or People: in mock mode it is a
+// replica that must be listening for the other phone's calendar:sync from the start.
+calendarClient(makeCtx(parseHash(location.hash)));
 showSafely(false);

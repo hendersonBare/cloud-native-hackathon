@@ -126,7 +126,7 @@ export const TABS = [
   { route: 'live', label: 'Capture', icon: 'mic' },
   { route: 'memory', label: 'Memory', icon: 'memory' },
   { route: 'calendar', label: 'Calendar', icon: 'calendar' },
-  { route: 'person', label: 'People', icon: 'people' },
+  { route: 'people', label: 'People', icon: 'people' },
 ];
 
 /** Which tab is highlighted for each route. */
@@ -135,7 +135,7 @@ export const TAB_FOR = {
   live: 'live', tag: 'live',
   memory: 'memory',
   calendar: 'calendar',
-  person: 'person', exchange: 'person', match: 'person',
+  people: 'people', person: 'people', exchange: 'people', match: 'people',
 };
 
 export function bottomNav(active) {

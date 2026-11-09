@@ -11,6 +11,9 @@
 //   exchange:policy   {encounter_id, org_id, allow, rule_id, reason}  live mode only (from SSE)
 //   encounter:done    {encounter_id}                              exchange finished (broadcast)
 //   config            {malicious}                                 presenter toolbar (local)
+//   calendar:sync     {events: [CalendarEvent], removed: [event_id], conference_mode?: {[id]: bool}}
+//                                                                 mock calendar replica changes (broadcast)
+//   calendar:changed  {persona_ids: [id]}                         a calendar changed; screens refetch (local)
 //   request:incoming  {request_id, from, to, initiated_by}        a connect request for this phone is pending (local)
 //   request:cleared   {request_id}                                it was answered, replaced or the encounter started (local)
 //   ui:respond        {request_id, accept}                        the brief/People answer a pending request (local)
