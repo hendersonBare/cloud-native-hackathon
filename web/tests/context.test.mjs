@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {
   currentContext, validateDraft, fromProfile, saveContext, MAX_NOTE_CHARS, MAX_FILE_BYTES,
 } from '../app/context-model.js';
+import { FakeElement, FakeNode, FakeText } from './fake-dom.mjs';
 
 const AVA = { id: 'acme.ava', orgName: 'Acme Observability' };
 const BO = { id: 'bluefin.bo', orgName: 'Bluefin Health' };
@@ -117,71 +118,25 @@ describe('context model', () => {
 
 // ------------------------------------------------------------ the Memory screen editor
 
-class FakeNode {
-  constructor() { this.childNodes = []; this.parent = null; }
-  append(...nodes) {
-    for (const n of nodes) {
-      const node = n instanceof FakeNode ? n : new FakeText(String(n));
-      node.parent = this;
-      this.childNodes.push(node);
-    }
-  }
-  get textContent() { return this.childNodes.map((c) => c.textContent).join(''); }
-}
-class FakeText extends FakeNode {
-  constructor(data) { super(); this.nodeType = 3; this.data = data; }
-  get textContent() { return this.data; }
-}
-class FakeElement extends FakeNode {
-  constructor(tag) {
-    super();
-    this.nodeType = 1;
-    this.tagName = tag.toUpperCase();
-    this.attrs = new Map();
-    this.listeners = {};
-    this.dataset = {};
-    this.hidden = false;
-    this.value = '';
-    this.style = { setProperty: (k, v) => { this.style[k] = v; } };
-  }
-  set textContent(text) { this.childNodes = []; this.append(String(text)); }
-  get textContent() { return this.childNodes.map((c) => c.textContent).join(''); }
-  set innerHTML(_) { throw new Error('innerHTML must never be used'); }
-  replaceChildren(...nodes) { this.childNodes = []; this.append(...nodes); }
-  setAttribute(k, v) { this.attrs.set(k, String(v)); }
-  getAttribute(k) { return this.attrs.has(k) ? this.attrs.get(k) : null; }
-  addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
+// The shared fake DOM (fake-dom.mjs), plus what a form needs: a value, events, focus and lookups.
+let focused = null;
+class FormElement extends FakeElement {
+  constructor(tag, ns) { super(tag, ns); this.value = ''; }
   fire(type, event = {}) { for (const fn of this.listeners[type] || []) fn({ preventDefault() {}, target: this, ...event }); }
   focus() { focused = this; }
-  get children() { return this.childNodes.filter((c) => c.nodeType === 1); }
   get lastElementChild() { return this.children.at(-1) || null; }
-  get classList() {
-    const el = this;
-    const list = () => (el.getAttribute('class') || '').split(/\s+/).filter(Boolean);
-    return {
-      contains: (name) => list().includes(name),
-      toggle(name, force) {
-        const on = force === undefined ? !list().includes(name) : force;
-        el.setAttribute('class', [...list().filter((c) => c !== name), ...(on ? [name] : [])].join(' '));
-      },
-    };
-  }
-  all(pred, out = []) {
-    for (const c of this.children) { if (pred(c)) out.push(c); c.all(pred, out); }
-    return out;
-  }
-  find(cls) { return this.all((el) => el.classList.contains(cls))[0] || null; }
-  querySelector(tag) { return this.all((el) => el.tagName === tag.toUpperCase())[0] || null; }
+  all(pred) { return this.findAll(pred); }
+  find(cls) { return this.byClass(cls)[0] || null; }
+  querySelector(tag) { return this.findAll((el) => el.tagName === tag.toUpperCase())[0] || null; }
 }
 
-let focused = null;
 let saved = null;
 let render;
 const FAKES = {
   Node: FakeNode,
   document: {
-    createElement: (tag) => new FakeElement(tag),
-    createElementNS: (_ns, tag) => new FakeElement(tag),
+    createElement: (tag) => new FormElement(tag),
+    createElementNS: (ns, tag) => new FormElement(tag, ns),
     createTextNode: (data) => new FakeText(data),
   },
 };
@@ -254,6 +209,30 @@ describe('Memory screen: Your context', () => {
     const status = s.card().find('memory-context-status');
     assert.match(status.textContent, /Write something/);
     assert.ok(status.classList.contains('is-error'));
+  });
+
+  it('a save that throws unexpectedly shows an error instead of staying on Saving…', async (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    const store = new Proxy({}, {
+      set(target, key, value) {
+        if (key === 'context') throw new Error('store refused');
+        target[key] = value;
+        return true;
+      },
+    });
+    const s = setup(store);
+    t.after(s.leave);
+    s.edit.fire('click');
+    const note = s.card().querySelector('textarea');
+    note.value = 'Meeting hospital platform teams';
+    note.fire('input');
+    s.card().find('memory-context-form').fire('submit');
+    await flush();
+    assert.equal(s.edit.getAttribute('aria-expanded'), 'true', 'the editor stays open');
+    const status = s.card().find('memory-context-status');
+    assert.match(status.textContent, /could not save/);
+    assert.ok(status.classList.contains('is-error'));
+    assert.deepEqual(warn.mock.calls.map((c) => c.arguments), [['Context save failed', 'Error']]);
   });
 
   it('Cancel discards the draft', (t) => {
