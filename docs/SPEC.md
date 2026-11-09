@@ -77,6 +77,7 @@ Browser: ONE page = left phone (Ava) + swarm panel + right phone (Bo)         (w
 | **delegate** | `src/rapport_delegate/`, `tests/delegate/` | The exchange protocol, the OPA client and the malicious mode | L |
 | **gateway** | `src/rapport_gateway/`, `deploy/gateway/`, `tests/gateway/` | REST, SSE, Encounter creation, pod watch, routing and mock mode | M |
 | **web** | `web/` | The two-phone page, the swarm panel, the My agent tab and RUM | M |
+| **calendar** (added v1.3) | `src/rapport_calendar/`, `tests/calendar/` | The calendar API the gateway mounts at `/api/calendar/*`: per-person agenda, free/busy meeting scheduling, `.ics` export. The team approved its one-time gateway wiring (PR #16). | S |
 | **integrator (you)** | contracts, `deploy/base`, `deploy/crds`, `deploy/elastic`, `scripts/`, `Makefile`, `Dockerfile`, docs | Setup, merging, deploy, demo, track evidence | — |
 
 **Nobody waits on anybody.** Each workstream builds against the contracts, with fakes for its neighbours:
