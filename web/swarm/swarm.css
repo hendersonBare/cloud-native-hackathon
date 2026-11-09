@@ -1,0 +1,129 @@
+/* Swarm panel: the judges' view of the agents meeting, between the two phones. */
+:root {
+  --swarm-w: 380px;
+  --swarm-gap: 24px;
+  --sw-ok-bg: #0F2A1B; --sw-ok-fg: #7FDDA6; --sw-ok-line: #1F6B42;
+  --sw-no-bg: #33130F; --sw-no-fg: #FF9C92; --sw-no-line: #8F2F26;
+  --sw-run-fg: #7FDDA6; --sw-wait-fg: #E6C992; --sw-done-fg: #9DC4FF; --sw-fail-fg: #FF9C92;
+}
+:root[data-theme="light"] {
+  --sw-ok-bg: #E3F3E9; --sw-ok-fg: #0E5A31; --sw-ok-line: #8CC9A6;
+  --sw-no-bg: #FBE6E3; --sw-no-fg: #9B1C13; --sw-no-line: #E3A29B;
+  --sw-run-fg: #0E5A31; --sw-wait-fg: #7A5718; --sw-done-fg: #1E4FA3; --sw-fail-fg: #9B1C13;
+}
+
+/* Only the stage with the panel changes: the phones' layout is untouched when it is hidden. */
+.stage.has-swarm { gap: var(--swarm-gap); }
+
+.swarm {
+  flex: none;
+  width: var(--swarm-w);
+  height: calc(var(--frame-h) * var(--s));
+  margin-top: 32px; /* aligns with the phone frames below their labels */
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px;
+  background: var(--stage-raised);
+  color: var(--stage-text);
+  border: 1px solid var(--stage-line);
+  border-radius: 20px;
+  font-size: 16px;
+  overflow: hidden;
+}
+.swarm[hidden] { display: none; }
+
+.sw-vh {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.swarm p, .swarm h2, .swarm h3, .swarm ul, .swarm ol { margin: 0; padding: 0; }
+.swarm ul, .swarm ol { list-style: none; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+.sw-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sw-title { font-family: 'Instrument Serif', Georgia, serif; font-size: 24px; font-weight: 400; line-height: 1.1; }
+.sw-status {
+  font-size: 14px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--stage-line); color: var(--stage-text); text-align: right;
+}
+.sw-status[data-status="running"] { border-color: var(--sw-ok-line); color: var(--sw-ok-fg); background: var(--sw-ok-bg); }
+.sw-status[data-status="completed"] { border-color: var(--sw-ok-line); color: var(--sw-ok-fg); }
+.sw-status[data-status="failed"], .sw-status[data-status="declined"] {
+  border-color: var(--sw-no-line); color: var(--sw-no-fg); background: var(--sw-no-bg);
+}
+
+.sw-header { min-height: 44px; }
+.sw-pair { font-size: 20px; line-height: 1.2; }
+.sw-pair strong { font-weight: 700; }
+.sw-pair-empty { font-size: 16px; color: var(--stage-text2); }
+.sw-orgs { font-size: 14px; color: var(--stage-text2); margin-top: 2px; }
+
+.sw-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sw-lanes-empty { grid-column: 1 / -1; font-size: 14px; color: var(--stage-text2); }
+.sw-lane {
+  min-width: 0; padding: 10px; border: 1px solid var(--stage-line); border-radius: 14px;
+  background: var(--stage-bg);
+}
+.sw-lane-title {
+  display: flex; flex-direction: column; gap: 0; font-size: 16px; font-weight: 700; margin-bottom: 8px;
+}
+.sw-lane-side { font-size: 14px; font-weight: 500; color: var(--stage-text2); }
+.sw-pods { display: flex; flex-direction: column; gap: 6px; }
+.sw-pod {
+  display: flex; flex-direction: column; gap: 2px; padding: 6px 8px;
+  border: 1px solid var(--stage-line); border-left-width: 4px; border-radius: 10px;
+  background: var(--stage-raised); font-size: 14px;
+}
+.sw-pod-name { overflow-wrap: anywhere; color: var(--stage-text); }
+.sw-pod-phase { font-weight: 700; }
+.sw-pod.is-pending { border-left-color: var(--sw-wait-fg); }
+.sw-pod.is-pending .sw-pod-phase { color: var(--sw-wait-fg); }
+.sw-pod.is-running { border-left-color: var(--sw-run-fg); }
+.sw-pod.is-running .sw-pod-phase { color: var(--sw-run-fg); }
+.sw-pod.is-done { border-left-color: var(--sw-done-fg); }
+.sw-pod.is-done .sw-pod-phase { color: var(--sw-done-fg); }
+.sw-pod.is-failed { border-left-color: var(--sw-fail-fg); }
+.sw-pod.is-failed .sw-pod-phase { color: var(--sw-fail-fg); }
+.sw-pod.is-unknown .sw-pod-phase { color: var(--stage-text2); }
+.sw-pod.is-pending .sw-pod-phase::before { content: '… '; }
+.sw-pod.is-running .sw-pod-phase::before { content: '▶ '; }
+.sw-pod.is-done .sw-pod-phase::before { content: '✓ '; }
+.sw-pod.is-failed .sw-pod-phase::before { content: '✕ '; }
+
+.sw-eyebrow {
+  font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--stage-text2);
+}
+.sw-timeline {
+  flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+  padding: 2px 4px 2px 2px; border-radius: 10px;
+}
+.sw-entry { display: flex; align-items: flex-start; gap: 10px; }
+.sw-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sw-time { flex: none; font-size: 13px; color: var(--stage-text2); white-space: nowrap; padding-top: 3px; }
+.sw-detail { font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+.sw-route { font-size: 14px; color: var(--stage-text2); }
+.sw-route strong { color: var(--stage-text); }
+.sw-round {
+  flex: none; width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--gold); color: var(--stage-bg); font-size: 15px; font-weight: 700;
+}
+.sw-dot { flex: none; width: 10px; height: 10px; margin: 9px 9px 0; border-radius: 50%; background: var(--stage-text2); }
+.sw-step.is-done .sw-dot { background: var(--sw-ok-fg); }
+.sw-step.is-failed .sw-dot { background: var(--sw-no-fg); }
+
+.sw-policy {
+  padding: 6px 10px; border-radius: 12px; border: 1px solid; align-items: flex-start;
+}
+.sw-policy.is-allow { background: var(--sw-ok-bg); color: var(--sw-ok-fg); border-color: var(--sw-ok-line); }
+.sw-policy.is-deny { background: var(--sw-no-bg); color: var(--sw-no-fg); border-color: var(--sw-no-line); }
+.sw-policy .sw-time { color: inherit; opacity: .9; }
+.sw-chip-icon { flex: none; padding-top: 2px; display: inline-flex; }
+.sw-policy-line { font-size: 15px; }
+.sw-policy .sw-detail { font-size: 14px; }
+.sw-rule { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; font-weight: 600; }
+
+.swarm :focus-visible, .sw-timeline:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .swarm * { transition: none !important; animation: none !important; }
+}
