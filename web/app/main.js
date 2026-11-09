@@ -4,8 +4,7 @@
 import { person, peerOf, VIEWS } from './data.js';
 import * as bus from './bus.js';
 import { initFlow } from './flow.js';
-
-export const ROUTES = ['home', 'profile', 'calendar', 'live', 'tag', 'memory', 'person', 'exchange', 'match'];
+import { parseHash, hashFor } from './route.js';
 
 const params = new URLSearchParams(location.search);
 const meId = person(params.get('persona')) ? params.get('persona') : 'acme.ava';
@@ -39,16 +38,8 @@ window.addEventListener('message', (e) => {
   }
 });
 
-function parseHash() {
-  const raw = location.hash.replace(/^#\/?/, '');
-  const [path, query] = raw.split('?');
-  const name = ROUTES.includes(path) ? path : 'home';
-  return { name, params: Object.fromEntries(new URLSearchParams(query || '')) };
-}
-
 export function go(name, params) {
-  const q = params ? `?${new URLSearchParams(params)}` : '';
-  location.hash = `#/${name}${q}`;
+  location.hash = hashFor(name, params);
 }
 
 const cssLoaded = new Set();
@@ -80,13 +71,13 @@ function makeCtx(route) {
 
 async function show(focus) {
   const token = ++renderToken;
-  const route = parseHash();
+  const route = parseHash(location.hash);
   ensureCss(route.name);
   let mod;
   try {
     mod = await import(`./screens/${route.name}.js`);
   } catch (err) {
-    console.error(`screen ${route.name} failed to load`, err);
+    console.error(`screen ${route.name} failed to load`, err?.name || 'Error');
     return;
   }
   if (token !== renderToken) return;

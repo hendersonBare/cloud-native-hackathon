@@ -28,7 +28,7 @@ const ROLES = [
 ];
 
 export function render(ctx) {
-  const content = CONTENT[ctx.me.id];
+  const content = CONTENT[ctx.me.id] || CONTENT['acme.ava'];
   const st = ctx.store.profile || (ctx.store.profile = {});
   if (!ROLES.some((role) => role.id === st.role)) st.role = 'engineer';
   let visibility = st.cv?.visibility || st.visibility || 'shareable';

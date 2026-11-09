@@ -17,7 +17,10 @@ function javascriptFiles(directory) {
 }
 
 const files = javascriptFiles(web).sort();
-assert.ok(files.length > 0, 'the source scan must find JavaScript files');
+
+test('the source scan finds JavaScript files', () => {
+  assert.ok(files.length > 0);
+});
 const sources = new Map(files.map((file) => [file, readFileSync(file, 'utf8')]));
 const forbidden = [
   ['HTML parsing properties', /\b(?:innerHTML|outerHTML|insertAdjacentHTML)\b/],
@@ -45,7 +48,7 @@ for (const [file, source] of sources) {
 }
 
 test('every declared route has a script, stylesheet and render export', () => {
-  const main = sources.get(join(web, 'app/main.js'));
+  const main = sources.get(join(web, 'app/route.js'));
   const declaration = main.match(/\b(?:export\s+)?const\s+ROUTES\s*=\s*\[([^\]]*)\]/s);
   assert.ok(declaration, 'ROUTES must be a literal array');
   const routes = [...declaration[1].matchAll(/(['"])([^'"]+)\1/g)].map((match) => match[2]);

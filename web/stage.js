@@ -52,14 +52,14 @@ function post(msg) {
 function applyTheme() {
   root.dataset.theme = theme;
   themeBtn.textContent = theme === 'dark' ? 'Light theme' : 'Dark theme';
-  themeBtn.setAttribute('aria-pressed', String(theme === 'light'));
   post({ type: 'theme', theme });
 }
 
 function fit() {
   const availH = window.innerHeight - toolbar.offsetHeight - 36 - LABEL_H;
-  const availW = window.innerWidth - 48 - MIN_GAP;
-  const s = Math.max(0.25, Math.min(1.3, availH / FRAME_H, availW / (2 * FRAME_W)));
+  // The gap between the phones scales with --s too, so it counts inside the scaled width.
+  const availW = window.innerWidth - 48;
+  const s = Math.max(0.25, Math.min(1.3, availH / FRAME_H, availW / (2 * FRAME_W + MIN_GAP)));
   root.style.setProperty('--s', s.toFixed(4));
 }
 

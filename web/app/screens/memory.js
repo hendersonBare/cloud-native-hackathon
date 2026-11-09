@@ -110,7 +110,7 @@ export function render(ctx) {
   });
   const form = h('form', {
     class: 'memory-ask', 'aria-label': 'Ask your memory',
-    onSubmit: (event) => { event.preventDefault(); ask(input.value); },
+    onSubmit: (event) => { event.preventDefault(); askSafely(input.value); },
   },
   icon('search', { size: 18, stroke: 1.9 }),
   h('label', { class: 'visually-hidden', for: inputId }, 'Ask your memory'),
@@ -143,6 +143,10 @@ export function render(ctx) {
         ))) : null,
       h('p', { class: 'memory-searched' }, `${pending ? 'Searching' : 'Searched'} ${scopeLabel(st.scope)}`),
     ].filter(Boolean));
+  }
+
+  function askSafely(value) {
+    ask(value).catch((err) => console.warn('Memory ask failed', err?.name || 'Error'));
   }
 
   async function ask(value) {
@@ -209,7 +213,7 @@ export function render(ctx) {
       st.scope = index;
       drawScope();
       const draft = input.value;
-      ask(st.question);
+      askSafely(st.question);
       st.draft = draft;
       input.value = draft;
     },
@@ -235,7 +239,7 @@ export function render(ctx) {
       form,
       h('div', { class: 'memory-suggestions', role: 'group', 'aria-label': 'Suggested questions' },
         content.questions.map((item) => h('button', {
-          type: 'button', class: 'memory-suggestion', onClick: () => { ask(item.question); },
+          type: 'button', class: 'memory-suggestion', onClick: () => { askSafely(item.question); },
         }, item.question)),
       ),
       answerRegion,

@@ -4,3 +4,5 @@ import './static.test.mjs';
 import './data.test.mjs';
 import './bus.test.mjs';
 import './api.test.mjs';
+import './route.test.mjs';
+import './ui.test.mjs';

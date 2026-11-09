@@ -105,6 +105,13 @@ export function openSheet(contentEl, { label = 'Dialog', onClose } = {}) {
   return close;
 }
 
+// Non-guessable id: randomUUID needs a secure context, getRandomValues doesn't.
+function encounterSuffix() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
   flowOverlay = overlay;
   let pending = null;
@@ -178,7 +185,7 @@ export function initFlow({ me, peer, store, mode, go, bus, overlay }) {
       request.settled = true;
       request.close();
       if (pending === request) pending = null;
-      const random = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
+      const random = encounterSuffix();
       const enc = {
         encounter_id: `enc-${random}`, initiator: from, responder: me.id,
         startedAt: Date.now() + 600, status: 'talking',
