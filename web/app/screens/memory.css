@@ -128,6 +128,14 @@
 .memory .memory-level[aria-pressed="true"] .memory-level-name { text-decoration: underline; text-underline-offset: 3px; }
 
 /* Your context: what the agent carries, and the editor that changes it. */
+.memory .memory-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.memory .memory-context-toggle {
+  min-height: 44px; padding: 0 14px; border: 1px solid var(--gold-line); border-radius: 999px;
+  background: var(--gold-bg); color: var(--gold); font: inherit; font-size: 14px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px; flex: none; cursor: pointer;
+}
+.memory .memory-context-toggle[aria-expanded="true"] { border-color: var(--gold-mid); }
+.memory .memory-context-panel[hidden] { display: none; }
 .memory .memory-context-edit {
   min-height: 44px; margin: -10px -8px -10px 0; padding: 0 10px; border: 0; border-radius: 999px;
   background: transparent; color: var(--gold); font: inherit; font-size: 14px; font-weight: 600;

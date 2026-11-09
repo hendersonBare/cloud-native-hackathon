@@ -7,7 +7,7 @@ import { calendarClient, calendarErrorMessage } from '../calendar-api.js';
 import { formatSlot } from '../time.js';
 import { AGENT_ORGS, metIds, withZone } from '../people-model.js';
 import { toast } from '../flow.js';
-import MOCK_RESEARCH from '../../mock/demo-research.json' with { type: 'json' };
+import { mockResearchFor } from '../mock-research.js';
 
 const CONTENT = {
   'acme.ava': {
@@ -79,7 +79,7 @@ function slotLabel(value) {
 
 /** The viewer's research card for this person, from the cache the People screen keeps. */
 function researchCard(ctx, subjectId) {
-  const research = ctx.mode === 'live' ? ctx.store.people?.research : MOCK_RESEARCH;
+  const research = ctx.mode === 'live' ? ctx.store.people?.research : mockResearchFor(ctx.me.id);
   if (!research || research.persona_id !== ctx.me.id) return null;
   return (research.cards || []).find((card) => card.persona_id === subjectId) || null;
 }

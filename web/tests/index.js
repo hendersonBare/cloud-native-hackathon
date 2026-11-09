@@ -23,3 +23,4 @@ import './find.test.mjs';
 import './rum.test.mjs';
 import './mode.test.mjs';
 import './context.test.mjs';
+import './progress.test.mjs';

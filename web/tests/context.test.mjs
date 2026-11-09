@@ -149,6 +149,8 @@ function setup(store = {}) {
   const s = {
     root, ctx,
     edit: root.find('memory-context-edit'),
+    toggle: root.find('memory-context-toggle'),
+    panel: root.find('memory-context-panel'),
     card: () => root.find('memory-context'),
     leave: () => { for (const fn of cleanups.splice(0)) fn(); },
   };
@@ -166,6 +168,20 @@ describe('Memory screen: Your context', () => {
       if (desc) Object.defineProperty(globalThis, k, desc);
       else delete globalThis[k];
     }
+  });
+
+  it('starts closed behind a top-right button that opens and closes it', (t) => {
+    const s = setup();
+    t.after(s.leave);
+    assert.equal(s.panel.hidden, true);
+    assert.equal(s.toggle.getAttribute('aria-expanded'), 'false');
+    assert.equal(s.toggle.getAttribute('aria-controls'), s.panel.getAttribute('id'));
+    s.toggle.fire('click');
+    assert.equal(s.panel.hidden, false);
+    assert.equal(s.toggle.getAttribute('aria-expanded'), 'true');
+    s.toggle.fire('click');
+    assert.equal(s.panel.hidden, true);
+    assert.equal(s.toggle.getAttribute('aria-expanded'), 'false');
   });
 
   it('shows what the agent carries, with an Edit button', (t) => {

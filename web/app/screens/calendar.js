@@ -170,8 +170,16 @@ export function render(ctx) {
   const agendaEl = h('div', { class: 'calendar-agenda' });
   const dataEl = h('div', { class: 'calendar-data', hidden: true }, stripSlot, agendaEl);
 
+  // Calendar has no tab: it opens from Home's Up next or from a session in Capture (?from=live),
+  // so it links back to wherever it came from.
+  const fromCapture = ctx.route?.params?.from === 'live';
+  const backLink = h('a', {
+    class: 'calendar-back', href: fromCapture ? '#/live' : '#/home',
+  }, icon('back', { size: 20, stroke: 1.8 }), fromCapture ? 'Capture' : 'Home');
+
   const main = h('main', { class: 'scroll calendar-main', 'aria-busy': 'true' },
     statusEl,
+    backLink,
     h('header', { class: 'calendar-head' },
       h('div', { class: 'calendar-heading' },
         monthEl,
@@ -827,5 +835,5 @@ export function render(ctx) {
 
   settle(load(), 'load');
 
-  return h('div', { class: 'screen calendar' }, main, bottomNav('calendar'));
+  return h('div', { class: 'screen calendar' }, main, bottomNav(fromCapture ? 'live' : 'calendar'));
 }
