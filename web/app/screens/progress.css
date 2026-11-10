@@ -10,56 +10,42 @@
   background: var(--yes-bg); color: var(--yes-text); font-size: 11px; font-weight: 700; letter-spacing: .02em;
 }
 
-/* Latest memory check */
+/* Memory check in progress, right after Capture stops */
 .progress .check-banner {
   display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px;
-  background: var(--surface); border: 1px solid var(--line); color: var(--text); text-decoration: none;
+  border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--text);
 }
-.progress .check-banner.is-checking { border-color: var(--gold-line); background: var(--gold-bg); }
-.progress .check-banner.is-fresh { border-color: var(--sage-line); background: var(--sage-bg); }
-.progress .check-banner > svg { flex: none; color: var(--text3); }
 .progress .check-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .progress .check-text strong { font-size: 15px; font-weight: 600; }
 .progress .check-text span { font-size: 13px; color: var(--text2); }
 .progress .check-pulse { width: 12px; height: 12px; flex: none; border-radius: 50%; background: var(--gold); }
-.progress .check-live { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--live); }
-.progress .check-done {
-  width: 26px; height: 26px; flex: none; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; background: var(--yes); color: #FFF;
-}
 
-/* Biggest lesson + day stats */
-.progress .progress-hero { padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 10px; }
-.progress .progress-hero-label { color: var(--on-fill2); }
-.progress .progress-lesson { font-size: 25px; line-height: 1.15; }
-.progress .progress-lesson-from { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--on-fill2); }
-.progress .progress-stats {
-  margin: 4px 0 0; padding-top: 12px; border-top: 1px solid rgba(244, 240, 232, .16);
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
-}
-.progress .progress-stat { display: flex; flex-direction: column-reverse; gap: 2px; }
-.progress .progress-stat dt { font-size: 12px; color: var(--on-fill2); }
-.progress .progress-stat dd { margin: 0; font-size: 30px; color: var(--on-fill); }
+/* Biggest lesson */
+.progress .progress-hero { padding: 18px; display: flex; flex-direction: column; gap: 10px; color: var(--text); }
+.progress .progress-hero-label { color: var(--gold); }
+.progress .progress-lesson { font-size: 19px; font-weight: 600; line-height: 1.35; }
+.progress .progress-lesson-from { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
 
-/* Takeaways */
-.progress .takeaways { margin: 0; padding: 4px 16px; list-style: none; }
-.progress .takeaway { display: flex; gap: 12px; padding: 12px 0; }
-.progress .takeaway + .takeaway { border-top: 1px solid var(--line2); }
-.progress .takeaway-n { width: 18px; flex: none; font-size: 22px; color: var(--gold); }
-.progress .takeaway-text { font-size: 15px; line-height: 1.4; color: var(--text); }
+/* Also learned today, inside the lesson card: a gold dot and a source line per takeaway */
+.progress .progress-also {
+  margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--gold-line);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.progress .takeaways { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.progress .takeaway { position: relative; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; }
+.progress .takeaway::before {
+  content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-mid);
+}
+.progress .takeaway-text { font-size: 15px; line-height: 1.45; color: var(--text); }
 .progress .takeaway-from { font-size: 12px; color: var(--text3); }
 
 /* Best interactions */
 .progress .best-list { margin: 0; padding: 0; list-style: none; gap: 10px; }
 .progress .best-card { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
 .progress .best-top { display: flex; align-items: center; gap: 10px; }
-.progress .best-rank { width: 16px; flex: none; font-size: 24px; color: var(--gold); text-align: center; }
+.progress .best-rank { width: 16px; flex: none; font-size: 17px; font-weight: 700; color: var(--gold); text-align: center; }
 .progress .best-name { margin: 0; font-size: 17px; font-weight: 600; }
 .progress .best-where { font-size: 12px; color: var(--text3); }
-.progress .best-learned {
-  flex: none; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
-  border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--gold);
-}
 .progress .best-headline { font-size: 15px; font-weight: 600; line-height: 1.35; }
 .progress .best-points { margin: 0; padding-left: 18px; list-style: disc; display: flex; flex-direction: column; gap: 3px; font-size: 14px; color: var(--text2); }
 .progress .best-brief {
@@ -82,20 +68,7 @@
 .progress .question { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
 .progress .question + .question { border-top: 1px solid var(--line2); }
 .progress .question-text { font-size: 15px; font-weight: 500; color: var(--text); }
-.progress .question-why { font-size: 13px; color: var(--text2); }
 .progress .question-ask {
   flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px 0 4px;
   border-radius: 22px; border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--text); text-decoration: none;
 }
-
-/* Memory checks, newest first */
-.progress .checks { margin: 0; padding: 2px 16px; list-style: none; }
-.progress .check-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; }
-.progress .check-row + .check-row { border-top: 1px solid var(--line2); }
-.progress .check-time { width: 64px; flex: none; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--gold); padding-top: 1px; }
-.progress .check-title { font-size: 14px; font-weight: 600; }
-.progress .check-kind { font-weight: 400; color: var(--text3); }
-.progress .check-headline { font-size: 13px; color: var(--text2); line-height: 1.35; }
-.progress .check-state { align-self: flex-start; font-size: 12px; font-weight: 600; color: var(--yes-text); }
-.progress .check-state.is-checking { color: var(--gold); }
-.progress .check-state.is-live { color: var(--live); text-decoration: none; min-height: 44px; margin: -12px 0 -14px; display: flex; align-items: center; }
