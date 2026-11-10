@@ -17,4 +17,4 @@ resources:
 images:
   - name: app
     newName: ghcr.io/hendersonbare/cloud-native-hackathon
-    newTag: 02d8a69
+    newTag: 4b945d2
