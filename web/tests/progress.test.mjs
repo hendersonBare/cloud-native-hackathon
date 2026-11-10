@@ -1,10 +1,11 @@
 // The Progress tab's day roll-up (web/app/progress-model.js): what each memory check after a
 // session adds, and how stopping the live capture changes the day.
-import test from 'node:test';
+import test, { after, before, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { CONTENT, LIVE_SESSION, dayProgress, learnedIn } from '../app/progress-model.js';
-import { PEOPLE } from '../app/data.js';
+import { PEOPLE, person } from '../app/data.js';
 import { CONTENT as CAPTURE } from '../app/screens/live.js';
+import { install } from './fake-dom.mjs';
 
 const PHONES = ['acme.ava', 'bluefin.bo'];
 
@@ -80,4 +81,36 @@ test('an empty day has no lesson and zero stats', () => {
   assert.equal(day.lesson, null);
   assert.equal(day.latest, null);
   assert.deepEqual(day.stats, { people: 0, sessions: 0, memories: 0 });
+});
+
+describe('Progress screen', () => {
+  let restore;
+  let render;
+  before(async () => {
+    restore = install();
+    ({ render } = await import('../app/screens/progress.js'));
+  });
+  after(() => restore());
+
+  const screen = (meId) => render({ me: person(meId), store: {}, view: {}, person, onCleanup() {} });
+
+  test('one gold card holds the biggest lesson and every other takeaway, and nothing prints as "null"', () => {
+    for (const id of PHONES) {
+      const el = screen(id);
+      const cards = el.byClass('progress-hero');
+      assert.equal(cards.length, 1, id);
+      assert.ok(cards[0].classList.contains('card-gold'), id);
+      assert.equal(cards[0].byClass('takeaway').length, dayProgress(CONTENT[id]).takeaways.length - 1, id);
+      assert.ok(!el.textContent.includes('null'), id);
+    }
+  });
+
+  test('the live banner, day stats, learned counts, question subtext and memory checks are not shown', () => {
+    const el = screen('acme.ava');
+    for (const cls of ['check-banner', 'progress-stats', 'best-learned', 'question-why', 'checks']) {
+      assert.equal(el.byClass(cls).length, 0, cls);
+    }
+    assert.ok(!el.textContent.includes('is still live'));
+    assert.ok(!el.textContent.includes('Memory checks today'));
+  });
 });
